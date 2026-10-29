@@ -1,0 +1,6 @@
+{
+  "summary":  "Updated navigation and branding layout:\n- Moved Settings next to Memories in both the desktop TopNav and mobile BottomTabBar.\n- Switched the icon for Memories to the Film (filmstrip) icon across BottomTabBar, TopNav, and the Memories Archive header.\n- Added the brand slogan \"Standing on the threshold of experience\" underneath the \"My Verge\" title in the top navigation bar.",
+  "updatedAt":  "2026-10-29T13:44:17.683324256Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

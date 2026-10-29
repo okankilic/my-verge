@@ -1,0 +1,112 @@
+import React, { useState } from 'react';
+import { X, Trophy, Star, Sparkles, Heart } from 'lucide-react';
+import { BucketItem } from '../types';
+
+interface MilestoneModalProps {
+  item: BucketItem | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSaveReflection: (itemId: string, reflection: string, rating: number) => void;
+}
+
+export const MilestoneModal: React.FC<MilestoneModalProps> = ({
+  item,
+  isOpen,
+  onClose,
+  onSaveReflection,
+}) => {
+  if (!isOpen || !item) return null;
+
+  const [reflection, setReflection] = useState(item.completionReflection || '');
+  const [rating, setRating] = useState(item.completionRating || 5);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSaveReflection(item.id, reflection.trim(), rating);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+      <div className="w-full max-w-lg bg-[#FAF7F2] border border-[#1E1915]/15 rounded-3xl shadow-2xl p-6 sm:p-7 relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center text-[#1E1915]/50 hover:text-[#1E1915] rounded-full hover:bg-black/5"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <div className="text-center mb-6">
+          <div className="w-12 h-12 bg-[#4A6B56]/15 text-[#4A6B56] rounded-2xl mx-auto flex items-center justify-center mb-3">
+            <Trophy className="w-6 h-6 stroke-[2]" />
+          </div>
+          <h2 className="font-serif-journal text-2xl font-semibold text-[#1E1915]">
+            Dream Accomplished
+          </h2>
+          <p className="text-xs text-[#1E1915]/70 mt-1 max-w-xs mx-auto">
+            You crossed the verge into reality for:
+          </p>
+          <p className="font-serif-journal text-base font-medium text-[#1E1915] mt-1.5 px-4">
+            “{item.title}”
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Milestone Star Rating */}
+          <div className="text-center">
+            <label className="block text-xs uppercase tracking-wider text-[#1E1915]/60 font-semibold mb-2">
+              Memory Resonance
+            </label>
+            <div className="flex items-center justify-center gap-1.5">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  type="button"
+                  key={star}
+                  onClick={() => setRating(star)}
+                  className="min-w-[40px] min-h-[40px] flex items-center justify-center text-[#1E1915]/20 hover:text-[#B45309] transition-colors"
+                >
+                  <Star
+                    className={`w-6 h-6 ${
+                      star <= rating ? 'text-[#B45309] fill-[#B45309]' : 'text-[#1E1915]/20'
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Reflection Journal Note */}
+          <div>
+            <label className="block text-xs uppercase tracking-wider text-[#1E1915]/60 font-semibold mb-1.5">
+              Retrospective Journal Note
+            </label>
+            <textarea
+              rows={3}
+              value={reflection}
+              onChange={(e) => setReflection(e.target.value)}
+              placeholder="What made this moment unforgettable? What changed in you after experiencing this?"
+              className="w-full px-3.5 py-2.5 text-sm bg-white border border-[#1E1915]/15 rounded-xl text-[#1E1915] placeholder-[#1E1915]/40 focus:outline-none focus:border-[#1E1915]"
+            />
+          </div>
+
+          <div className="pt-2 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="min-h-[44px] px-4 py-2 text-xs font-semibold text-[#1E1915]/70 hover:text-[#1E1915] rounded-xl hover:bg-black/5"
+            >
+              Skip Reflection
+            </button>
+            <button
+              type="submit"
+              className="min-h-[44px] px-6 py-2.5 text-xs font-semibold text-white bg-[#4A6B56] hover:bg-[#3d5a47] rounded-xl shadow-md transition-all flex items-center gap-1.5"
+            >
+              <Heart className="w-3.5 h-3.5" />
+              <span>Preserve in Memories</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
