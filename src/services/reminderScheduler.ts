@@ -1,18 +1,10 @@
 import { LocalNotifications, LocalNotificationSchema, Schedule } from '@capacitor/local-notifications';
 import { BucketItem } from '../types';
 import { isNative, stableIntId } from './platform';
+import { reminderTime } from './notifications';
 
 // Native only: reminders are handed to the OS so they fire while the app is closed.
 // On the web, App.tsx's 30-second poll + browser Notification covers it instead.
-
-// Date-only reminders (YYYY-MM-DD) fire at 9:00 local time rather than UTC midnight
-function reminderTime(value: string): Date {
-  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (dateOnly) {
-    return new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]), 9, 0);
-  }
-  return new Date(value);
-}
 
 function scheduleFor(item: BucketItem, now: number): Schedule | null {
   const reminder = item.reminder;

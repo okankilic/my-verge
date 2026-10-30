@@ -15,10 +15,11 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
   onClose,
   onSaveReflection,
 }) => {
-  if (!isOpen || !item) return null;
+  // App.tsx keys this modal by item id, so state is seeded fresh for each item
+  const [reflection, setReflection] = useState(item?.completionReflection || '');
+  const [rating, setRating] = useState(item?.completionRating || 5);
 
-  const [reflection, setReflection] = useState(item.completionReflection || '');
-  const [rating, setRating] = useState(item.completionRating || 5);
+  if (!isOpen || !item) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

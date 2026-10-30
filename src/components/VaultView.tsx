@@ -1,24 +1,39 @@
 import React, { useState } from 'react';
-import { BookOpen, Film, DollarSign, Check, ExternalLink, Sparkles } from 'lucide-react';
-import { BucketItem } from '../types';
+import { BookOpen, Film, DollarSign, Check } from 'lucide-react';
+import { BucketItem, CategoryDefinition } from '../types';
 
 interface VaultViewProps {
   items: BucketItem[];
+  categories: CategoryDefinition[];
+  onSelect: (item: BucketItem) => void;
   onToggleComplete: (item: BucketItem) => void;
   onEdit: (item: BucketItem) => void;
 }
 
+const formatMoney = (amount: number | undefined, currency = '$') =>
+  `${currency || '$'}${(amount ?? 0).toLocaleString()}`;
+
+const EmptyShelf: React.FC<{ title: string; hint: string }> = ({ title, hint }) => (
+  <div className="p-8 text-center bg-card border border-ink/10 rounded-xl">
+    <p className="font-serif-journal text-base text-ink/70">{title}</p>
+    <p className="text-xs text-ink/50 mt-1 max-w-sm mx-auto">{hint}</p>
+  </div>
+);
+
 export const VaultView: React.FC<VaultViewProps> = ({
   items,
+  categories,
+  onSelect,
   onToggleComplete,
   onEdit,
 }) => {
   const [activeTab, setActiveTab] = useState<'reading' | 'watching' | 'budget'>('reading');
 
-  // Filter items
-  const readingItems = items.filter((i) => i.categoryId === 'read');
-  const watchingItems = items.filter((i) => i.categoryId === 'watch');
-  const budgetItems = items.filter(
+  // Archived items stay out of the Vault
+  const visibleItems = items.filter((i) => i.status !== 'archived');
+  const readingItems = visibleItems.filter((i) => i.categoryId === 'read');
+  const watchingItems = visibleItems.filter((i) => i.categoryId === 'watch');
+  const budgetItems = visibleItems.filter(
     (i) => i.budget && i.budget.estimatedCost > 0
   );
 
@@ -26,43 +41,49 @@ export const VaultView: React.FC<VaultViewProps> = ({
   const totalEstimated = budgetItems.reduce((acc, i) => acc + (i.budget?.estimatedCost || 0), 0);
   const totalSaved = budgetItems.reduce((acc, i) => acc + (i.budget?.savedAmount || 0), 0);
 
+  // Inner buttons must not also open the detail drawer
+  const stop = (fn: () => void) => (e: React.MouseEvent) => {
+    e.stopPropagation();
+    fn();
+  };
+
   return (
     <div className="space-y-6">
       {/* Vault Category Selector Tabs */}
       <div className="flex items-center gap-1.5 p-1 bg-paper-deep rounded-2xl max-w-md mx-auto">
         <button
           onClick={() => setActiveTab('reading')}
-          className={`flex-1 min-h-[44px] py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+          className={`flex-1 min-h-[44px] py-2 px-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'reading'
               ? 'bg-card text-ink shadow-xs'
               : 'text-ink/60 hover:text-ink'
           }`}
         >
-          <BookOpen className="w-3.5 h-3.5 text-[#C05621]" />
-          <span>Reading Shelf ({readingItems.length})</span>
+          <BookOpen className="w-3.5 h-3.5 shrink-0 text-[#C05621]" />
+          <span>Reading ({readingItems.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab('watching')}
-          className={`flex-1 min-h-[44px] py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+          className={`flex-1 min-h-[44px] py-2 px-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'watching'
               ? 'bg-card text-ink shadow-xs'
               : 'text-ink/60 hover:text-ink'
           }`}
         >
-          <Film className="w-3.5 h-3.5 text-[#BE185D]" />
-          <span>Watchlist ({watchingItems.length})</span>
+          <Film className="w-3.5 h-3.5 shrink-0 text-[#BE185D]" />
+          <span>Watching ({watchingItems.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab('budget')}
-          className={`flex-1 min-h-[44px] py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+          className={`flex-1 min-h-[44px] py-2 px-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'budget'
               ? 'bg-card text-ink shadow-xs'
               : 'text-ink/60 hover:text-ink'
           }`}
         >
-          <DollarSign className="w-3.5 h-3.5 text-[#059669]" />
+          <DollarSign className="w-3.5 h-3.5 shrink-0 text-[#059669]" />
           <span>Ledger</span>
         </button>
       </div>
@@ -70,14 +91,21 @@ export const VaultView: React.FC<VaultViewProps> = ({
       {/* Tab 1: Reading Shelf */}
       {activeTab === 'reading' && (
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             <h3 className="font-serif-journal text-lg font-medium text-ink">
               Personal Library & Reading Intentions
             </h3>
-            <span className="text-xs text-ink/60 font-mono">
+            <span className="shrink-0 text-xs text-ink/60 font-mono">
               {readingItems.filter((i) => i.status === 'completed').length} / {readingItems.length} read
             </span>
           </div>
+
+          {readingItems.length === 0 && (
+            <EmptyShelf
+              title="Your reading shelf is empty"
+              hint="Add an intention in the Read category and it will appear here."
+            />
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {readingItems.map((book) => {
@@ -85,7 +113,8 @@ export const VaultView: React.FC<VaultViewProps> = ({
               return (
                 <div
                   key={book.id}
-                  className={`bg-card border rounded-2xl p-4 transition-all flex gap-3.5 ${
+                  onClick={() => onSelect(book)}
+                  className={`bg-card border rounded-2xl p-4 transition-all flex gap-3.5 cursor-pointer ${
                     isCompleted
                       ? 'border-ink/10 bg-paper/60 opacity-80'
                       : 'border-ink/12 shadow-xs hover:border-ink/30'
@@ -136,8 +165,8 @@ export const VaultView: React.FC<VaultViewProps> = ({
 
                     <div className="pt-2 flex items-center justify-between border-t border-ink/8 mt-2">
                       <button
-                        onClick={() => onToggleComplete(book)}
-                        className={`min-h-[36px] px-2.5 py-1 text-xs rounded-lg flex items-center gap-1.5 transition-colors ${
+                        onClick={stop(() => onToggleComplete(book))}
+                        className={`min-h-[44px] px-2.5 py-1 text-xs rounded-lg flex items-center gap-1.5 transition-colors ${
                           isCompleted
                             ? 'bg-[#4A6B56]/15 text-[#4A6B56] font-medium'
                             : 'bg-paper border border-ink/15 text-ink/80 hover:bg-ink/10'
@@ -148,8 +177,8 @@ export const VaultView: React.FC<VaultViewProps> = ({
                       </button>
 
                       <button
-                        onClick={() => onEdit(book)}
-                        className="min-h-[36px] text-xs text-ink/60 hover:text-ink px-2"
+                        onClick={stop(() => onEdit(book))}
+                        className="min-h-[44px] min-w-[44px] text-xs text-ink/60 hover:text-ink px-2"
                       >
                         Edit
                       </button>
@@ -165,14 +194,21 @@ export const VaultView: React.FC<VaultViewProps> = ({
       {/* Tab 2: Watchlist Theater */}
       {activeTab === 'watching' && (
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             <h3 className="font-serif-journal text-lg font-medium text-ink">
               Cinema & Screen Screenings
             </h3>
-            <span className="text-xs text-ink/60 font-mono">
+            <span className="shrink-0 text-xs text-ink/60 font-mono">
               {watchingItems.filter((i) => i.status === 'completed').length} / {watchingItems.length} watched
             </span>
           </div>
+
+          {watchingItems.length === 0 && (
+            <EmptyShelf
+              title="Your watchlist is empty"
+              hint="Add an intention in the Watch category and it will appear here."
+            />
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {watchingItems.map((film) => {
@@ -180,7 +216,8 @@ export const VaultView: React.FC<VaultViewProps> = ({
               return (
                 <div
                   key={film.id}
-                  className={`bg-card border rounded-2xl p-4 transition-all flex flex-col justify-between ${
+                  onClick={() => onSelect(film)}
+                  className={`bg-card border rounded-2xl p-4 transition-all flex flex-col justify-between cursor-pointer ${
                     isCompleted
                       ? 'border-ink/10 bg-paper/60 opacity-80'
                       : 'border-ink/12 shadow-xs hover:border-ink/30'
@@ -214,8 +251,8 @@ export const VaultView: React.FC<VaultViewProps> = ({
 
                   <div className="pt-3 flex items-center justify-between border-t border-ink/8 mt-3">
                     <button
-                      onClick={() => onToggleComplete(film)}
-                      className={`min-h-[36px] px-2.5 py-1 text-xs rounded-lg flex items-center gap-1.5 transition-colors ${
+                      onClick={stop(() => onToggleComplete(film))}
+                      className={`min-h-[44px] px-2.5 py-1 text-xs rounded-lg flex items-center gap-1.5 transition-colors ${
                         isCompleted
                           ? 'bg-[#4A6B56]/15 text-[#4A6B56] font-medium'
                           : 'bg-paper border border-ink/15 text-ink/80 hover:bg-ink/10'
@@ -225,8 +262,8 @@ export const VaultView: React.FC<VaultViewProps> = ({
                       <span>{isCompleted ? 'Watched' : 'Mark Watched'}</span>
                     </button>
                     <button
-                      onClick={() => onEdit(film)}
-                      className="min-h-[36px] text-xs text-ink/60 hover:text-ink px-2"
+                      onClick={stop(() => onEdit(film))}
+                      className="min-h-[44px] min-w-[44px] text-xs text-ink/60 hover:text-ink px-2"
                     >
                       Edit
                     </button>
@@ -249,10 +286,10 @@ export const VaultView: React.FC<VaultViewProps> = ({
               </span>
               <div className="flex items-baseline gap-2 mt-1">
                 <span className="font-mono text-2xl font-bold text-ink tabular-nums">
-                  ${totalSaved.toLocaleString()}
+                  {formatMoney(totalSaved)}
                 </span>
                 <span className="text-xs text-ink/60">
-                  saved towards ${totalEstimated.toLocaleString()} target
+                  saved towards {formatMoney(totalEstimated)} target
                 </span>
               </div>
             </div>
@@ -279,15 +316,23 @@ export const VaultView: React.FC<VaultViewProps> = ({
             </div>
           </div>
 
+          {budgetItems.length === 0 && (
+            <EmptyShelf
+              title="No budgets yet"
+              hint="Give any intention an estimated cost to track savings here."
+            />
+          )}
+
           <div className="space-y-2.5">
             {budgetItems.map((item) => (
               <div
                 key={item.id}
-                className="bg-card border border-ink/10 rounded-xl p-3.5 hover:border-ink/25 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                onClick={() => onSelect(item)}
+                className="bg-card border border-ink/10 rounded-xl p-3.5 hover:border-ink/25 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer"
               >
-                <div>
+                <div className="min-w-0">
                   <div className="text-[11px] text-ink/60">
-                    <span>{item.categoryId}</span>
+                    <span>{categories.find((c) => c.id === item.categoryId)?.name || item.categoryId}</span>
                     {item.subCategory && <span> · {item.subCategory}</span>}
                   </div>
                   <h4 className="font-serif-journal text-base font-medium text-ink">
@@ -295,15 +340,14 @@ export const VaultView: React.FC<VaultViewProps> = ({
                   </h4>
                 </div>
 
-                <div className="flex items-center gap-4 shrink-0">
-                  <div className="text-right">
-                    <span className="font-mono font-semibold text-sm text-ink">
-                      ${item.budget?.savedAmount} / ${item.budget?.estimatedCost}
-                    </span>
-                  </div>
+                <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
+                  <span className="font-mono font-semibold text-sm text-ink tabular-nums">
+                    {formatMoney(item.budget!.savedAmount, item.budget!.currency)} /{' '}
+                    {formatMoney(item.budget!.estimatedCost, item.budget!.currency)}
+                  </span>
                   <button
-                    onClick={() => onEdit(item)}
-                    className="min-h-[36px] px-3 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink font-medium hover:bg-paper-deep"
+                    onClick={stop(() => onEdit(item))}
+                    className="min-h-[44px] px-3 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink font-medium hover:bg-paper-deep"
                   >
                     Update Funds
                   </button>
