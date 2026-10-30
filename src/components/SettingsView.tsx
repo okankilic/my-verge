@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { Download, Upload, Volume2, RefreshCw } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Bell, Download, Upload, Volume2, RefreshCw } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import {
   exportBackup,
@@ -9,7 +9,12 @@ import {
 } from '../services/storage';
 import { INITIAL_ITEMS } from '../data/initialData';
 import { DEFAULT_CATEGORIES } from '../data/categories';
-import { playChimeSound } from '../services/notifications';
+import {
+  playChimeSound,
+  getNotificationPermission,
+  requestNotificationPermission,
+} from '../services/notifications';
+import { deleteAttachmentBlobs } from '../services/attachments';
 import { confirmAction, notify } from '../services/dialogs';
 
 interface SettingsViewProps {
@@ -18,6 +23,7 @@ interface SettingsViewProps {
   onReloadData: (items: BucketItem[], categories: CategoryDefinition[]) => void;
   theme: ThemePreference;
   onThemeChange: (theme: ThemePreference) => void;
+  onNotificationsEnabled: () => void;
 }
 
 const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
@@ -32,8 +38,31 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onReloadData,
   theme,
   onThemeChange,
+  onNotificationsEnabled,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [notificationState, setNotificationState] = useState<string>('unsupported');
+
+  useEffect(() => {
+    getNotificationPermission().then(setNotificationState);
+  }, []);
+
+  const handleEnableNotifications = async () => {
+    const res = await requestNotificationPermission();
+    setNotificationState(res);
+    if (res === 'granted') onNotificationsEnabled();
+  };
+
+  // Drop attachment blobs that the incoming items no longer reference
+  const deleteOrphanedBlobs = (nextItems: BucketItem[]) => {
+    const keep = new Set(nextItems.flatMap((i) => i.attachments?.map((a) => a.id) ?? []));
+    const orphaned = items
+      .flatMap((i) => i.attachments?.map((a) => a.id) ?? [])
+      .filter((id) => !keep.has(id));
+    deleteAttachmentBlobs(orphaned).catch((err) =>
+      console.error('Failed to delete attachments:', err)
+    );
+  };
 
   const handleExport = () => {
     exportBackup(items, categories).catch((err) => {
@@ -44,42 +73,64 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     });
   };
 
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    // Reset so picking the same file again still fires onChange
+    e.target.value = '';
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const content = event.target?.result as string;
-        const parsed = JSON.parse(content);
-        if (parsed.items && Array.isArray(parsed.items)) {
-          saveBucketItems(parsed.items);
-          if (parsed.categories && Array.isArray(parsed.categories)) {
-            saveCategories(parsed.categories);
-            onReloadData(parsed.items, parsed.categories);
-          } else {
-            onReloadData(parsed.items, categories);
-          }
-          notify('Backup restored successfully.', 'success');
-        } else {
-          notify('Invalid backup file format.', 'error');
-        }
-      } catch (err) {
-        notify('Failed to parse backup file.', 'error');
-      }
-    };
-    reader.readAsText(file);
+    let parsed: { items?: unknown; categories?: unknown };
+    try {
+      parsed = JSON.parse(await file.text());
+    } catch {
+      notify('Failed to parse backup file.', 'error');
+      return;
+    }
+
+    // Keep only entries that look like items, and fill in fields the views rely on
+    const importedItems: BucketItem[] = Array.isArray(parsed.items)
+      ? parsed.items
+          .filter(
+            (i): i is BucketItem =>
+              Boolean(i) && typeof i.id === 'string' && typeof i.title === 'string'
+          )
+          .map((i) => ({ ...i, description: i.description ?? '', photos: i.photos ?? [] }))
+      : [];
+    if (importedItems.length === 0) {
+      notify('Invalid backup file format.', 'error');
+      return;
+    }
+    const importedCategories =
+      Array.isArray(parsed.categories) && parsed.categories.length > 0
+        ? (parsed.categories as CategoryDefinition[])
+        : categories;
+
+    const confirmed = await confirmAction({
+      title: 'Restore this backup?',
+      message: `Your current journal will be replaced with ${importedItems.length} ${
+        importedItems.length === 1 ? 'entry' : 'entries'
+      } from "${file.name}".`,
+      confirmLabel: 'Restore',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
+
+    deleteOrphanedBlobs(importedItems);
+    saveBucketItems(importedItems);
+    saveCategories(importedCategories);
+    onReloadData(importedItems, importedCategories);
+    notify('Backup restored successfully.', 'success');
   };
 
   const handleResetToSample = async () => {
     const confirmed = await confirmAction({
       title: 'Reset to sample journal?',
-      message: 'Your entries and categories will be replaced with the original samples.',
+      message: 'Your entries, categories, photos and files will be replaced with the original samples.',
       confirmLabel: 'Reset',
       tone: 'danger',
     });
     if (confirmed) {
+      deleteOrphanedBlobs(INITIAL_ITEMS);
       saveBucketItems(INITIAL_ITEMS);
       saveCategories(DEFAULT_CATEGORIES);
       onReloadData(INITIAL_ITEMS, DEFAULT_CATEGORIES);
@@ -102,7 +153,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   role="radio"
                   aria-checked={theme === opt.value}
                   onClick={() => onThemeChange(opt.value)}
-                  className={`min-h-[36px] px-3 text-xs rounded-lg transition-colors ${
+                  className={`min-h-[44px] px-3 text-xs rounded-lg transition-colors ${
                     theme === opt.value
                       ? 'bg-ink text-paper font-semibold shadow-2xs'
                       : 'text-ink/70 hover:text-ink'
@@ -115,8 +166,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
 
           {/* Backup / Export */}
-          <div className="bg-card border border-ink/10 rounded-2xl p-4 flex items-center justify-between">
-            <div>
+          <div className="bg-card border border-ink/10 rounded-2xl p-4 flex items-center justify-between gap-3">
+            <div className="min-w-0">
               <h4 className="text-xs font-semibold text-ink">Export Full Backup</h4>
               <p className="text-[11px] text-ink/60 mt-0.5">
                 Download all your lists, categories, and reflections as JSON
@@ -132,8 +183,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
 
           {/* Import / Restore */}
-          <div className="bg-card border border-ink/10 rounded-2xl p-4 flex items-center justify-between">
-            <div>
+          <div className="bg-card border border-ink/10 rounded-2xl p-4 flex items-center justify-between gap-3">
+            <div className="min-w-0">
               <h4 className="text-xs font-semibold text-ink">Restore from Backup</h4>
               <p className="text-[11px] text-ink/60 mt-0.5">
                 Load intentions from a previously saved JSON file
@@ -155,9 +206,34 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             />
           </div>
 
+          {/* Notifications */}
+          <div className="bg-card border border-ink/10 rounded-2xl p-4 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h4 className="text-xs font-semibold text-ink">Reminder Alerts</h4>
+              <p className="text-[11px] text-ink/60 mt-0.5">
+                {notificationState === 'granted'
+                  ? 'On. Reminders arrive as notifications.'
+                  : notificationState === 'denied'
+                    ? 'Off. Turn them on in your system settings.'
+                    : notificationState === 'unsupported'
+                      ? 'Not supported on this device.'
+                      : 'Get a notification when a reminder is due'}
+              </p>
+            </div>
+            {notificationState === 'default' && (
+              <button
+                onClick={handleEnableNotifications}
+                className="min-h-[44px] px-3.5 py-1.5 text-xs font-semibold bg-ink text-paper rounded-xl hover:bg-ink/85 transition-colors flex items-center gap-1.5 shrink-0"
+              >
+                <Bell className="w-3.5 h-3.5" />
+                <span>Enable</span>
+              </button>
+            )}
+          </div>
+
           {/* Sound Chime Preview */}
-          <div className="bg-card border border-ink/10 rounded-2xl p-4 flex items-center justify-between">
-            <div>
+          <div className="bg-card border border-ink/10 rounded-2xl p-4 flex items-center justify-between gap-3">
+            <div className="min-w-0">
               <h4 className="text-xs font-semibold text-ink">Reminder Chime</h4>
               <p className="text-[11px] text-ink/60 mt-0.5">
                 Harmonic meditation bell synthesized via Web Audio API

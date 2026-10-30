@@ -23,6 +23,7 @@ import {
 import { BucketItem, CategoryDefinition } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
 import { externalLinkProps } from '../services/platform';
+import { isReminderDue as isDue, reminderNextAt } from '../services/notifications';
 
 interface ItemDetailDrawerProps {
   item: BucketItem | null;
@@ -71,15 +72,8 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
     : null;
 
   // Reminder info
-  const now = new Date().getTime();
-  const reminderTime = item.reminder?.date ? new Date(item.reminder.date).getTime() : null;
-  const snoozedUntilTime = item.reminder?.snoozedUntil
-    ? new Date(item.reminder.snoozedUntil).getTime()
-    : null;
-  const isReminderDue =
-    !isCompleted &&
-    ((snoozedUntilTime && snoozedUntilTime <= now) ||
-      (!snoozedUntilTime && reminderTime && reminderTime <= now));
+  const isReminderDue = !isCompleted && Boolean(item.reminder?.date) && isDue(item.reminder!);
+  const nextReminderAt = item.reminder?.date ? reminderNextAt(item.reminder) : null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -272,12 +266,14 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
                   <span>
                     {isReminderDue
                       ? 'Alert Due Right Now!'
-                      : `Scheduled: ${new Date(item.reminder.date).toLocaleString(undefined, {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: 'numeric',
-                          minute: '2-digit',
-                        })}`}
+                      : nextReminderAt === null
+                        ? 'Reminder passed'
+                        : `Scheduled: ${new Date(nextReminderAt).toLocaleString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                          })}`}
                   </span>
                 </div>
                 {item.reminder.recurrence !== 'none' && (

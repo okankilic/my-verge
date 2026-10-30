@@ -108,7 +108,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
   const canAddMedia = Boolean(onAddPhoto && onAddAttachment);
 
   return (
-    <div className="pt-1 -mx-2 flex items-center gap-1.5">
+    <div className="pt-1 -mx-3 -mb-1.5 flex items-center gap-0.5">
       {!isCompleted && (
         <button
           type="button"
@@ -118,7 +118,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
           }}
           title={isStarted ? 'Stop — move back to Journal' : 'Start — mark as in progress'}
           aria-label={isStarted ? 'Stop' : 'Start'}
-          className="min-h-[32px] min-w-[32px] flex items-center justify-center rounded-lg text-ink/60 hover:text-ink hover:bg-paper transition-colors"
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/60 hover:text-ink hover:bg-paper transition-colors"
         >
           {isStarted ? <Square className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
         </button>
@@ -133,7 +133,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
         aria-pressed={isCompleted}
         title={isCompleted ? 'Mark unaccomplished' : 'Mark accomplished'}
         aria-label={isCompleted ? 'Mark unaccomplished' : 'Mark accomplished'}
-        className={`min-h-[32px] min-w-[32px] flex items-center justify-center rounded-lg transition-colors ${
+        className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${
           isCompleted
             ? 'text-[#4A6B56] hover:bg-paper'
             : 'text-ink/60 hover:text-[#4A6B56] hover:bg-paper'
@@ -156,7 +156,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
             }}
             title="Take a photo or video"
             aria-label="Take a photo or video"
-            className="min-h-[32px] min-w-[32px] flex items-center justify-center rounded-lg text-ink/60 hover:text-[#B45309] hover:bg-paper transition-colors"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/60 hover:text-[#B45309] hover:bg-paper transition-colors"
           >
             <Camera className="w-3.5 h-3.5" />
           </button>
@@ -184,7 +184,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
             }}
             title="Add image, video or PDF"
             aria-label="Add image, video or PDF"
-            className="min-h-[32px] min-w-[32px] flex items-center justify-center rounded-lg text-ink/60 hover:text-[#B45309] hover:bg-paper transition-colors"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/60 hover:text-[#B45309] hover:bg-paper transition-colors"
           >
             <Paperclip className="w-3.5 h-3.5" />
           </button>
@@ -216,7 +216,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
         }}
         title="Delete intention"
         aria-label="Delete intention"
-        className="ml-auto min-h-[32px] min-w-[32px] flex items-center justify-center rounded-lg text-ink/40 hover:text-red-600 hover:bg-red-500/10 transition-colors"
+        className="ml-auto min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/40 hover:text-red-600 hover:bg-red-500/10 transition-colors"
       >
         <Trash2 className="w-3.5 h-3.5" />
       </button>

@@ -32,6 +32,7 @@ import {
   playChimeSound,
   sendBrowserNotification,
   getDueReminderItems,
+  getUnnotifiedDueItems,
 } from './services/notifications';
 import { saveAttachmentBlob, deleteAttachmentBlobs } from './services/attachments';
 import { syncNativeReminders, onReminderTapped } from './services/reminderScheduler';
@@ -116,19 +117,27 @@ export default function App() {
     saveCategories(categories);
   }, [categories]);
 
-  // Periodic Reminder Checker (checks every 30 seconds)
+  // Periodic Reminder Checker (checks every 30 seconds); each occurrence alerts once, via lastNotifiedAt
   useEffect(() => {
     const checkReminders = () => {
-      const due = getDueReminderItems(items);
-      if (due.length > 0) {
-        const firstDue = due[0];
-        setActiveToastItem(firstDue);
-        playChimeSound();
-        sendBrowserNotification(
-          `My Verge: ${firstDue.title}`,
-          `Reminder for your bucket list intention: ${firstDue.title}`
-        );
-      }
+      const fresh = getUnnotifiedDueItems(items);
+      if (fresh.length === 0) return;
+      const firstDue = fresh[0];
+      setActiveToastItem(firstDue);
+      playChimeSound();
+      sendBrowserNotification(
+        `My Verge: ${firstDue.title}`,
+        `Reminder for your bucket list intention: ${firstDue.title}`
+      );
+      const nowIso = new Date().toISOString();
+      const freshIds = new Set(fresh.map((i) => i.id));
+      setItems((prev) =>
+        prev.map((i) =>
+          freshIds.has(i.id) && i.reminder
+            ? { ...i, reminder: { ...i.reminder, lastNotifiedAt: nowIso } }
+            : i
+        )
+      );
     };
 
     checkReminders();
@@ -211,16 +220,16 @@ export default function App() {
 
   const handleToggleComplete = async (item: BucketItem) => {
     const isNowCompleted = item.status !== 'completed';
-    if (
-      isNowCompleted &&
-      !(await confirmAction({
-        title: 'Mark as accomplished?',
-        message: item.title,
-        confirmLabel: 'Accomplish',
-      }))
-    ) {
-      return;
-    }
+    const confirmed = await confirmAction(
+      isNowCompleted
+        ? { title: 'Mark as accomplished?', message: item.title, confirmLabel: 'Accomplish' }
+        : {
+            title: 'Re-activate this intention?',
+            message: `"${item.title}" will leave your Memories and return to your Journal.`,
+            confirmLabel: 'Re-activate',
+          }
+    );
+    if (!confirmed) return;
     const nowIso = new Date().toISOString();
 
     if (isNowCompleted) {
@@ -419,43 +428,6 @@ export default function App() {
     }
   };
 
-  const handleCustomSnooze = (item: BucketItem, dateIso: string) => {
-    setItems((prev) =>
-      prev.map((i) =>
-        i.id === item.id
-          ? {
-              ...i,
-              reminder: i.reminder
-                ? {
-                    ...i.reminder,
-                    snoozedUntil: dateIso,
-                  }
-                : undefined,
-              updatedAt: new Date().toISOString(),
-            }
-          : i
-      )
-    );
-
-    if (activeToastItem?.id === item.id) {
-      setActiveToastItem(null);
-    }
-  };
-
-  const handleAddSubCategory = (categoryId: string, newSubCategory: string) => {
-    setCategories((prev) =>
-      prev.map((cat) => {
-        if (cat.id === categoryId && !cat.defaultSubCategories.includes(newSubCategory)) {
-          return {
-            ...cat,
-            defaultSubCategories: [...cat.defaultSubCategories, newSubCategory],
-          };
-        }
-        return cat;
-      })
-    );
-  };
-
   const handleCreateCategory = (newCategory: CategoryDefinition) => {
     setCategories((prev) => [...prev, newCategory]);
     setSelectedCategoryId(newCategory.id);
@@ -500,6 +472,7 @@ export default function App() {
       })
       .sort((a, b) => {
         if (sortOption === 'targetDate') {
+          if (!a.targetDate && !b.targetDate) return 0;
           if (!a.targetDate) return 1;
           if (!b.targetDate) return -1;
           return new Date(a.targetDate).getTime() - new Date(b.targetDate).getTime();
@@ -590,13 +563,14 @@ export default function App() {
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   onClick={() => handleSnooze(activeToastItem, 1)}
-                  className="min-h-[34px] px-2.5 py-1 text-xs font-medium bg-card border border-ink/15 rounded-lg hover:bg-paper text-ink"
+                  className="min-h-[44px] px-2.5 py-1 text-xs font-medium bg-card border border-ink/15 rounded-lg hover:bg-paper text-ink"
                 >
                   Snooze 1d
                 </button>
                 <button
                   onClick={() => setActiveToastItem(null)}
-                  className="min-h-[34px] min-w-[34px] flex items-center justify-center text-ink/50 hover:text-ink"
+                  aria-label="Dismiss reminder"
+                  className="min-h-[44px] min-w-[44px] flex items-center justify-center text-ink/50 hover:text-ink"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -686,15 +660,11 @@ export default function App() {
               items={searchedItems}
               categories={categories}
               onSnooze={handleSnooze}
-              onCustomSnooze={handleCustomSnooze}
               onNotificationsEnabled={() => syncNativeReminders(items)}
               onToggleComplete={handleToggleComplete}
               onToggleStarted={handleToggleStarted}
               onDelete={handleDeleteItem}
-              onEdit={(it) => {
-                setEditingItem(it);
-                setIsFormOpen(true);
-              }}
+              onSelect={(it) => setViewingItem(it)}
             />
           )}
 
@@ -716,6 +686,8 @@ export default function App() {
           {currentTab === 'vault' && (
             <VaultView
               items={searchedItems}
+              categories={categories}
+              onSelect={(it) => setViewingItem(it)}
               onToggleComplete={handleToggleComplete}
               onEdit={(it) => {
                 setEditingItem(it);
@@ -729,6 +701,7 @@ export default function App() {
             <MilestonesArchiveView
               items={searchedItems}
               categories={categories}
+              onSelect={(it) => setViewingItem(it)}
               onToggleComplete={handleToggleComplete}
               onEdit={(it) => {
                 setCelebratingItem(it);
@@ -745,9 +718,14 @@ export default function App() {
               onReloadData={(newItems, newCats) => {
                 setItems(newItems);
                 setCategories(newCats);
+                // The selected category may no longer exist
+                setSelectedCategoryId('all');
+                setSelectedSubCategory('all');
+                setActiveToastItem(null);
               }}
               theme={theme}
               onThemeChange={setTheme}
+              onNotificationsEnabled={() => syncNativeReminders(items)}
             />
           )}
 
@@ -805,6 +783,7 @@ export default function App() {
 
       {/* Milestone Accomplishment Modal */}
       <MilestoneModal
+        key={celebratingItem?.id ?? 'none'}
         isOpen={isMilestoneOpen}
         item={celebratingItem}
         onClose={() => {

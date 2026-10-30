@@ -190,10 +190,14 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
     }
 
     if (enableReminder && reminderDate) {
+      // Keep snooze/alert state unless the schedule itself changed, so unrelated edits don't re-chime
+      const prev = editingItem?.reminder;
+      const unchanged = prev?.date === reminderDate && prev?.recurrence === reminderRecurrence;
       itemData.reminder = {
         date: reminderDate,
         recurrence: reminderRecurrence,
-        snoozedUntil: null,
+        snoozedUntil: unchanged ? prev.snoozedUntil ?? null : null,
+        lastNotifiedAt: unchanged ? prev.lastNotifiedAt ?? null : null,
       };
     } else {
       itemData.reminder = undefined;

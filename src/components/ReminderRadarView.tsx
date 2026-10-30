@@ -1,19 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, AlertTriangle } from 'lucide-react';
+import { Bell, BellOff, AlertTriangle } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
-import { getNotificationPermission, requestNotificationPermission } from '../services/notifications';
+import {
+  getNotificationPermission,
+  requestNotificationPermission,
+  isReminderDue,
+  reminderDueAt,
+  reminderNextAt,
+} from '../services/notifications';
 import { ItemActions } from './ItemActions';
 
 interface ReminderRadarViewProps {
   items: BucketItem[];
   categories: CategoryDefinition[];
   onSnooze: (item: BucketItem, days: number) => void;
-  onCustomSnooze: (item: BucketItem, dateIso: string) => void;
   onToggleComplete: (item: BucketItem) => void;
   onToggleStarted: (item: BucketItem) => void;
   onDelete: (id: string) => void;
-  onEdit: (item: BucketItem) => void;
+  onSelect: (item: BucketItem) => void;
   onNotificationsEnabled: () => void;
 }
 
@@ -24,7 +29,7 @@ export const ReminderRadarView: React.FC<ReminderRadarViewProps> = ({
   onToggleComplete,
   onToggleStarted,
   onDelete,
-  onEdit,
+  onSelect,
   onNotificationsEnabled,
 }) => {
   const [notificationState, setNotificationState] = useState<string>('unsupported');
@@ -43,33 +48,31 @@ export const ReminderRadarView: React.FC<ReminderRadarViewProps> = ({
     (item) => item.status === 'active' && item.reminder?.date
   );
 
-  const now = new Date().getTime();
+  const now = Date.now();
 
-  // Sort and classify
+  // Sort and classify: due (with the time it came due) vs upcoming (with its next alert time)
   const dueItems: BucketItem[] = [];
   const upcomingItems: BucketItem[] = [];
+  const alertTimes = new Map<string, number>();
 
   activeItemsWithReminders.forEach((item) => {
-    const effectiveTime = item.reminder?.snoozedUntil
-      ? new Date(item.reminder.snoozedUntil).getTime()
-      : new Date(item.reminder!.date).getTime();
-
-    if (effectiveTime <= now) {
+    const reminder = item.reminder!;
+    if (isReminderDue(reminder, now)) {
       dueItems.push(item);
-    } else {
+      alertTimes.set(item.id, reminderDueAt(reminder, now)!);
+      return;
+    }
+    const next = reminderNextAt(reminder, now);
+    if (next !== null) {
       upcomingItems.push(item);
+      alertTimes.set(item.id, next);
     }
   });
 
   // Sort upcoming chronologically
-  upcomingItems.sort((a, b) => {
-    const timeA = new Date(a.reminder?.snoozedUntil || a.reminder!.date).getTime();
-    const timeB = new Date(b.reminder?.snoozedUntil || b.reminder!.date).getTime();
-    return timeA - timeB;
-  });
+  upcomingItems.sort((a, b) => alertTimes.get(a.id)! - alertTimes.get(b.id)!);
 
-  const reminderDate = (item: BucketItem) =>
-    new Date(item.reminder?.snoozedUntil || item.reminder!.date);
+  const reminderDate = (item: BucketItem) => new Date(alertTimes.get(item.id)!);
 
   const formatReminderDate = (item: BucketItem) =>
     reminderDate(item).toLocaleString(undefined, {
@@ -131,7 +134,7 @@ export const ReminderRadarView: React.FC<ReminderRadarViewProps> = ({
         />
         <div className="text-[11px] leading-5 mb-1.5 truncate">{schedule}</div>
         <article
-          onClick={() => onEdit(item)}
+          onClick={() => onSelect(item)}
           className={`border rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3 space-y-1 cursor-pointer shadow-[var(--item-shadow)] transition-all duration-150 ${
             tone === 'due'
               ? 'bg-warm border-[#C05621]/30 hover:border-[#C05621]/50'
@@ -180,7 +183,7 @@ export const ReminderRadarView: React.FC<ReminderRadarViewProps> = ({
         onSnooze(item, days);
       }}
       title={`Snooze ${label}`}
-      className="h-7 px-2.5 text-[11px] font-medium bg-card border border-ink/15 rounded-md text-ink/80 hover:bg-paper transition-colors"
+      className="min-h-[44px] px-3 text-xs font-medium bg-card border border-ink/15 rounded-md text-ink/80 hover:bg-paper transition-colors"
     >
       +{label}
     </button>
@@ -202,6 +205,12 @@ export const ReminderRadarView: React.FC<ReminderRadarViewProps> = ({
             Enable
           </button>
         </div>
+      )}
+      {notificationState === 'denied' && (
+        <p className="flex items-center gap-2 px-1 text-[11px] text-ink/55">
+          <BellOff className="w-3.5 h-3.5 shrink-0" />
+          <span>Alerts are turned off in your system settings.</span>
+        </p>
       )}
 
       {/* Reminders timeline: Due first, then upcoming grouped by day */}
@@ -275,11 +284,11 @@ export const ReminderRadarView: React.FC<ReminderRadarViewProps> = ({
         </div>
       )}
 
-      {/* Empty state for upcoming reminders */}
-      {upcomingItems.length === 0 && (
+      {/* Empty state: nothing due and nothing scheduled */}
+      {dueItems.length === 0 && upcomingItems.length === 0 && (
         <div className="p-8 text-center bg-card border border-ink/10 rounded-xl">
           <p className="font-serif-journal text-base text-ink/70">
-            No upcoming scheduled reminders
+            No reminders scheduled
           </p>
           <p className="text-xs text-ink/50 mt-1 max-w-sm mx-auto">
             Add a reminder date to any item in your journal to receive gentle alerts and timed reflections.
