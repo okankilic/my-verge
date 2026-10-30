@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>My Verge</string>
+        <string>Nowish</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -67,11 +67,11 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>My Verge uses the camera so you can add photos and videos to your intentions.</string>
+	<string>Nowish uses the camera so you can add photos and videos to your intentions.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>My Verge records audio when you capture a video for an intention.</string>
+	<string>Nowish records audio when you capture a video for an intention.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>My Verge lets you attach photos and videos from your library to your intentions.</string>
+	<string>Nowish lets you attach photos and videos from your library to your intentions.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 </dict>

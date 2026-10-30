@@ -45,7 +45,7 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
             Dream Accomplished
           </h2>
           <p className="text-xs text-ink/70 mt-1 max-w-xs mx-auto">
-            You crossed the verge into reality for:
+            Someday became now for:
           </p>
           <p className="font-serif-journal text-base font-medium text-ink mt-1.5 px-4">
             “{item.title}”

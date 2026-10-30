@@ -45,13 +45,27 @@ export const TopNav: React.FC<TopNavProps> = ({
         <div className="flex items-center gap-3 shrink-0">
           <button
             onClick={() => onTabChange('inprogress')}
-            className="text-left group focus-visible:outline-none flex flex-col justify-center"
+            className="text-left group focus-visible:outline-none flex items-center gap-2.5"
           >
-            <span className="font-serif-journal text-xl sm:text-2xl font-semibold tracking-tight text-ink group-hover:text-[#B45309] transition-colors leading-tight">
-              My Verge
-            </span>
-            <span className="text-[10px] sm:text-[11px] font-sans tracking-tight text-ink/55 leading-tight mt-0.5">
-              Standing on the threshold of experience
+            {/* Nowish mark: an amber dot (now) over a wave (-ish); source in assets/brand/render.mjs */}
+            <svg viewBox="0 0 100 100" className="w-8 h-8 sm:w-9 sm:h-9 shrink-0" aria-hidden="true">
+              <circle cx="50" cy="38" r="10" fill="#D97706" />
+              <path
+                d="M22 66 C30 55 39 55 50 63 C61 71 70 71 78 60"
+                stroke="currentColor"
+                strokeWidth="8"
+                strokeLinecap="round"
+                fill="none"
+                className="text-ink"
+              />
+            </svg>
+            <span className="flex flex-col justify-center">
+              <span className="font-serif-journal text-xl sm:text-2xl font-semibold tracking-tight text-ink group-hover:text-[#B45309] transition-colors leading-tight">
+                Nowish
+              </span>
+              <span className="text-[10px] sm:text-[11px] font-sans tracking-tight text-ink/55 leading-tight mt-0.5">
+                Someday is closer than you think
+              </span>
             </span>
           </button>
         </div>

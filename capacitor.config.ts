@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.okankilic.myverge',
-  appName: 'My Verge',
+  appName: 'Nowish',
   webDir: 'dist',
   plugins: {
     LocalNotifications: {

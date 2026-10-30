@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-My Verge is a client-only React 19 + Vite + Tailwind CSS v4 single-page app, also shipped as iOS and Android apps through Capacitor 8: a mobile-first "bucket list and reminder journal" with categories Go, Do, Buy, Remember, Read, Watch (plus user-created custom categories). It was scaffolded in Google AI Studio (`metadata.json`, `.aistudio/`), and the package manager is Bun (`bun.lock`).
+Nowish (formerly My Verge; the repo, app ID `com.okankilic.myverge` and the `my_verge_*` storage keys keep the old name on purpose, since renaming them would lose user data or the store identity) is a client-only React 19 + Vite + Tailwind CSS v4 single-page app, also shipped as iOS and Android apps through Capacitor 8: a mobile-first "bucket list and reminder journal" with categories Go, Do, Buy, Remember, Read, Watch (plus user-created custom categories). It was scaffolded in Google AI Studio (`metadata.json`, `.aistudio/`), and the package manager is Bun (`bun.lock`).
 
 ## Commands
 
@@ -38,7 +38,7 @@ There's no test framework, so `lint` (type-checking) is the only automated check
     - `target="_blank"` links: use `externalLinkProps(url)` / `openExternal(url)`.
     - `new Notification`: replaced by the scheduler above on native.
   - `applyNativeTheme` keeps the status bar in sync with the theme.
-  - Icons and splash screens are generated from `assets/*.png` by `@capacitor/assets`.
+  - Icons and splash screens are generated from `assets/*.png` by `@capacitor/assets`. Those PNGs, `public/favicon.svg` and `public/apple-touch-icon.png` are rendered from the brand mark in `assets/brand/render.mjs`. To regenerate everything, run `node assets/brand/render.mjs`, then `node node_modules/@capacitor/assets/bin/capacitor-assets generate --android --ios`. Afterwards, revert the generator's line-ending-only changes to XML/JSON files. The TopNav mark is an inline copy of the same SVG.
   - iOS builds run on Codemagic (`codemagic.yaml`), since there is no local Mac. Android is built locally in Android Studio.
 - **Category icons:** a category stores its Lucide icon as a string name (`CategoryDefinition.icon`). `src/utils/categoryIcons.tsx` maps those names to components, so a new icon must be added to that map.
 - **Styling:** Tailwind v4 is loaded through `@tailwindcss/vite` with `@import "tailwindcss"` in `src/index.css`, so there is no `tailwind.config`. Colors are `@theme` tokens in `src/index.css` (`ink`, `page`, `paper`, `card`, `paper-deep`, `warm`, `sage-tint`, `sage-deep`, `link`), used as `bg-card`, `text-ink`, `border-ink/15`, and so on. Dark mode overrides those tokens: it follows `prefers-color-scheme` unless `data-theme="light"` is set on `<html>`, and `data-theme="dark"` forces it. Use the tokens for surfaces and text. Keep raw hex for fixed accents only (category colors, alert orange `#C05621`), and check those in dark mode. An inline script in `index.html` applies the saved theme before first paint and reads `my_verge_theme_v1` directly, so keep it in sync with `storage.ts`. Fonts are bundled through `@fontsource` imports in `src/main.tsx` (no Google Fonts, so the app works offline): Marcellus for display serif (`.font-serif-journal`), Plus Jakarta Sans, and JetBrains Mono (`.font-mono-journal`). Animation uses `motion`, and completions trigger `canvas-confetti`.

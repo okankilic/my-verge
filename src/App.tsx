@@ -126,7 +126,7 @@ export default function App() {
       setActiveToastItem(firstDue);
       playChimeSound();
       sendBrowserNotification(
-        `My Verge: ${firstDue.title}`,
+        `Nowish: ${firstDue.title}`,
         `Reminder for your bucket list intention: ${firstDue.title}`
       );
       const nowIso = new Date().toISOString();
