@@ -1,0 +1,43 @@
+# iOS builds run on Codemagic's Macs (no local Mac needed). Start the workflow manually from the Codemagic UI.
+# One-time setup in Codemagic: Team settings > Integrations > App Store Connect, add an API key named "My Verge ASC".
+workflows:
+  ios-testflight:
+    name: iOS → TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: My Verge ASC
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.okankilic.myverge
+      vars:
+        # Numeric "Apple ID" shown on the app's App Information page in App Store Connect
+        APP_STORE_APPLE_ID: "0000000000"
+        XCODE_PROJECT: ios/App/App.xcodeproj
+        XCODE_SCHEME: App
+      node: 22
+      xcode: latest
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm install -g bun@1.2.23
+          bun install --frozen-lockfile
+      - name: Build web app and sync iOS project
+        script: |
+          bun run build
+          npx cap sync ios
+      - name: Apply signing profiles
+        script: xcode-project use-profiles
+      - name: Bump build number past the latest TestFlight build
+        script: |
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 0)
+          cd ios/App && agvtool new-version -all $((LATEST + 1))
+      - name: Build IPA
+        script: xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

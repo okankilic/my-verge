@@ -6,3 +6,10 @@ coverage/
 *.log
 .env*
 !.env.example
+.idea
+
+# Native signing keys
+*.jks
+*.keystore
+*.p8
+*.mobileprovision

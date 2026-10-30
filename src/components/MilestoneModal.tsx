@@ -28,10 +28,10 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-      <div className="w-full max-w-lg bg-[#FAF7F2] border border-[#1E1915]/15 rounded-3xl shadow-2xl p-6 sm:p-7 relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="w-full max-w-lg bg-paper border border-ink/15 rounded-3xl shadow-2xl p-6 sm:p-7 relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center text-[#1E1915]/50 hover:text-[#1E1915] rounded-full hover:bg-black/5"
+          className="absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center text-ink/50 hover:text-ink rounded-full hover:bg-ink/5"
         >
           <X className="w-5 h-5" />
         </button>
@@ -40,13 +40,13 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
           <div className="w-12 h-12 bg-[#4A6B56]/15 text-[#4A6B56] rounded-2xl mx-auto flex items-center justify-center mb-3">
             <Trophy className="w-6 h-6 stroke-[2]" />
           </div>
-          <h2 className="font-serif-journal text-2xl font-semibold text-[#1E1915]">
+          <h2 className="font-serif-journal text-2xl font-semibold text-ink">
             Dream Accomplished
           </h2>
-          <p className="text-xs text-[#1E1915]/70 mt-1 max-w-xs mx-auto">
+          <p className="text-xs text-ink/70 mt-1 max-w-xs mx-auto">
             You crossed the verge into reality for:
           </p>
-          <p className="font-serif-journal text-base font-medium text-[#1E1915] mt-1.5 px-4">
+          <p className="font-serif-journal text-base font-medium text-ink mt-1.5 px-4">
             “{item.title}”
           </p>
         </div>
@@ -54,7 +54,7 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Milestone Star Rating */}
           <div className="text-center">
-            <label className="block text-xs uppercase tracking-wider text-[#1E1915]/60 font-semibold mb-2">
+            <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-2">
               Memory Resonance
             </label>
             <div className="flex items-center justify-center gap-1.5">
@@ -63,11 +63,11 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
                   type="button"
                   key={star}
                   onClick={() => setRating(star)}
-                  className="min-w-[40px] min-h-[40px] flex items-center justify-center text-[#1E1915]/20 hover:text-[#B45309] transition-colors"
+                  className="min-w-[40px] min-h-[40px] flex items-center justify-center text-ink/20 hover:text-[#B45309] transition-colors"
                 >
                   <Star
                     className={`w-6 h-6 ${
-                      star <= rating ? 'text-[#B45309] fill-[#B45309]' : 'text-[#1E1915]/20'
+                      star <= rating ? 'text-[#B45309] fill-[#B45309]' : 'text-ink/20'
                     }`}
                   />
                 </button>
@@ -77,7 +77,7 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
 
           {/* Reflection Journal Note */}
           <div>
-            <label className="block text-xs uppercase tracking-wider text-[#1E1915]/60 font-semibold mb-1.5">
+            <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
               Retrospective Journal Note
             </label>
             <textarea
@@ -85,7 +85,7 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
               value={reflection}
               onChange={(e) => setReflection(e.target.value)}
               placeholder="What made this moment unforgettable? What changed in you after experiencing this?"
-              className="w-full px-3.5 py-2.5 text-sm bg-white border border-[#1E1915]/15 rounded-xl text-[#1E1915] placeholder-[#1E1915]/40 focus:outline-none focus:border-[#1E1915]"
+              className="w-full px-3.5 py-2.5 text-sm bg-card border border-ink/15 rounded-xl text-ink placeholder-ink/40 focus:outline-none focus:border-ink"
             />
           </div>
 
@@ -93,7 +93,7 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="min-h-[44px] px-4 py-2 text-xs font-semibold text-[#1E1915]/70 hover:text-[#1E1915] rounded-xl hover:bg-black/5"
+              className="min-h-[44px] px-4 py-2 text-xs font-semibold text-ink/70 hover:text-ink rounded-xl hover:bg-ink/5"
             >
               Skip Reflection
             </button>
