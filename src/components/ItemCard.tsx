@@ -54,12 +54,12 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
   return (
     <article
-      className={`group relative bg-white border rounded-2xl p-4 sm:p-5 transition-all duration-200 ${
+      className={`group relative bg-card border rounded-2xl p-4 sm:p-5 transition-all duration-200 ${
         isReminderDue
           ? 'border-[#C05621] shadow-[0_3px_14px_rgba(192,86,33,0.12)]'
           : isCompleted
-          ? 'border-[#1E1915]/10 bg-[#FAF7F2]/60 opacity-80'
-          : 'border-[#1E1915]/12 shadow-[0_2px_10px_rgba(30,25,21,0.04)] hover:border-[#1E1915]/30 hover:shadow-[0_4px_16px_rgba(30,25,21,0.07)]'
+          ? 'border-ink/10 bg-paper/60 opacity-80'
+          : 'border-ink/12 shadow-[0_2px_10px_rgba(30,25,21,0.04)] hover:border-ink/30 hover:shadow-[0_4px_16px_rgba(30,25,21,0.07)]'
       }`}
     >
       <div className="flex items-start gap-3.5">
@@ -73,7 +73,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             className={`w-6 h-6 rounded-lg border flex items-center justify-center transition-all ${
               isCompleted
                 ? 'bg-[#4A6B56] border-[#4A6B56] text-white'
-                : 'border-[#1E1915]/30 bg-white hover:border-[#1E1915]'
+                : 'border-ink/30 bg-card hover:border-ink'
             }`}
           >
             {isCompleted && <Check className="w-3.5 h-3.5 stroke-[2.5]" />}
@@ -83,11 +83,11 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         {/* Content Body */}
         <div className="flex-1 min-w-0">
           {/* Unboxed Metadata Line (Zero-Pill Discipline) */}
-          <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 text-xs text-[#1E1915]/60 mb-1.5 font-medium">
-            <span className="flex items-center gap-1.5 text-[#1E1915]/80 font-semibold">
+          <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 text-xs text-ink/60 mb-1.5 font-medium">
+            <span className="flex items-center gap-1.5 text-ink/80 font-semibold">
               <span
                 className="shrink-0 transition-colors"
-                style={{ color: categoryDef?.accentColor || '#1E1915' }}
+                style={{ color: categoryDef?.accentColor || 'var(--color-ink)' }}
               >
                 {renderCategoryIcon(categoryDef?.icon || item.categoryId, 'w-3.5 h-3.5')}
               </span>
@@ -97,7 +97,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             {item.subCategory && (
               <>
                 <span aria-hidden="true">·</span>
-                <span className="text-[#1E1915]/70">{item.subCategory}</span>
+                <span className="text-ink/70">{item.subCategory}</span>
               </>
             )}
 
@@ -105,7 +105,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
               <>
                 <span aria-hidden="true">·</span>
                 <span className="font-mono text-[11px] flex items-center gap-1">
-                  <Calendar className="w-3 h-3 text-[#1E1915]/50" />
+                  <Calendar className="w-3 h-3 text-ink/50" />
                   <span>{formattedTargetDate}</span>
                 </span>
               </>
@@ -121,8 +121,8 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
           {/* Primary Item Title */}
           <h3
-            className={`font-serif-journal text-lg sm:text-xl font-medium tracking-tight text-[#1E1915] leading-snug transition-colors ${
-              isCompleted ? 'line-through text-[#1E1915]/50' : ''
+            className={`font-serif-journal text-lg sm:text-xl font-medium tracking-tight text-ink leading-snug transition-colors ${
+              isCompleted ? 'line-through text-ink/50' : ''
             }`}
           >
             {item.title}
@@ -130,10 +130,10 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
           {/* Media Attribution (Read / Watch / Craft) */}
           {item.mediaMeta?.authorOrCreator && (
-            <p className="text-xs text-[#1E1915]/70 font-medium italic mt-0.5">
+            <p className="text-xs text-ink/70 font-medium italic mt-0.5">
               by {item.mediaMeta.authorOrCreator}
               {item.mediaMeta.formatOrEdition && (
-                <span className="font-normal not-italic text-[#1E1915]/50">
+                <span className="font-normal not-italic text-ink/50">
                   {' '}
                   ({item.mediaMeta.formatOrEdition})
                 </span>
@@ -143,14 +143,14 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
           {/* Item Description / Notes */}
           {item.description && (
-            <p className="text-sm text-[#1E1915]/75 mt-2 leading-relaxed line-clamp-3">
+            <p className="text-sm text-ink/75 mt-2 leading-relaxed line-clamp-3">
               {item.description}
             </p>
           )}
 
           {/* Optional Photo Attachment */}
           {item.photos && item.photos.length > 0 && (
-            <div className="mt-3 overflow-hidden rounded-xl border border-[#1E1915]/10 aspect-[16/9] max-h-48 bg-[#F5F2EB]">
+            <div className="mt-3 overflow-hidden rounded-xl border border-ink/10 aspect-[16/9] max-h-48 bg-paper-deep">
               <img
                 src={item.photos[0]}
                 alt={item.title}
@@ -162,18 +162,18 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
           {/* Budget Progress (for Buy / Go / Projects) */}
           {item.budget && item.budget.estimatedCost > 0 && (
-            <div className="mt-3 p-2.5 rounded-xl bg-[#FAF7F2] border border-[#1E1915]/8">
-              <div className="flex justify-between items-center text-xs text-[#1E1915]/70 mb-1.5 font-medium">
+            <div className="mt-3 p-2.5 rounded-xl bg-paper border border-ink/8">
+              <div className="flex justify-between items-center text-xs text-ink/70 mb-1.5 font-medium">
                 <span className="flex items-center gap-1">
                   <span>Target Budget</span>
                 </span>
-                <span className="font-mono tabular-nums text-[#1E1915] font-semibold">
+                <span className="font-mono tabular-nums text-ink font-semibold">
                   {item.budget.currency}
                   {item.budget.savedAmount} / {item.budget.currency}
                   {item.budget.estimatedCost}
                 </span>
               </div>
-              <div className="w-full h-1.5 bg-[#1E1915]/10 rounded-full overflow-hidden">
+              <div className="w-full h-1.5 bg-ink/10 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-[#059669] transition-all"
                   style={{
@@ -189,7 +189,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
           {/* Location Marker */}
           {item.location && item.location.name && (
-            <div className="mt-2.5 flex items-center gap-1.5 text-xs text-[#1E1915]/60">
+            <div className="mt-2.5 flex items-center gap-1.5 text-xs text-ink/60">
               <MapPin className="w-3.5 h-3.5 text-[#B45309]" />
               <span className="truncate">
                 {item.location.name}
@@ -205,7 +205,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
                 href={item.linkUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-[#2C3E50] hover:underline font-medium"
+                className="inline-flex items-center gap-1 text-xs text-link hover:underline font-medium"
               >
                 <ExternalLink className="w-3 h-3" />
                 <span className="truncate max-w-xs">{item.linkUrl}</span>
@@ -218,12 +218,12 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             <div
               className={`mt-3 p-2.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
                 isReminderDue
-                  ? 'bg-[#FFF7ED] border-[#C05621]/30 text-[#C05621]'
-                  : 'bg-[#FAF7F2] border-[#1E1915]/10 text-[#1E1915]/70'
+                  ? 'bg-warm border-[#C05621]/30 text-[#C05621]'
+                  : 'bg-paper border-ink/10 text-ink/70'
               }`}
             >
               <div className="flex items-center gap-1.5 text-xs font-medium">
-                <Bell className={`w-3.5 h-3.5 ${isReminderDue ? 'text-[#C05621]' : 'text-[#1E1915]/60'}`} />
+                <Bell className={`w-3.5 h-3.5 ${isReminderDue ? 'text-[#C05621]' : 'text-ink/60'}`} />
                 <span>
                   {isReminderDue
                     ? 'Reminder due now!'
@@ -244,13 +244,13 @@ export const ItemCard: React.FC<ItemCardProps> = ({
                 <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     onClick={() => onSnooze(item, 1)}
-                    className="min-h-[36px] px-2.5 py-1 text-[11px] font-semibold bg-white border border-[#1E1915]/15 rounded-lg hover:bg-[#FAF7F2] text-[#1E1915] transition-colors shadow-2xs"
+                    className="min-h-[36px] px-2.5 py-1 text-[11px] font-semibold bg-card border border-ink/15 rounded-lg hover:bg-paper text-ink transition-colors shadow-2xs"
                   >
                     +1 Day
                   </button>
                   <button
                     onClick={() => onSnooze(item, 7)}
-                    className="min-h-[36px] px-2.5 py-1 text-[11px] font-semibold bg-white border border-[#1E1915]/15 rounded-lg hover:bg-[#FAF7F2] text-[#1E1915] transition-colors shadow-2xs"
+                    className="min-h-[36px] px-2.5 py-1 text-[11px] font-semibold bg-card border border-ink/15 rounded-lg hover:bg-paper text-ink transition-colors shadow-2xs"
                   >
                     +1 Week
                   </button>
@@ -261,8 +261,8 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
           {/* Completed Reflection Quote */}
           {isCompleted && item.completionReflection && (
-            <div className="mt-3 p-3 rounded-xl bg-[#F0F5F2] border border-[#4A6B56]/20">
-              <p className="font-serif-journal text-xs text-[#2A4333] italic leading-relaxed">
+            <div className="mt-3 p-3 rounded-xl bg-sage-tint border border-[#4A6B56]/20">
+              <p className="font-serif-journal text-xs text-sage-deep italic leading-relaxed">
                 “{item.completionReflection}”
               </p>
               {item.completedAt && (
@@ -279,14 +279,14 @@ export const ItemCard: React.FC<ItemCardProps> = ({
           <button
             onClick={() => onEdit(item)}
             title="Edit intention"
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center text-[#1E1915]/60 hover:text-[#1E1915] rounded-lg hover:bg-[#FAF7F2] transition-colors"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center text-ink/60 hover:text-ink rounded-lg hover:bg-paper transition-colors"
           >
             <Edit3 className="w-4 h-4" />
           </button>
           <button
             onClick={() => onDelete(item.id)}
             title="Delete intention"
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center text-[#1E1915]/40 hover:text-red-700 rounded-lg hover:bg-red-50 transition-colors"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center text-ink/40 hover:text-red-600 rounded-lg hover:bg-red-500/10 transition-colors"
           >
             <Trash2 className="w-4 h-4" />
           </button>

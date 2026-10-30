@@ -1,9 +1,14 @@
+import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 import { BucketItem, CategoryDefinition } from '../types';
 import { INITIAL_ITEMS } from '../data/initialData';
 import { DEFAULT_CATEGORIES } from '../data/categories';
+import { isNative } from './platform';
 
 const ITEMS_STORAGE_KEY = 'my_verge_bucket_items_v1';
 const CATEGORIES_STORAGE_KEY = 'my_verge_categories_v1';
+// Also read by the inline script in index.html; keep the two in sync
+const THEME_STORAGE_KEY = 'my_verge_theme_v1';
 
 export function loadBucketItems(): BucketItem[] {
   try {
@@ -72,18 +77,52 @@ export function saveCategories(categories: CategoryDefinition[]): void {
   }
 }
 
-export function exportBackup(items: BucketItem[], categories: CategoryDefinition[]): void {
+export type ThemePreference = 'system' | 'light' | 'dark';
+
+export function loadTheme(): ThemePreference {
+  try {
+    const raw = localStorage.getItem(THEME_STORAGE_KEY);
+    return raw === 'light' || raw === 'dark' ? raw : 'system';
+  } catch {
+    return 'system';
+  }
+}
+
+export function saveTheme(theme: ThemePreference): void {
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch (err) {
+    console.error('Failed to save theme to storage:', err);
+  }
+}
+
+// Web: download the JSON. Native: write it to the cache and open the share sheet (Save to Files, AirDrop, Drive...)
+export async function exportBackup(items: BucketItem[], categories: CategoryDefinition[]): Promise<void> {
   const data = {
     appName: 'My Verge',
     exportDate: new Date().toISOString(),
     items,
     categories,
   };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const json = JSON.stringify(data, null, 2);
+  const fileName = `my-verge-backup-${new Date().toISOString().split('T')[0]}.json`;
+
+  if (isNative) {
+    const { uri } = await Filesystem.writeFile({
+      path: fileName,
+      data: json,
+      directory: Directory.Cache,
+      encoding: Encoding.UTF8,
+    });
+    await Share.share({ title: 'My Verge backup', files: [uri] });
+    return;
+  }
+
+  const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `my-verge-backup-${new Date().toISOString().split('T')[0]}.json`;
+  a.download = fileName;
   a.click();
   URL.revokeObjectURL(url);
 }

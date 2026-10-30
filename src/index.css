@@ -1,16 +1,64 @@
 @import "tailwindcss";
 
+/* Theme tokens: light values here, dark overrides below. Plain @theme (not inline)
+   so utilities reference the variables and flip with the theme. */
+@theme {
+  --color-ink: #1E1915;        /* text, borders, primary buttons */
+  --color-page: #FFFFFF;       /* page background and nav bars */
+  --color-paper: #FAF7F2;      /* secondary surfaces, text on ink */
+  --color-card: #FFFFFF;       /* cards, modals, drawers */
+  --color-paper-deep: #EFEAE1; /* hover and inset tints */
+  --color-warm: #FFF8EE;       /* due / alert tints */
+  --color-sage-tint: #F0F5F2;
+  --color-sage-deep: #2A4333;
+  --color-link: #2C3E50;
+}
+
 @layer base {
   :root {
     --font-serif: 'Marcellus', Georgia, serif;
     --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
+    /* Shadow under list items (feed rows, radar cards) */
+    --item-shadow: 0 1px 3px rgb(30 25 21 / 0.12), 0 6px 16px rgb(30 25 21 / 0.12);
+    color-scheme: light;
+  }
+
+  /* Dark: follows the system unless the user picked Light in Settings */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --color-ink: #EDE6DB;
+      --color-page: #14110E;
+      --color-paper: #14110E;
+      --color-card: #1F1A16;
+      --color-paper-deep: #2A241F;
+      --color-warm: #2A1F17;
+      --color-sage-tint: #1C2620;
+      --color-sage-deep: #B9D3C1;
+      --color-link: #9DB4CC;
+      --item-shadow: 0 1px 3px rgb(0 0 0 / 0.65), 0 6px 18px rgb(0 0 0 / 0.5);
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --color-ink: #EDE6DB;
+    --color-page: #14110E;
+    --color-paper: #14110E;
+    --color-card: #1F1A16;
+    --color-paper-deep: #2A241F;
+    --color-warm: #2A1F17;
+    --color-sage-tint: #1C2620;
+    --color-sage-deep: #B9D3C1;
+    --color-link: #9DB4CC;
+    --item-shadow: 0 1px 3px rgb(0 0 0 / 0.65), 0 6px 18px rgb(0 0 0 / 0.5);
+    color-scheme: dark;
   }
 
   body {
     font-family: var(--font-sans);
-    background-color: #FAF7F2;
-    color: #1E1915;
+    background-color: var(--color-page);
+    color: var(--color-ink);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
@@ -25,7 +73,7 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(30, 25, 21, 0.15);
+    background: color-mix(in oklab, var(--color-ink) 15%, transparent);
     border-radius: 9999px;
   }
 }
@@ -40,8 +88,8 @@
 
 /* Subtle parchment texture feeling */
 .paper-texture {
-  background-color: #FAF7F2;
-  background-image: radial-gradient(rgba(30, 25, 21, 0.03) 1px, transparent 0);
+  background-color: var(--color-page);
+  background-image: radial-gradient(color-mix(in oklab, var(--color-ink) 3%, transparent) 1px, transparent 0);
   background-size: 24px 24px;
 }
 

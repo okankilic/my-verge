@@ -51,10 +51,10 @@ export const SerendipityModal: React.FC<SerendipityModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-      <div className="w-full max-w-md bg-[#FAF7F2] border border-[#1E1915]/15 rounded-3xl shadow-2xl p-6 sm:p-7 relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="w-full max-w-md bg-paper border border-ink/15 rounded-3xl shadow-2xl p-6 sm:p-7 relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center text-[#1E1915]/50 hover:text-[#1E1915] rounded-full hover:bg-black/5"
+          className="absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center text-ink/50 hover:text-ink rounded-full hover:bg-ink/5"
         >
           <X className="w-5 h-5" />
         </button>
@@ -67,22 +67,22 @@ export const SerendipityModal: React.FC<SerendipityModalProps> = ({
               }`}
             />
           </div>
-          <h2 className="font-serif-journal text-2xl font-semibold text-[#1E1915]">
+          <h2 className="font-serif-journal text-2xl font-semibold text-ink">
             Serendipity Roll
           </h2>
-          <p className="text-xs text-[#1E1915]/65 mt-1">
+          <p className="text-xs text-ink/65 mt-1">
             Let fate nudge your focus for today from your active bucket lists.
           </p>
         </div>
 
         {selectedItem ? (
           <div className="space-y-4">
-            <div className="bg-white border border-[#1E1915]/10 rounded-2xl p-5 shadow-xs transition-all">
-              <div className="text-xs text-[#1E1915]/60 font-medium mb-1 flex items-center justify-between">
-                <span className="flex items-center gap-1.5 font-semibold text-[#1E1915]">
+            <div className="bg-card border border-ink/10 rounded-2xl p-5 shadow-xs transition-all">
+              <div className="text-xs text-ink/60 font-medium mb-1 flex items-center justify-between">
+                <span className="flex items-center gap-1.5 font-semibold text-ink">
                   <span
                     className="shrink-0 transition-colors"
-                    style={{ color: catDef?.accentColor || '#1E1915' }}
+                    style={{ color: catDef?.accentColor || 'var(--color-ink)' }}
                   >
                     {renderCategoryIcon(catDef?.icon || selectedItem.categoryId, 'w-3.5 h-3.5')}
                   </span>
@@ -94,21 +94,21 @@ export const SerendipityModal: React.FC<SerendipityModalProps> = ({
                   </span>
                 )}
               </div>
-              <h3 className="font-serif-journal text-lg font-medium text-[#1E1915] leading-snug">
+              <h3 className="font-serif-journal text-lg font-medium text-ink leading-snug">
                 {selectedItem.title}
               </h3>
               {selectedItem.mediaMeta?.authorOrCreator && (
-                <p className="text-xs text-[#1E1915]/70 italic mt-0.5">
+                <p className="text-xs text-ink/70 italic mt-0.5">
                   by {selectedItem.mediaMeta.authorOrCreator}
                 </p>
               )}
               {selectedItem.description && (
-                <p className="text-xs text-[#1E1915]/75 mt-2 line-clamp-3 leading-relaxed">
+                <p className="text-xs text-ink/75 mt-2 line-clamp-3 leading-relaxed">
                   {selectedItem.description}
                 </p>
               )}
               {selectedItem.photos && selectedItem.photos.length > 0 && (
-                <div className="mt-3 overflow-hidden rounded-xl aspect-[16/9] border border-[#1E1915]/10">
+                <div className="mt-3 overflow-hidden rounded-xl aspect-[16/9] border border-ink/10">
                   <img
                     src={selectedItem.photos[0]}
                     alt={selectedItem.title}
@@ -123,7 +123,7 @@ export const SerendipityModal: React.FC<SerendipityModalProps> = ({
               <button
                 onClick={handleRoll}
                 disabled={isRolling || activeItems.length <= 1}
-                className="flex-1 min-h-[44px] px-4 py-2 text-xs font-semibold text-[#1E1915] bg-white border border-[#1E1915]/20 hover:bg-[#FAF7F2] rounded-xl transition-colors flex items-center justify-center gap-1.5"
+                className="flex-1 min-h-[44px] px-4 py-2 text-xs font-semibold text-ink bg-card border border-ink/20 hover:bg-paper rounded-xl transition-colors flex items-center justify-center gap-1.5"
               >
                 <Dices className="w-3.5 h-3.5" />
                 <span>Roll Again</span>
@@ -133,7 +133,7 @@ export const SerendipityModal: React.FC<SerendipityModalProps> = ({
                   onSelectFocus(selectedItem);
                   onClose();
                 }}
-                className="flex-1 min-h-[44px] px-4 py-2 text-xs font-semibold text-white bg-[#1E1915] hover:bg-[#332b24] rounded-xl shadow-md transition-colors flex items-center justify-center gap-1.5"
+                className="flex-1 min-h-[44px] px-4 py-2 text-xs font-semibold text-paper bg-ink hover:bg-ink/85 rounded-xl shadow-md transition-colors flex items-center justify-center gap-1.5"
               >
                 <span>View Details</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -141,7 +141,7 @@ export const SerendipityModal: React.FC<SerendipityModalProps> = ({
             </div>
           </div>
         ) : (
-          <div className="p-6 text-center text-xs text-[#1E1915]/60">
+          <div className="p-6 text-center text-xs text-ink/60">
             No active intentions yet. Create one to enable Serendipity rolls!
           </div>
         )}

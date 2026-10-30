@@ -1,4 +1,6 @@
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { BucketItem } from '../types';
+import { isNative } from './platform';
 
 /**
  * Play a delicate, meditative wooden chime sound using pure Web Audio API.
@@ -45,10 +47,23 @@ export function playChimeSound(): void {
   }
 }
 
+// Permission state in browser terms: 'default' (not asked yet), 'granted', 'denied' or 'unsupported'
+export async function getNotificationPermission(): Promise<NotificationPermission | 'unsupported'> {
+  if (isNative) {
+    const { display } = await LocalNotifications.checkPermissions();
+    return display === 'granted' || display === 'denied' ? display : 'default';
+  }
+  return 'Notification' in window ? Notification.permission : 'unsupported';
+}
+
 /**
- * Request browser Notification permission
+ * Request notification permission (system prompt on iOS/Android, browser prompt on the web)
  */
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
+  if (isNative) {
+    const { display } = await LocalNotifications.requestPermissions();
+    return display === 'granted' ? 'granted' : 'denied';
+  }
   if (!('Notification' in window)) {
     return 'denied';
   }
@@ -56,9 +71,10 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 }
 
 /**
- * Trigger browser Notification if permitted
+ * Trigger browser Notification if permitted. On native, reminderScheduler has already scheduled it.
  */
 export function sendBrowserNotification(title: string, body: string, icon?: string): void {
+  if (isNative) return;
   if (!('Notification' in window) || Notification.permission !== 'granted') {
     return;
   }

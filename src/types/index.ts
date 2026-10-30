@@ -38,6 +38,18 @@ export interface MediaMeta {
   progress?: string;        // e.g. "Chapter 4" or "Season 2"
 }
 
+// Metadata for a video/PDF whose bytes are stored in IndexedDB (src/services/attachments.ts)
+export interface AttachmentMeta {
+  id: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  addedAt: string;
+  note?: string; // optional caption, max 100 chars
+}
+
+export const MEDIA_NOTE_MAX_LENGTH = 100;
+
 export interface BucketItem {
   id: string;
   categoryId: DefaultCategoryId | string;
@@ -51,9 +63,12 @@ export interface BucketItem {
   budget?: BudgetInfo;
   mediaMeta?: MediaMeta;
   photos: string[];
+  photoNotes?: Record<string, string>; // keyed by photoKey(photo), see src/utils/photoKey.ts
+  attachments?: AttachmentMeta[];
   linkUrl?: string;
   reminder?: ReminderConfig;
   status: 'active' | 'completed' | 'archived';
+  startedAt?: string; // ISO timestamp, set while the item is in progress
   completedAt?: string;
   completionReflection?: string;
   completionRating?: number; // 1-5 stars or rating
@@ -61,5 +76,5 @@ export interface BucketItem {
   updatedAt: string;
 }
 
-export type ViewTab = 'feed' | 'reminders' | 'vault' | 'milestones';
+export type ViewTab = 'feed' | 'reminders' | 'inprogress' | 'vault' | 'milestones' | 'settings';
 export type FilterSortOption = 'targetDate' | 'priority' | 'newest' | 'alphabetical';

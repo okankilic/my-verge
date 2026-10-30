@@ -149,11 +149,12 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
     e.preventDefault();
     if (!title.trim()) return;
 
-    const photos = selectedPhoto
-      ? [selectedPhoto]
-      : customPhotoUrl.trim()
-      ? [customPhotoUrl.trim()]
-      : [];
+    const cover = selectedPhoto || customPhotoUrl.trim();
+    // The form only edits the cover; keep photos captured on the Now tab (stored as data URLs)
+    const capturedPhotos = (editingItem?.photos || []).filter(
+      (p) => p !== cover && p.startsWith('data:')
+    );
+    const photos = cover ? [cover, ...capturedPhotos] : capturedPhotos;
 
     const itemData: Partial<BucketItem> = {
       categoryId,
@@ -215,23 +216,23 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       />
 
       {/* Drawer Container (slides up on mobile, slides in on tablet/desktop) */}
-      <div className="absolute inset-x-0 bottom-0 max-h-[92vh] sm:max-h-full sm:inset-y-0 sm:right-0 sm:left-auto sm:w-full sm:max-w-xl bg-[#FAF7F2] border-t sm:border-l border-[#1E1915]/15 rounded-t-3xl sm:rounded-none shadow-2xl flex flex-col overflow-hidden">
+      <div className="absolute inset-x-0 bottom-0 max-h-[92vh] sm:max-h-full sm:inset-y-0 sm:right-0 sm:left-auto sm:w-full sm:max-w-xl bg-paper border-t sm:border-l border-ink/15 rounded-t-3xl sm:rounded-none shadow-2xl flex flex-col overflow-hidden">
         {/* Mobile Grab Handle */}
-        <div className="sm:hidden w-12 h-1.5 bg-[#1E1915]/20 rounded-full mx-auto my-3" />
+        <div className="sm:hidden w-12 h-1.5 bg-ink/20 rounded-full mx-auto my-3" />
 
         {/* Header */}
-        <div className="px-5 py-4 border-b border-[#1E1915]/10 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-ink/10 flex items-center justify-between">
           <div>
-            <h2 className="font-serif-journal text-xl font-medium text-[#1E1915]">
+            <h2 className="font-serif-journal text-xl font-medium text-ink">
               {editingItem ? 'Edit Intention' : 'Capture Intention'}
             </h2>
-            <p className="text-xs text-[#1E1915]/60 mt-0.5">
+            <p className="text-xs text-ink/60 mt-0.5">
               Give your upcoming dream shape, timeline, and reminders
             </p>
           </div>
           <button
             onClick={onClose}
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-[#1E1915]/60 hover:text-[#1E1915] hover:bg-[#1E1915]/5"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-ink/60 hover:text-ink hover:bg-ink/5"
           >
             <X className="w-5 h-5" />
           </button>
@@ -241,7 +242,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-6">
           {/* Step 1: Category Selection */}
           <div>
-            <label className="block text-xs uppercase tracking-wider text-[#1E1915]/60 font-semibold mb-2">
+            <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-2">
               Category
             </label>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
@@ -254,11 +255,11 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                     onClick={() => handleCategoryChange(cat.id)}
                     className={`min-h-[48px] p-2 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-1 ${
                       isSelected
-                        ? 'border-[#1E1915] bg-[#1E1915] text-[#FAF7F2] font-semibold shadow-xs'
-                        : 'border-[#1E1915]/15 bg-white text-[#1E1915]/80 hover:border-[#1E1915]/30'
+                        ? 'border-ink bg-ink text-paper font-semibold shadow-xs'
+                        : 'border-ink/15 bg-card text-ink/80 hover:border-ink/30'
                     }`}
                   >
-                    <span style={{ color: isSelected ? '#FAF7F2' : cat.accentColor }}>
+                    <span style={{ color: isSelected ? 'var(--color-paper)' : cat.accentColor }}>
                       {renderCategoryIcon(cat.icon, 'w-3.5 h-3.5')}
                     </span>
                     <span className="text-[11px] leading-tight truncate max-w-full">
@@ -273,7 +274,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
           {/* Step 2: Sub-category Selection & Creation */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-xs uppercase tracking-wider text-[#1E1915]/60 font-semibold">
+              <label className="text-xs uppercase tracking-wider text-ink/60 font-semibold">
                 Sub-Category
               </label>
               <button
@@ -295,8 +296,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                   onClick={() => setSubCategory(sub)}
                   className={`min-h-[36px] px-3 py-1.5 rounded-lg text-xs transition-all ${
                     subCategory === sub
-                      ? 'bg-[#1E1915] text-white font-medium shadow-xs'
-                      : 'bg-white border border-[#1E1915]/15 text-[#1E1915]/70 hover:border-[#1E1915]/30'
+                      ? 'bg-ink text-paper font-medium shadow-xs'
+                      : 'bg-card border border-ink/15 text-ink/70 hover:border-ink/30'
                   }`}
                 >
                   {sub}
@@ -311,12 +312,12 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                   value={newSubInput}
                   onChange={(e) => setNewSubInput(e.target.value)}
                   placeholder="e.g. Classic Noir, Solo Hiking, Artisan Woodwork"
-                  className="flex-1 min-h-[44px] px-3 py-2 text-xs bg-white border border-[#1E1915]/20 rounded-lg text-[#1E1915] focus:outline-none focus:border-[#1E1915]"
+                  className="flex-1 min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-lg text-ink focus:outline-none focus:border-ink"
                 />
                 <button
                   type="button"
                   onClick={handleAddNewSub}
-                  className="min-h-[44px] px-4 py-2 bg-[#1E1915] text-white text-xs font-medium rounded-lg hover:bg-[#332b24]"
+                  className="min-h-[44px] px-4 py-2 bg-ink text-paper text-xs font-medium rounded-lg hover:bg-ink/85"
                 >
                   Apply
                 </button>
@@ -327,7 +328,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
           {/* Step 3: Title & Description */}
           <div className="space-y-4">
             <div>
-              <label className="block text-xs uppercase tracking-wider text-[#1E1915]/60 font-semibold mb-1.5">
+              <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
                 Intention Title *
               </label>
               <input
@@ -348,15 +349,15 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                     ? 'e.g., Attention is the rarest and purest generosity'
                     : 'e.g., Hand-bind a leather hardcover journal'
                 }
-                className="w-full min-h-[44px] px-3.5 py-2.5 text-sm bg-white border border-[#1E1915]/20 rounded-xl text-[#1E1915] placeholder-[#1E1915]/40 focus:outline-none focus:border-[#1E1915]"
+                className="w-full min-h-[44px] px-3.5 py-2.5 text-sm bg-card border border-ink/20 rounded-xl text-ink placeholder-ink/40 focus:outline-none focus:border-ink"
               />
             </div>
 
             {/* Read & Watch specialized author/creator metadata */}
             {(categoryId === 'read' || categoryId === 'watch') && (
-              <div className="grid grid-cols-2 gap-3 p-3 bg-white rounded-xl border border-[#1E1915]/10">
+              <div className="grid grid-cols-2 gap-3 p-3 bg-card rounded-xl border border-ink/10">
                 <div>
-                  <label className="block text-[11px] uppercase tracking-wider text-[#1E1915]/60 font-semibold mb-1">
+                  <label className="block text-[11px] uppercase tracking-wider text-ink/60 font-semibold mb-1">
                     {categoryId === 'read' ? 'Author / Writer' : 'Director / Creator'}
                   </label>
                   <input
@@ -364,11 +365,11 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                     value={authorOrCreator}
                     onChange={(e) => setAuthorOrCreator(e.target.value)}
                     placeholder={categoryId === 'read' ? 'e.g. Italo Calvino' : 'e.g. Denis Villeneuve'}
-                    className="w-full min-h-[38px] px-2.5 py-1.5 text-xs bg-[#FAF7F2] border border-[#1E1915]/15 rounded-lg text-[#1E1915] focus:outline-none focus:border-[#1E1915]"
+                    className="w-full min-h-[38px] px-2.5 py-1.5 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] uppercase tracking-wider text-[#1E1915]/60 font-semibold mb-1">
+                  <label className="block text-[11px] uppercase tracking-wider text-ink/60 font-semibold mb-1">
                     Format / Edition
                   </label>
                   <input
@@ -376,14 +377,14 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                     value={formatOrEdition}
                     onChange={(e) => setFormatOrEdition(e.target.value)}
                     placeholder={categoryId === 'read' ? 'Hardcover, Audiobook' : '35mm, Criterion, Theater'}
-                    className="w-full min-h-[38px] px-2.5 py-1.5 text-xs bg-[#FAF7F2] border border-[#1E1915]/15 rounded-lg text-[#1E1915] focus:outline-none focus:border-[#1E1915]"
+                    className="w-full min-h-[38px] px-2.5 py-1.5 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
                   />
                 </div>
               </div>
             )}
 
             <div>
-              <label className="block text-xs uppercase tracking-wider text-[#1E1915]/60 font-semibold mb-1.5">
+              <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
                 Notes & Reflections
               </label>
               <textarea
@@ -391,7 +392,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Why does this matter? What specific feeling or memory does it hold?"
-                className="w-full px-3.5 py-2.5 text-sm bg-white border border-[#1E1915]/20 rounded-xl text-[#1E1915] placeholder-[#1E1915]/40 focus:outline-none focus:border-[#1E1915]"
+                className="w-full px-3.5 py-2.5 text-sm bg-card border border-ink/20 rounded-xl text-ink placeholder-ink/40 focus:outline-none focus:border-ink"
               />
             </div>
           </div>
@@ -399,13 +400,13 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
           {/* Step 4: Priority & Target Date */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs uppercase tracking-wider text-[#1E1915]/60 font-semibold mb-1.5">
+              <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
                 Timeframe / Priority
               </label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as PriorityLevel)}
-                className="w-full min-h-[44px] px-3 py-2 text-xs bg-white border border-[#1E1915]/20 rounded-xl text-[#1E1915] focus:outline-none focus:border-[#1E1915]"
+                className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
               >
                 <option value="this_month">This Month (High Focus)</option>
                 <option value="this_year">This Year (Current Chapter)</option>
@@ -415,24 +416,24 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs uppercase tracking-wider text-[#1E1915]/60 font-semibold mb-1.5">
+              <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
                 Target Date
               </label>
               <input
                 type="date"
                 value={targetDate}
                 onChange={(e) => setTargetDate(e.target.value)}
-                className="w-full min-h-[44px] px-3 py-2 text-xs bg-white border border-[#1E1915]/20 rounded-xl text-[#1E1915] focus:outline-none focus:border-[#1E1915]"
+                className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
               />
             </div>
           </div>
 
           {/* Step 5: Scheduled Reminders Engine */}
-          <div className="p-4 rounded-2xl bg-white border border-[#1E1915]/10 space-y-3">
+          <div className="p-4 rounded-2xl bg-card border border-ink/10 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Bell className="w-4 h-4 text-[#B45309]" />
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#1E1915]">
+                <span className="text-xs font-semibold uppercase tracking-wider text-ink">
                   Scheduled Reminder Alert
                 </span>
               </div>
@@ -441,14 +442,14 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 id="enableReminder"
                 checked={enableReminder}
                 onChange={(e) => setEnableReminder(e.target.checked)}
-                className="w-4 h-4 rounded text-[#1E1915] border-[#1E1915]/20 focus:ring-0 cursor-pointer"
+                className="w-4 h-4 rounded text-ink border-ink/20 focus:ring-0 cursor-pointer"
               />
             </div>
 
             {enableReminder && (
-              <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-[#1E1915]/8">
+              <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-ink/8">
                 <div>
-                  <label className="block text-[11px] text-[#1E1915]/60 font-medium mb-1">
+                  <label className="block text-[11px] text-ink/60 font-medium mb-1">
                     Alert Date & Time
                   </label>
                   <input
@@ -456,17 +457,17 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                     value={reminderDate}
                     onChange={(e) => setReminderDate(e.target.value)}
                     required={enableReminder}
-                    className="w-full min-h-[40px] px-3 py-1.5 text-xs bg-[#FAF7F2] border border-[#1E1915]/15 rounded-lg text-[#1E1915] focus:outline-none focus:border-[#1E1915]"
+                    className="w-full min-h-[40px] px-3 py-1.5 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] text-[#1E1915]/60 font-medium mb-1">
+                  <label className="block text-[11px] text-ink/60 font-medium mb-1">
                     Recurrence
                   </label>
                   <select
                     value={reminderRecurrence}
                     onChange={(e) => setReminderRecurrence(e.target.value as RecurrenceType)}
-                    className="w-full min-h-[40px] px-3 py-1.5 text-xs bg-[#FAF7F2] border border-[#1E1915]/15 rounded-lg text-[#1E1915] focus:outline-none focus:border-[#1E1915]"
+                    className="w-full min-h-[40px] px-3 py-1.5 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
                   >
                     <option value="none">One-time Alert</option>
                     <option value="daily">Daily Nudge</option>
@@ -482,8 +483,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
           {/* Step 6: Location & Budget Fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Location */}
-            <div className="p-3.5 bg-white rounded-2xl border border-[#1E1915]/10 space-y-2">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1E1915]">
+            <div className="p-3.5 bg-card rounded-2xl border border-ink/10 space-y-2">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-ink">
                 <MapPin className="w-3.5 h-3.5 text-[#B45309]" />
                 <span>Geographic Place</span>
               </div>
@@ -492,20 +493,20 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 value={locationName}
                 onChange={(e) => setLocationName(e.target.value)}
                 placeholder="Place or venue name"
-                className="w-full min-h-[38px] px-2.5 py-1 text-xs bg-[#FAF7F2] border border-[#1E1915]/15 rounded-lg text-[#1E1915] focus:outline-none"
+                className="w-full min-h-[38px] px-2.5 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
               />
               <input
                 type="text"
                 value={locationCity}
                 onChange={(e) => setLocationCity(e.target.value)}
                 placeholder="City, Country"
-                className="w-full min-h-[38px] px-2.5 py-1 text-xs bg-[#FAF7F2] border border-[#1E1915]/15 rounded-lg text-[#1E1915] focus:outline-none"
+                className="w-full min-h-[38px] px-2.5 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
               />
             </div>
 
             {/* Budget */}
-            <div className="p-3.5 bg-white rounded-2xl border border-[#1E1915]/10 space-y-2">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1E1915]">
+            <div className="p-3.5 bg-card rounded-2xl border border-ink/10 space-y-2">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-ink">
                 <DollarSign className="w-3.5 h-3.5 text-[#059669]" />
                 <span>Budget & Savings</span>
               </div>
@@ -517,7 +518,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                   value={estimatedCost}
                   onChange={(e) => setEstimatedCost(e.target.value)}
                   placeholder="Target ($)"
-                  className="min-h-[38px] px-2.5 py-1 text-xs bg-[#FAF7F2] border border-[#1E1915]/15 rounded-lg text-[#1E1915] focus:outline-none"
+                  className="min-h-[38px] px-2.5 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
                 />
                 <input
                   type="number"
@@ -526,7 +527,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                   value={savedAmount}
                   onChange={(e) => setSavedAmount(e.target.value)}
                   placeholder="Saved ($)"
-                  className="min-h-[38px] px-2.5 py-1 text-xs bg-[#FAF7F2] border border-[#1E1915]/15 rounded-lg text-[#1E1915] focus:outline-none"
+                  className="min-h-[38px] px-2.5 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
                 />
               </div>
               <input
@@ -534,14 +535,14 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 value={linkUrl}
                 onChange={(e) => setLinkUrl(e.target.value)}
                 placeholder="Reference URL or shop link"
-                className="w-full min-h-[38px] px-2.5 py-1 text-xs bg-[#FAF7F2] border border-[#1E1915]/15 rounded-lg text-[#1E1915] focus:outline-none"
+                className="w-full min-h-[38px] px-2.5 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
               />
             </div>
           </div>
 
           {/* Step 7: Visual Photograph Attachment */}
           <div className="space-y-2">
-            <label className="block text-xs uppercase tracking-wider text-[#1E1915]/60 font-semibold">
+            <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold">
               Inspirational Photo
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -557,8 +558,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                     }}
                     className={`relative rounded-xl overflow-hidden border aspect-[4/3] group text-left ${
                       isSelected
-                        ? 'ring-2 ring-[#1E1915] border-transparent'
-                        : 'border-[#1E1915]/15 hover:border-[#1E1915]/40'
+                        ? 'ring-2 ring-ink border-transparent'
+                        : 'border-ink/15 hover:border-ink/40'
                     }`}
                   >
                     <img
@@ -573,7 +574,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                       </span>
                     </div>
                     {isSelected && (
-                      <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-[#1E1915] text-white rounded-full flex items-center justify-center">
+                      <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-ink text-paper rounded-full flex items-center justify-center">
                         <Check className="w-3 h-3 stroke-[3]" />
                       </div>
                     )}
@@ -583,7 +584,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             </div>
 
             <div className="mt-2 flex items-center gap-2">
-              <Camera className="w-4 h-4 text-[#1E1915]/50 shrink-0" />
+              <Camera className="w-4 h-4 text-ink/50 shrink-0" />
               <input
                 type="url"
                 value={customPhotoUrl}
@@ -592,25 +593,25 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                   setSelectedPhoto('');
                 }}
                 placeholder="Or paste any custom image web link..."
-                className="flex-1 min-h-[38px] px-3 py-1.5 text-xs bg-white border border-[#1E1915]/15 rounded-lg text-[#1E1915] focus:outline-none focus:border-[#1E1915]"
+                className="flex-1 min-h-[38px] px-3 py-1.5 text-xs bg-card border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
               />
             </div>
           </div>
         </form>
 
         {/* Fixed Sticky Confirmation Bottom Bar */}
-        <div className="p-4 bg-[#FAF7F2] border-t border-[#1E1915]/10 flex items-center justify-end gap-3">
+        <div className="p-4 bg-paper border-t border-ink/10 flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[44px] px-4 py-2 text-xs font-semibold text-[#1E1915]/70 hover:text-[#1E1915] rounded-xl hover:bg-black/5 transition-colors"
+            className="min-h-[44px] px-4 py-2 text-xs font-semibold text-ink/70 hover:text-ink rounded-xl hover:bg-ink/5 transition-colors"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={handleSubmit}
-            className="min-h-[44px] px-6 py-2.5 text-xs font-semibold text-white bg-[#1E1915] hover:bg-[#332b24] active:scale-98 rounded-xl shadow-md transition-all"
+            className="min-h-[44px] px-6 py-2.5 text-xs font-semibold text-paper bg-ink hover:bg-ink/85 active:scale-98 rounded-xl shadow-md transition-all"
           >
             {editingItem ? 'Save Changes' : 'Record Intention'}
           </button>

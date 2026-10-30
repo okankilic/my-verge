@@ -29,13 +29,13 @@ export const VaultView: React.FC<VaultViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Vault Category Selector Tabs */}
-      <div className="flex items-center gap-1.5 p-1 bg-[#F2ECE1] rounded-2xl max-w-md mx-auto">
+      <div className="flex items-center gap-1.5 p-1 bg-paper-deep rounded-2xl max-w-md mx-auto">
         <button
           onClick={() => setActiveTab('reading')}
           className={`flex-1 min-h-[44px] py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'reading'
-              ? 'bg-white text-[#1E1915] shadow-xs'
-              : 'text-[#1E1915]/60 hover:text-[#1E1915]'
+              ? 'bg-card text-ink shadow-xs'
+              : 'text-ink/60 hover:text-ink'
           }`}
         >
           <BookOpen className="w-3.5 h-3.5 text-[#C05621]" />
@@ -46,8 +46,8 @@ export const VaultView: React.FC<VaultViewProps> = ({
           onClick={() => setActiveTab('watching')}
           className={`flex-1 min-h-[44px] py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'watching'
-              ? 'bg-white text-[#1E1915] shadow-xs'
-              : 'text-[#1E1915]/60 hover:text-[#1E1915]'
+              ? 'bg-card text-ink shadow-xs'
+              : 'text-ink/60 hover:text-ink'
           }`}
         >
           <Film className="w-3.5 h-3.5 text-[#BE185D]" />
@@ -58,8 +58,8 @@ export const VaultView: React.FC<VaultViewProps> = ({
           onClick={() => setActiveTab('budget')}
           className={`flex-1 min-h-[44px] py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'budget'
-              ? 'bg-white text-[#1E1915] shadow-xs'
-              : 'text-[#1E1915]/60 hover:text-[#1E1915]'
+              ? 'bg-card text-ink shadow-xs'
+              : 'text-ink/60 hover:text-ink'
           }`}
         >
           <DollarSign className="w-3.5 h-3.5 text-[#059669]" />
@@ -71,10 +71,10 @@ export const VaultView: React.FC<VaultViewProps> = ({
       {activeTab === 'reading' && (
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-serif-journal text-lg font-medium text-[#1E1915]">
+            <h3 className="font-serif-journal text-lg font-medium text-ink">
               Personal Library & Reading Intentions
             </h3>
-            <span className="text-xs text-[#1E1915]/60 font-mono">
+            <span className="text-xs text-ink/60 font-mono">
               {readingItems.filter((i) => i.status === 'completed').length} / {readingItems.length} read
             </span>
           </div>
@@ -85,14 +85,14 @@ export const VaultView: React.FC<VaultViewProps> = ({
               return (
                 <div
                   key={book.id}
-                  className={`bg-white border rounded-2xl p-4 transition-all flex gap-3.5 ${
+                  className={`bg-card border rounded-2xl p-4 transition-all flex gap-3.5 ${
                     isCompleted
-                      ? 'border-[#1E1915]/10 bg-[#FAF7F2]/60 opacity-80'
-                      : 'border-[#1E1915]/12 shadow-xs hover:border-[#1E1915]/30'
+                      ? 'border-ink/10 bg-paper/60 opacity-80'
+                      : 'border-ink/12 shadow-xs hover:border-ink/30'
                   }`}
                 >
                   {/* Book Spine / Cover preview */}
-                  <div className="w-20 sm:w-24 shrink-0 rounded-lg overflow-hidden bg-[#EFECE6] border border-[#1E1915]/10 aspect-[3/4]">
+                  <div className="w-20 sm:w-24 shrink-0 rounded-lg overflow-hidden bg-paper-deep border border-ink/10 aspect-[3/4]">
                     {book.photos && book.photos.length > 0 ? (
                       <img
                         src={book.photos[0]}
@@ -101,7 +101,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center text-[#1E1915]/30">
+                      <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center text-ink/30">
                         <BookOpen className="w-6 h-6 stroke-[1.5]" />
                       </div>
                     )}
@@ -116,31 +116,31 @@ export const VaultView: React.FC<VaultViewProps> = ({
                         </span>
                       )}
                       <h4
-                        className={`font-serif-journal text-base font-medium text-[#1E1915] mt-0.5 line-clamp-2 ${
-                          isCompleted ? 'line-through text-[#1E1915]/50' : ''
+                        className={`font-serif-journal text-base font-medium text-ink mt-0.5 line-clamp-2 ${
+                          isCompleted ? 'line-through text-ink/50' : ''
                         }`}
                       >
                         {book.title}
                       </h4>
                       {book.mediaMeta?.authorOrCreator && (
-                        <p className="text-xs text-[#1E1915]/70 italic mt-0.5">
+                        <p className="text-xs text-ink/70 italic mt-0.5">
                           {book.mediaMeta.authorOrCreator}
                         </p>
                       )}
                       {book.mediaMeta?.formatOrEdition && (
-                        <p className="text-[11px] text-[#1E1915]/50 mt-0.5">
+                        <p className="text-[11px] text-ink/50 mt-0.5">
                           {book.mediaMeta.formatOrEdition}
                         </p>
                       )}
                     </div>
 
-                    <div className="pt-2 flex items-center justify-between border-t border-[#1E1915]/8 mt-2">
+                    <div className="pt-2 flex items-center justify-between border-t border-ink/8 mt-2">
                       <button
                         onClick={() => onToggleComplete(book)}
                         className={`min-h-[36px] px-2.5 py-1 text-xs rounded-lg flex items-center gap-1.5 transition-colors ${
                           isCompleted
                             ? 'bg-[#4A6B56]/15 text-[#4A6B56] font-medium'
-                            : 'bg-[#FAF7F2] border border-[#1E1915]/15 text-[#1E1915]/80 hover:bg-[#1E1915]/10'
+                            : 'bg-paper border border-ink/15 text-ink/80 hover:bg-ink/10'
                         }`}
                       >
                         <Check className="w-3.5 h-3.5" />
@@ -149,7 +149,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
 
                       <button
                         onClick={() => onEdit(book)}
-                        className="min-h-[36px] text-xs text-[#1E1915]/60 hover:text-[#1E1915] px-2"
+                        className="min-h-[36px] text-xs text-ink/60 hover:text-ink px-2"
                       >
                         Edit
                       </button>
@@ -166,10 +166,10 @@ export const VaultView: React.FC<VaultViewProps> = ({
       {activeTab === 'watching' && (
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-serif-journal text-lg font-medium text-[#1E1915]">
+            <h3 className="font-serif-journal text-lg font-medium text-ink">
               Cinema & Screen Screenings
             </h3>
-            <span className="text-xs text-[#1E1915]/60 font-mono">
+            <span className="text-xs text-ink/60 font-mono">
               {watchingItems.filter((i) => i.status === 'completed').length} / {watchingItems.length} watched
             </span>
           </div>
@@ -180,45 +180,45 @@ export const VaultView: React.FC<VaultViewProps> = ({
               return (
                 <div
                   key={film.id}
-                  className={`bg-white border rounded-2xl p-4 transition-all flex flex-col justify-between ${
+                  className={`bg-card border rounded-2xl p-4 transition-all flex flex-col justify-between ${
                     isCompleted
-                      ? 'border-[#1E1915]/10 bg-[#FAF7F2]/60 opacity-80'
-                      : 'border-[#1E1915]/12 shadow-xs hover:border-[#1E1915]/30'
+                      ? 'border-ink/10 bg-paper/60 opacity-80'
+                      : 'border-ink/12 shadow-xs hover:border-ink/30'
                   }`}
                 >
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs text-[#1E1915]/60">
+                    <div className="flex items-center justify-between text-xs text-ink/60">
                       <span className="text-[#BE185D] font-semibold">{film.subCategory || 'Cinema'}</span>
                       {film.mediaMeta?.formatOrEdition && (
                         <span className="font-mono text-[11px]">{film.mediaMeta.formatOrEdition}</span>
                       )}
                     </div>
                     <h4
-                      className={`font-serif-journal text-base font-medium text-[#1E1915] ${
-                        isCompleted ? 'line-through text-[#1E1915]/50' : ''
+                      className={`font-serif-journal text-base font-medium text-ink ${
+                        isCompleted ? 'line-through text-ink/50' : ''
                       }`}
                     >
                       {film.title}
                     </h4>
                     {film.mediaMeta?.authorOrCreator && (
-                      <p className="text-xs text-[#1E1915]/70 italic">
+                      <p className="text-xs text-ink/70 italic">
                         Directed by {film.mediaMeta.authorOrCreator}
                       </p>
                     )}
                     {film.description && (
-                      <p className="text-xs text-[#1E1915]/75 line-clamp-2 leading-relaxed">
+                      <p className="text-xs text-ink/75 line-clamp-2 leading-relaxed">
                         {film.description}
                       </p>
                     )}
                   </div>
 
-                  <div className="pt-3 flex items-center justify-between border-t border-[#1E1915]/8 mt-3">
+                  <div className="pt-3 flex items-center justify-between border-t border-ink/8 mt-3">
                     <button
                       onClick={() => onToggleComplete(film)}
                       className={`min-h-[36px] px-2.5 py-1 text-xs rounded-lg flex items-center gap-1.5 transition-colors ${
                         isCompleted
                           ? 'bg-[#4A6B56]/15 text-[#4A6B56] font-medium'
-                          : 'bg-[#FAF7F2] border border-[#1E1915]/15 text-[#1E1915]/80 hover:bg-[#1E1915]/10'
+                          : 'bg-paper border border-ink/15 text-ink/80 hover:bg-ink/10'
                       }`}
                     >
                       <Check className="w-3.5 h-3.5" />
@@ -226,7 +226,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
                     </button>
                     <button
                       onClick={() => onEdit(film)}
-                      className="min-h-[36px] text-xs text-[#1E1915]/60 hover:text-[#1E1915] px-2"
+                      className="min-h-[36px] text-xs text-ink/60 hover:text-ink px-2"
                     >
                       Edit
                     </button>
@@ -242,29 +242,29 @@ export const VaultView: React.FC<VaultViewProps> = ({
       {activeTab === 'budget' && (
         <section className="space-y-4">
           {/* Summary Box */}
-          <div className="bg-white border border-[#1E1915]/10 rounded-2xl p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="bg-card border border-ink/10 rounded-2xl p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#1E1915]/60">
+              <span className="text-xs font-semibold uppercase tracking-wider text-ink/60">
                 Aspiration Savings Summary
               </span>
               <div className="flex items-baseline gap-2 mt-1">
-                <span className="font-mono text-2xl font-bold text-[#1E1915] tabular-nums">
+                <span className="font-mono text-2xl font-bold text-ink tabular-nums">
                   ${totalSaved.toLocaleString()}
                 </span>
-                <span className="text-xs text-[#1E1915]/60">
+                <span className="text-xs text-ink/60">
                   saved towards ${totalEstimated.toLocaleString()} target
                 </span>
               </div>
             </div>
 
             <div className="w-full sm:w-48">
-              <div className="flex justify-between text-xs text-[#1E1915]/70 mb-1 font-mono">
+              <div className="flex justify-between text-xs text-ink/70 mb-1 font-mono">
                 <span>Funded</span>
                 <span>
                   {totalEstimated > 0 ? Math.round((totalSaved / totalEstimated) * 100) : 0}%
                 </span>
               </div>
-              <div className="w-full h-2 bg-[#FAF7F2] border border-[#1E1915]/10 rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-paper border border-ink/10 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-[#059669] transition-all"
                   style={{
@@ -283,27 +283,27 @@ export const VaultView: React.FC<VaultViewProps> = ({
             {budgetItems.map((item) => (
               <div
                 key={item.id}
-                className="bg-white border border-[#1E1915]/10 rounded-xl p-3.5 hover:border-[#1E1915]/25 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                className="bg-card border border-ink/10 rounded-xl p-3.5 hover:border-ink/25 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
               >
                 <div>
-                  <div className="text-[11px] text-[#1E1915]/60">
+                  <div className="text-[11px] text-ink/60">
                     <span>{item.categoryId}</span>
                     {item.subCategory && <span> · {item.subCategory}</span>}
                   </div>
-                  <h4 className="font-serif-journal text-base font-medium text-[#1E1915]">
+                  <h4 className="font-serif-journal text-base font-medium text-ink">
                     {item.title}
                   </h4>
                 </div>
 
                 <div className="flex items-center gap-4 shrink-0">
                   <div className="text-right">
-                    <span className="font-mono font-semibold text-sm text-[#1E1915]">
+                    <span className="font-mono font-semibold text-sm text-ink">
                       ${item.budget?.savedAmount} / ${item.budget?.estimatedCost}
                     </span>
                   </div>
                   <button
                     onClick={() => onEdit(item)}
-                    className="min-h-[36px] px-3 py-1 text-xs bg-[#FAF7F2] border border-[#1E1915]/15 rounded-lg text-[#1E1915] font-medium hover:bg-[#EBE5DA]"
+                    className="min-h-[36px] px-3 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink font-medium hover:bg-paper-deep"
                   >
                     Update Funds
                   </button>
