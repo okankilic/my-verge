@@ -68,18 +68,15 @@ export async function toDraft(payload: SharedPayload): Promise<Partial<BucketIte
 // Call back for every share waiting now and for each one that arrives later. Native only; returns a cleanup.
 export function onSharedContent(cb: (payload: SharedPayload) => void): () => void {
   if (!isNative) return () => {};
-  let active = true;
+  // getPending removes the shares natively, so always deliver what it returns, even after cleanup
   const drain = () =>
     ShareInbox.getPending()
-      .then(({ items }) => {
-        if (active) items.forEach(cb);
-      })
+      .then(({ items }) => items.forEach(cb))
       .catch((err) => console.error('Could not read shared content:', err));
 
   const handle = ShareInbox.addListener('shareReceived', drain);
   drain();
   return () => {
-    active = false;
     handle.then((h) => h.remove()).catch(() => {});
   };
 }
