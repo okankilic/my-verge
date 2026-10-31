@@ -23,6 +23,8 @@ import { Sheet } from './Sheet';
 import { StepList } from './StepList';
 import { newStep, toggleStep } from '../utils/steps';
 import { PRESET_PHOTOS } from '../data/presetPhotos';
+import { CURRENCIES } from '../data/currencies';
+import { currencySymbol } from '../utils/expenses';
 
 interface ItemFormDrawerProps {
   isOpen: boolean;
@@ -33,6 +35,7 @@ interface ItemFormDrawerProps {
   // Prefills a new wish, e.g. from content shared by another app
   draft?: Partial<BucketItem> | null;
   defaultCategoryId?: string;
+  defaultCurrency: string; // ISO code new wishes start with (Settings)
 }
 
 export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
@@ -43,6 +46,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   editingItem,
   draft,
   defaultCategoryId,
+  defaultCurrency,
 }) => {
   const [categoryId, setCategoryId] = useState<string>('go');
   const [title, setTitle] = useState<string>('');
@@ -64,6 +68,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   const [locationCity, setLocationCity] = useState<string>('');
   const [estimatedCost, setEstimatedCost] = useState<string>('');
   const [savedAmount, setSavedAmount] = useState<string>('');
+  const [currency, setCurrency] = useState<string>(defaultCurrency);
   const [linkUrl, setLinkUrl] = useState<string>('');
 
   // Photo
@@ -99,6 +104,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       setLocationCity(editingItem.location?.cityOrCountry || '');
       setEstimatedCost(editingItem.budget?.estimatedCost?.toString() || '');
       setSavedAmount(editingItem.budget?.savedAmount?.toString() || '');
+      setCurrency(editingItem.currency || defaultCurrency);
       setLinkUrl(editingItem.linkUrl || '');
       setSelectedPhoto(editingItem.photos?.[0] || '');
       setSteps(editingItem.steps || []);
@@ -120,13 +126,14 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       setLocationCity('');
       setEstimatedCost('');
       setSavedAmount('');
+      setCurrency(defaultCurrency);
       setLinkUrl(draft?.linkUrl || '');
       setSelectedPhoto(draft?.photos?.[0] || '');
       setCustomPhotoUrl('');
       setSteps([]);
       setStepDraft('');
     }
-  }, [editingItem, draft, defaultCategoryId, isOpen]);
+  }, [editingItem, draft, defaultCategoryId, defaultCurrency, isOpen]);
 
   // A photo shared from another app, offered as the first cover choice
   const sharedCover = !editingItem ? draft?.photos?.[0] : undefined;
@@ -154,6 +161,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       photos,
       linkUrl: linkUrl.trim() || undefined,
       steps: allSteps.length > 0 ? allSteps : undefined,
+      currency,
     };
 
     if (authorOrCreator.trim() || formatOrEdition.trim()) {
@@ -174,7 +182,6 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       itemData.budget = {
         estimatedCost: parseFloat(estimatedCost) || 0,
         savedAmount: parseFloat(savedAmount) || 0,
-        currency: '$',
       };
     }
 
@@ -443,9 +450,25 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
 
             {/* Budget */}
             <div className="p-3.5 bg-card rounded-2xl border border-ink/10 space-y-2">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-ink">
-                <DollarSign className="w-3.5 h-3.5 text-[#059669]" />
-                <span>Budget & Savings</span>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-ink">
+                  <DollarSign className="w-3.5 h-3.5 text-[#059669]" />
+                  <span>Budget & Savings</span>
+                </div>
+                {/* One currency per wish, for its budget and expenses */}
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  aria-label="Currency"
+                  title="Currency for this wish's budget and expenses"
+                  className="min-h-[44px] px-2 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.code} · {currencySymbol(c.code)}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <input
@@ -454,7 +477,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                   step="any"
                   value={estimatedCost}
                   onChange={(e) => setEstimatedCost(e.target.value)}
-                  placeholder="Target ($)"
+                  placeholder="Target"
+                  aria-label="Target amount"
                   className="min-h-[38px] px-2.5 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
                 />
                 <input
@@ -463,7 +487,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                   step="any"
                   value={savedAmount}
                   onChange={(e) => setSavedAmount(e.target.value)}
-                  placeholder="Saved ($)"
+                  placeholder="Saved"
+                  aria-label="Saved amount"
                   className="min-h-[38px] px-2.5 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
                 />
               </div>

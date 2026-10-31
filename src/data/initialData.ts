@@ -16,8 +16,8 @@ export const INITIAL_ITEMS: BucketItem[] = [
     budget: {
       estimatedCost: 1800,
       savedAmount: 1100,
-      currency: '$',
     },
+    currency: 'USD',
     photos: [PRESET_PHOTO_URLS.kyotoGarden],
     linkUrl: 'https://saihoji-kokedera.com/en/',
     reminder: {
@@ -64,8 +64,8 @@ export const INITIAL_ITEMS: BucketItem[] = [
     budget: {
       estimatedCost: 260,
       savedAmount: 180,
-      currency: '$',
     },
+    currency: 'USD',
     photos: [PRESET_PHOTO_URLS.ceramicVessel],
     linkUrl: 'https://artisan-pottery-craft.example.com',
     reminder: {
@@ -110,8 +110,8 @@ export const INITIAL_ITEMS: BucketItem[] = [
     budget: {
       estimatedCost: 75,
       savedAmount: 75,
-      currency: '$',
     },
+    currency: 'USD',
     photos: [],
     reminder: {
       date: '2026-11-25T14:00',

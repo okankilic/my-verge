@@ -12,6 +12,8 @@ import {
 import { deleteAttachmentBlobs } from '../services/attachments';
 import { notify } from '../services/dialogs';
 import { renderCategoryIcon } from '../utils/categoryIcons';
+import { CURRENCIES } from '../data/currencies';
+import { currencySymbol } from '../utils/expenses';
 
 interface SettingsViewProps {
   items: BucketItem[];
@@ -20,6 +22,8 @@ interface SettingsViewProps {
   onCategoriesChange: (categories: CategoryDefinition[]) => void;
   theme: ThemePreference;
   onThemeChange: (theme: ThemePreference) => void;
+  defaultCurrency: string;
+  onDefaultCurrencyChange: (code: string) => void;
   onNotificationsEnabled: () => void;
 }
 
@@ -64,6 +68,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onCategoriesChange,
   theme,
   onThemeChange,
+  defaultCurrency,
+  onDefaultCurrencyChange,
   onNotificationsEnabled,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -184,6 +190,28 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Currency: what new wishes start with; each wish can change its own */}
+          <div className="bg-card border border-ink/10 rounded-2xl p-4 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h4 className="text-xs font-semibold text-ink">Currency</h4>
+              <p className="text-[11px] text-ink/60 mt-0.5">
+                New wishes start with this. You can change it on each wish.
+              </p>
+            </div>
+            <select
+              value={defaultCurrency}
+              onChange={(e) => onDefaultCurrencyChange(e.target.value)}
+              aria-label="Default currency"
+              className="shrink-0 min-h-[44px] px-3 text-xs bg-paper border border-ink/15 rounded-xl text-ink focus:outline-none focus:border-ink"
+            >
+              {CURRENCIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.code} · {currencySymbol(c.code)} · {c.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Vault: which categories' finished wishes start out kept */}

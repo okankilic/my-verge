@@ -15,6 +15,7 @@ import {
   BucketItem,
   CategoryDefinition,
   ViewTab,
+  WishExpense,
   WishStep,
 } from './types';
 import {
@@ -25,7 +26,10 @@ import {
   loadTheme,
   saveTheme,
   ThemePreference,
+  loadDefaultCurrency,
+  saveDefaultCurrency,
 } from './services/storage';
+import { DEFAULT_CURRENCY } from './data/currencies';
 import {
   playChimeSound,
   sendBrowserNotification,
@@ -39,6 +43,7 @@ import { onSharedContent, toDraft } from './services/shareInbox';
 import { notify, notifyUndo, UNDO_MS } from './services/dialogs';
 import { photoKey } from './utils/photoKey';
 import { newStep, toggleStep } from './utils/steps';
+import { formatMoney, newExpense, stampCurrency, wishCurrency } from './utils/expenses';
 
 import { TopNav } from './components/TopNav';
 import { BottomTabBar } from './components/BottomTabBar';
@@ -91,14 +96,18 @@ export default function App() {
   // Appearance: 'system' follows prefers-color-scheme, otherwise forced via data-theme
   const [theme, setTheme] = useState<ThemePreference>('system');
 
+  // The currency new wishes start with; each wish keeps its own once it has one
+  const [defaultCurrency, setDefaultCurrency] = useState(DEFAULT_CURRENCY);
+
   useEffect(() => {
     let cancelled = false;
-    Promise.all([loadBucketItems(), loadCategories(), loadTheme()]).then(
-      ([loadedItems, loadedCategories, loadedTheme]) => {
+    Promise.all([loadBucketItems(), loadCategories(), loadTheme(), loadDefaultCurrency()]).then(
+      ([loadedItems, loadedCategories, loadedTheme, loadedCurrency]) => {
         if (cancelled) return;
-        setItems(loadedItems);
+        setItems(stampCurrency(loadedItems, loadedCurrency));
         setCategories(loadedCategories);
         setTheme(loadedTheme);
+        setDefaultCurrency(loadedCurrency);
         setIsHydrated(true);
       }
     );
@@ -118,6 +127,10 @@ export default function App() {
     saveTheme(theme);
     applyNativeTheme(theme);
   }, [theme, isHydrated]);
+
+  useEffect(() => {
+    if (isHydrated) saveDefaultCurrency(defaultCurrency);
+  }, [defaultCurrency, isHydrated]);
 
   // Active Reminder In-App Toast
   const [activeToastItem, setActiveToastItem] = useState<BucketItem | null>(null);
@@ -226,6 +239,7 @@ export default function App() {
         targetDate: itemData.targetDate,
         location: itemData.location,
         budget: itemData.budget,
+        currency: itemData.currency || defaultCurrency,
         mediaMeta: itemData.mediaMeta,
         photos: itemData.photos || [],
         linkUrl: itemData.linkUrl,
@@ -405,6 +419,37 @@ export default function App() {
     );
   };
 
+  // Applies a change to an item's expenses, working from the latest copy like updateSteps
+  const updateExpenses = (id: string, change: (expenses: WishExpense[]) => WishExpense[]) => {
+    const nowIso = new Date().toISOString();
+    const apply = (i: BucketItem): BucketItem => {
+      const expenses = change(i.expenses || []);
+      return { ...i, expenses: expenses.length > 0 ? expenses : undefined, updatedAt: nowIso };
+    };
+    setItems((prev) => prev.map((i) => (i.id === id ? apply(i) : i)));
+    setViewingItem((prev) => (prev?.id === id ? apply(prev) : prev));
+  };
+
+  const handleAddExpense = (item: BucketItem, amount: number, note?: string) => {
+    updateExpenses(item.id, (expenses) => [...expenses, newExpense(amount, note)]);
+    notify(`Logged ${formatMoney(amount, wishCurrency(item))} on "${item.title}".`, 'success');
+  };
+
+  const handleRemoveExpense = (item: BucketItem, expenseId: string) => {
+    const expense = item.expenses?.find((e) => e.id === expenseId);
+    if (!expense) return;
+    const index = item.expenses!.indexOf(expense);
+    updateExpenses(item.id, (expenses) => expenses.filter((e) => e.id !== expenseId));
+    // Undo puts it back where it was
+    notifyUndo(`Removed ${formatMoney(expense.amount, wishCurrency(item))} expense.`, () =>
+      updateExpenses(item.id, (expenses) =>
+        expenses.some((e) => e.id === expenseId)
+          ? expenses
+          : [...expenses.slice(0, index), expense, ...expenses.slice(index)]
+      )
+    );
+  };
+
   const handleAddPhoto = (item: BucketItem, photoDataUrl: string, note?: string) => {
     const nowIso = new Date().toISOString();
     const append = (i: BucketItem): BucketItem => ({
@@ -549,7 +594,8 @@ export default function App() {
         item.description.toLowerCase().includes(q) ||
         item.location?.name.toLowerCase().includes(q) ||
         item.mediaMeta?.authorOrCreator?.toLowerCase().includes(q) ||
-        item.steps?.some((s) => s.title.toLowerCase().includes(q))
+        item.steps?.some((s) => s.title.toLowerCase().includes(q)) ||
+        item.expenses?.some((e) => e.note?.toLowerCase().includes(q))
     );
   }, [items, searchQuery]);
 
@@ -799,6 +845,7 @@ export default function App() {
               onAddPhoto={handleAddPhoto}
               onAddAttachment={handleAddAttachment}
               onToggleStep={handleToggleStep}
+              onAddExpense={handleAddExpense}
             />
           )}
 
@@ -842,7 +889,7 @@ export default function App() {
               items={items}
               categories={categories}
               onReloadData={(newItems, newCats) => {
-                setItems(newItems);
+                setItems(stampCurrency(newItems, defaultCurrency));
                 setCategories(newCats);
                 // The selected categories may no longer exist
                 setCategoryByTab({});
@@ -851,6 +898,8 @@ export default function App() {
               onCategoriesChange={setCategories}
               theme={theme}
               onThemeChange={setTheme}
+              defaultCurrency={defaultCurrency}
+              onDefaultCurrencyChange={setDefaultCurrency}
               onNotificationsEnabled={() => syncNativeReminders(items)}
             />
           )}
@@ -892,6 +941,8 @@ export default function App() {
         onToggleStep={handleToggleStep}
         onAddStep={handleAddStep}
         onRemoveStep={handleRemoveStep}
+        onAddExpense={handleAddExpense}
+        onRemoveExpense={handleRemoveExpense}
         categoryDef={
           viewingItem
             ? categories.find((c) => c.id === viewingItem.categoryId)
@@ -912,6 +963,7 @@ export default function App() {
         editingItem={editingItem}
         draft={shareDraft}
         defaultCategoryId={selectedCategoryId}
+        defaultCurrency={defaultCurrency}
       />
 
       {/* Milestone Accomplishment Sheet */}

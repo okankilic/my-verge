@@ -32,6 +32,8 @@ import { Sheet } from './Sheet';
 import { KeepInVaultSwitch, HideInMemoriesSwitch } from './KeepInVaultSwitch';
 import { ItemMediaStrip } from './ItemMediaStrip';
 import { StepList } from './StepList';
+import { ExpenseList } from './ExpenseList';
+import { expenseTotal, formatMoney, wishCurrency } from '../utils/expenses';
 
 interface ItemDetailDrawerProps {
   item: BucketItem | null;
@@ -47,6 +49,8 @@ interface ItemDetailDrawerProps {
   onToggleStep: (item: BucketItem, stepId: string) => void;
   onAddStep: (item: BucketItem, title: string) => void;
   onRemoveStep: (item: BucketItem, stepId: string) => void;
+  onAddExpense: (item: BucketItem, amount: number, note?: string) => void;
+  onRemoveExpense: (item: BucketItem, expenseId: string) => void;
   categoryDef?: CategoryDefinition;
 }
 
@@ -64,12 +68,17 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
   onToggleStep,
   onAddStep,
   onRemoveStep,
+  onAddExpense,
+  onRemoveExpense,
   categoryDef,
 }) => {
   if (!isOpen || !item) return null;
 
   const isCompleted = item.status === 'completed';
   const isStarted = !isCompleted && Boolean(item.startedAt);
+  const expenses = item.expenses || [];
+  const spent = expenseTotal(expenses);
+  const currency = wishCurrency(item);
 
   const formattedStartedAt = isStarted
     ? new Date(item.startedAt!).toLocaleDateString(undefined, {
@@ -188,6 +197,17 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
             onRemove={(stepId) => onRemoveStep(item, stepId)}
           />
 
+          {/* Money spent along the way: added while in progress, kept after it's finished */}
+          {(isStarted || expenses.length > 0) && (
+            <ExpenseList
+              expenses={expenses}
+              title={item.title}
+              currency={currency}
+              onAdd={isStarted ? (amount, note) => onAddExpense(item, amount, note) : undefined}
+              onRemove={(expenseId) => onRemoveExpense(item, expenseId)}
+            />
+          )}
+
           {/* In Progress */}
           {formattedStartedAt && (
             <div className="flex items-center gap-2 text-xs text-ink/70">
@@ -243,7 +263,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
                   <span>Aspiration Budget</span>
                 </div>
                 <span className="font-mono text-sm font-semibold text-ink">
-                  ${item.budget.savedAmount} / ${item.budget.estimatedCost}
+                  {formatMoney(item.budget.savedAmount, currency)} / {formatMoney(item.budget.estimatedCost, currency)}
                 </span>
               </div>
               <div className="w-full h-2 bg-paper border border-ink/10 rounded-full overflow-hidden">
@@ -261,8 +281,13 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
                 <span>
                   {Math.round((item.budget.savedAmount / item.budget.estimatedCost) * 100)}% Funded
                 </span>
-                <span>${item.budget.estimatedCost - item.budget.savedAmount} remaining</span>
+                <span>{formatMoney(item.budget.estimatedCost - item.budget.savedAmount, currency)} remaining</span>
               </div>
+              {spent > 0 && (
+                <div className="pt-2 border-t border-ink/8 text-[11px] text-ink/70 font-mono">
+                  {formatMoney(spent, currency)} spent of {formatMoney(item.budget.estimatedCost, currency)}
+                </div>
+              )}
             </div>
           )}
 

@@ -25,8 +25,7 @@ export interface LocationInfo {
 
 export interface BudgetInfo {
   estimatedCost: number;
-  savedAmount: number;
-  currency: string;
+  savedAmount: number; // in the wish's currency (BucketItem.currency)
 }
 
 export interface MediaMeta {
@@ -56,6 +55,16 @@ export interface WishStep {
 
 export const STEP_TITLE_MAX_LENGTH = 100;
 
+// Money spent on a wish along the way (BucketItem.expenses)
+export interface WishExpense {
+  id: string;
+  amount: number; // > 0, in the wish's currency
+  note?: string; // max EXPENSE_NOTE_MAX_LENGTH chars
+  spentAt: string; // ISO timestamp
+}
+
+export const EXPENSE_NOTE_MAX_LENGTH = 60;
+
 export interface BucketItem {
   id: string;
   categoryId: string;
@@ -66,12 +75,14 @@ export interface BucketItem {
   targetDate?: string;
   location?: LocationInfo;
   budget?: BudgetInfo;
+  currency?: string; // ISO 4217 code for the budget and expenses; App stamps the Settings default on wishes without one
   mediaMeta?: MediaMeta;
   photos: string[];
   photoNotes?: Record<string, string>; // keyed by photoKey(photo), see src/utils/photoKey.ts
   attachments?: AttachmentMeta[];
   linkUrl?: string;
   steps?: WishStep[]; // Checklist of smaller steps toward the wish, in order; finishing the wish leaves them as they are
+  expenses?: WishExpense[]; // Money spent on the wish, oldest first; finishing the wish leaves them as they are
   reminder?: ReminderConfig;
   status: 'active' | 'completed' | 'archived';
   startedAt?: string; // ISO timestamp, set while the item is in progress

@@ -1,6 +1,7 @@
 import React from 'react';
 import { BookOpen, Calendar, Check, Star } from 'lucide-react';
 import { renderCategoryIcon } from '../utils/categoryIcons';
+import { formatMoney, wishCurrency } from '../utils/expenses';
 import { PRESET_RANGES, TimeRange, rangeLabel } from '../utils/timeRange';
 import { BucketItem, CategoryDefinition } from '../types';
 import { Sheet } from './Sheet';
@@ -18,9 +19,6 @@ interface VaultViewProps {
   onOpenRange: () => void;
   onCloseRange: () => void;
 }
-
-const formatMoney = (amount: number | undefined, currency = '$') =>
-  `${currency || '$'}${(amount ?? 0).toLocaleString()}`;
 
 const isShelved = (i: BucketItem) =>
   i.categoryId === 'read' || i.categoryId === 'watch' || (i.budget?.estimatedCost ?? 0) > 0;
@@ -70,9 +68,15 @@ export const VaultView: React.FC<VaultViewProps> = ({
   const isEmpty =
     readingItems.length + watchingItems.length + budgetItems.length + keptItems.length === 0;
 
-  // Financial summary
-  const totalEstimated = budgetItems.reduce((acc, i) => acc + (i.budget?.estimatedCost || 0), 0);
-  const totalSaved = budgetItems.reduce((acc, i) => acc + (i.budget?.savedAmount || 0), 0);
+  // Financial summary, one total per currency so different currencies are never added together
+  const totalsByCurrency = new Map<string, { saved: number; estimated: number }>();
+  for (const i of budgetItems) {
+    const code = wishCurrency(i);
+    const totals = totalsByCurrency.get(code) ?? { saved: 0, estimated: 0 };
+    totals.saved += i.budget?.savedAmount || 0;
+    totals.estimated += i.budget?.estimatedCost || 0;
+    totalsByCurrency.set(code, totals);
+  }
 
   // Inner buttons must not also open the detail drawer
   const stop = (fn: () => void) => (e: React.MouseEvent) => {
@@ -333,41 +337,41 @@ export const VaultView: React.FC<VaultViewProps> = ({
           </div>
 
           {/* Summary Box */}
-          <div className="bg-card border border-ink/10 rounded-2xl p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-ink/60">
-                Aspiration Savings Summary
-              </span>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="font-mono text-2xl font-bold text-ink tabular-nums">
-                  {formatMoney(totalSaved)}
-                </span>
-                <span className="text-xs text-ink/60">
-                  saved towards {formatMoney(totalEstimated)} target
-                </span>
-              </div>
-            </div>
-
-            <div className="w-full sm:w-48">
-              <div className="flex justify-between text-xs text-ink/70 mb-1 font-mono">
-                <span>Funded</span>
-                <span>
-                  {totalEstimated > 0 ? Math.round((totalSaved / totalEstimated) * 100) : 0}%
-                </span>
-              </div>
-              <div className="w-full h-2 bg-paper border border-ink/10 rounded-full overflow-hidden">
+          <div className="bg-card border border-ink/10 rounded-2xl p-5 shadow-xs space-y-4">
+            <span className="block text-xs font-semibold uppercase tracking-wider text-ink/60">
+              Aspiration Savings Summary
+            </span>
+            {[...totalsByCurrency].map(([code, { saved, estimated }]) => {
+              const funded = estimated > 0 ? Math.round((saved / estimated) * 100) : 0;
+              return (
                 <div
-                  className="h-full bg-[#059669] transition-all"
-                  style={{
-                    width: `${
-                      totalEstimated > 0
-                        ? Math.min(100, Math.round((totalSaved / totalEstimated) * 100))
-                        : 0
-                    }%`,
-                  }}
-                />
-              </div>
-            </div>
+                  key={code}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                >
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-mono text-2xl font-bold text-ink tabular-nums">
+                      {formatMoney(saved, code)}
+                    </span>
+                    <span className="text-xs text-ink/60">
+                      saved towards {formatMoney(estimated, code)} target
+                    </span>
+                  </div>
+
+                  <div className="w-full sm:w-48">
+                    <div className="flex justify-between text-xs text-ink/70 mb-1 font-mono">
+                      <span>Funded</span>
+                      <span>{funded}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-paper border border-ink/10 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[#059669] transition-all"
+                        style={{ width: `${Math.min(100, funded)}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
 
@@ -389,8 +393,8 @@ export const VaultView: React.FC<VaultViewProps> = ({
 
                 <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
                   <span className="font-mono font-semibold text-sm text-ink tabular-nums">
-                    {formatMoney(item.budget!.savedAmount, item.budget!.currency)} /{' '}
-                    {formatMoney(item.budget!.estimatedCost, item.budget!.currency)}
+                    {formatMoney(item.budget!.savedAmount, wishCurrency(item))} /{' '}
+                    {formatMoney(item.budget!.estimatedCost, wishCurrency(item))}
                   </span>
                   <button
                     onClick={stop(() => onEdit(item))}

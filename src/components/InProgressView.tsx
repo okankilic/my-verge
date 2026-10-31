@@ -2,6 +2,7 @@ import React from 'react';
 import { Hourglass, MapPin, Play } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
+import { expenseTotal, formatMoney, wishCurrency } from '../utils/expenses';
 import { ItemActions } from './ItemActions';
 import { ItemMediaStrip } from './ItemMediaStrip';
 import { StepList } from './StepList';
@@ -16,6 +17,7 @@ interface InProgressViewProps {
   onAddPhoto: (item: BucketItem, photoDataUrl: string, note?: string) => void;
   onAddAttachment: (item: BucketItem, file: File, note?: string) => void;
   onToggleStep: (item: BucketItem, stepId: string) => void;
+  onAddExpense: (item: BucketItem, amount: number, note?: string) => void;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -30,6 +32,7 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
   onAddPhoto,
   onAddAttachment,
   onToggleStep,
+  onAddExpense,
 }) => {
   if (items.length === 0) {
     return (
@@ -55,6 +58,7 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
         const sinceStr = started
           ? started.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
           : null;
+        const spent = expenseTotal(item.expenses);
 
         return (
           <article
@@ -81,12 +85,17 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
               {item.title}
             </h3>
 
-            {/* Since + Location */}
-            {(sinceStr || item.location?.name) && (
+            {/* Since + Spent + Location */}
+            {(sinceStr || spent > 0 || item.location?.name) && (
               <div className="flex items-center gap-2 text-[11px] text-ink/55 min-w-0">
                 {sinceStr && (
                   <span className="font-mono-journal shrink-0">
                     Since {sinceStr} · {days} {days === 1 ? 'day' : 'days'}
+                  </span>
+                )}
+                {spent > 0 && (
+                  <span className="font-mono-journal shrink-0 text-[#059669]">
+                    {formatMoney(spent, wishCurrency(item))} spent
                   </span>
                 )}
                 {item.location?.name && (
@@ -119,6 +128,7 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
               onDelete={onDelete}
               onAddPhoto={onAddPhoto}
               onAddAttachment={onAddAttachment}
+              onAddExpense={onAddExpense}
             />
           </article>
         );

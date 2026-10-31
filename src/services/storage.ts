@@ -1,6 +1,7 @@
 import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
-import { BucketItem, CategoryDefinition } from '../types';
+import { BucketItem, BudgetInfo, CategoryDefinition } from '../types';
+import { DEFAULT_CURRENCY, LEGACY_CURRENCY_SYMBOLS, isCurrencyCode } from '../data/currencies';
 import { INITIAL_ITEMS } from '../data/initialData';
 import { LEGACY_PRESET_PATHS } from '../data/presetPhotos';
 import { photoKey } from '../utils/photoKey';
@@ -11,6 +12,7 @@ import { isNative } from './platform';
 const ITEMS_STORAGE_KEY = 'my_verge_bucket_items_v1';
 const CATEGORIES_STORAGE_KEY = 'my_verge_categories_v1';
 const THEME_STORAGE_KEY = 'my_verge_theme_v1';
+const CURRENCY_STORAGE_KEY = 'my_verge_currency_v1';
 
 // Web: an IndexedDB key/value store. Native: one JSON file per key in the app's data
 // directory, which the OS doesn't evict the way it can evict WebView storage.
@@ -88,7 +90,8 @@ const MERGED_CATEGORY_IDS: Record<string, string> = Object.fromEntries(
 // Wishes in a retired verb move to the verb it merged into.
 // Finished wishes from before "Keep in Vault" stay where the Vault used to show them.
 // Preset photos saved under their old dev-only paths move to their public/presets ones, captions included.
-// Malformed steps are dropped.
+// Malformed steps and expenses are dropped.
+// The budget's old currency symbol moves to the wish as an ISO code; invalid codes are dropped.
 export function normalizeItems<T extends BucketItem>(raw: T[]): BucketItem[] {
   return raw.map((entry) => {
     const { subCategory: _subCategory, ...item } = entry as T & { subCategory?: string };
@@ -107,12 +110,38 @@ export function normalizeItems<T extends BucketItem>(raw: T[]): BucketItem[] {
       if (item.photoNotes) item.photoNotes = notes;
     }
     item.categoryId = MERGED_CATEGORY_IDS[item.categoryId] ?? item.categoryId;
+    // The currency used to be a symbol on the budget; it's now an ISO code on the wish
+    if (item.budget && 'currency' in item.budget) {
+      const { currency: symbol, ...budget } = item.budget as BudgetInfo & { currency?: string };
+      item.budget = budget;
+      if (!isCurrencyCode(item.currency)) {
+        item.currency = isCurrencyCode(symbol)
+          ? symbol
+          : (symbol && LEGACY_CURRENCY_SYMBOLS[symbol]) || DEFAULT_CURRENCY;
+      }
+    }
+    if (item.currency !== undefined && !isCurrencyCode(item.currency)) item.currency = undefined;
     // Steps from a hand-edited or damaged backup: keep only well-formed ones
     if (item.steps !== undefined) {
       const steps = Array.isArray(item.steps)
         ? item.steps.filter((s) => s && typeof s.id === 'string' && typeof s.title === 'string' && s.title.trim())
         : [];
       item.steps = steps.length > 0 ? steps : undefined;
+    }
+    // Same for expenses: keep only ones with an id, a positive amount and a date
+    if (item.expenses !== undefined) {
+      const expenses = Array.isArray(item.expenses)
+        ? item.expenses.filter(
+            (e) =>
+              e &&
+              typeof e.id === 'string' &&
+              typeof e.amount === 'number' &&
+              Number.isFinite(e.amount) &&
+              e.amount > 0 &&
+              typeof e.spentAt === 'string'
+          )
+        : [];
+      item.expenses = expenses.length > 0 ? expenses : undefined;
     }
     if (item.status === 'completed' && item.keptInVault === undefined) {
       item.keptInVault =
@@ -190,6 +219,20 @@ export async function loadTheme(): Promise<ThemePreference> {
 
 export function saveTheme(theme: ThemePreference): void {
   queueWrite(THEME_STORAGE_KEY, theme, 'theme');
+}
+
+// The currency new wishes start with (Settings)
+export async function loadDefaultCurrency(): Promise<string> {
+  try {
+    const raw = await readKey(CURRENCY_STORAGE_KEY);
+    return isCurrencyCode(raw) ? raw : DEFAULT_CURRENCY;
+  } catch {
+    return DEFAULT_CURRENCY;
+  }
+}
+
+export function saveDefaultCurrency(code: string): void {
+  queueWrite(CURRENCY_STORAGE_KEY, code, 'currency');
 }
 
 // Web: download the JSON. Native: write it to the cache and open the share sheet (Save to Files, AirDrop, Drive...)
