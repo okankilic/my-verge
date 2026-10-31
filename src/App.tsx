@@ -254,7 +254,7 @@ export default function App() {
       setItems((prev) => [newItem, ...prev]);
       // New wishes land at the top of the Journal; say so when it isn't the tab on screen
       if (currentTab !== 'feed') {
-        notify('Added to your Journal.', 'success', {
+        notify('Added to your Journal!', 'success', {
           action: { label: 'Open', onAction: () => setCurrentTab('feed') },
         });
       }
@@ -282,7 +282,7 @@ export default function App() {
       expenses: item.expenses,
       updatedAt: item.updatedAt,
     };
-    notifyUndo(isNowCompleted ? `Accomplished "${item.title}".` : `"${item.title}" is back in your Journal.`, () => {
+    notifyUndo(isNowCompleted ? `You did it: "${item.title}"!` : `"${item.title}" is back in your Journal.`, () => {
       patchItem(item.id, previous);
       // Dropping the celebrated item hides its reflection sheet (MilestoneSheet renders nothing without one)
       if (isNowCompleted) {
@@ -369,9 +369,9 @@ export default function App() {
     // Prep never blocks starting; the toast just mentions what's still left
     const prepLeft = stepProgress(item.prepSteps);
     const leftCount = prepLeft.total - prepLeft.done;
-    const prepNote = leftCount > 0 ? ` ${leftCount} prep ${leftCount === 1 ? 'item' : 'items'} left.` : '';
+    const prepNote = leftCount > 0 ? ` ${leftCount} prep ${leftCount === 1 ? 'item' : 'items'} to go.` : '';
     notifyUndo(
-      item.startedAt ? `Stopped "${item.title}".` : `Started "${item.title}". It's on Now.${prepNote}`,
+      item.startedAt ? `Paused "${item.title}". It's back in your Journal.` : `"${item.title}" is on Now. Enjoy!${prepNote}`,
       () => patchItem(item.id, previous)
     );
     const nowIso = new Date().toISOString();
@@ -498,7 +498,7 @@ export default function App() {
       }
     } catch (err) {
       console.error('Failed to add file:', err);
-      notify(`Could not add "${file.name}".`, 'error');
+      notify(`Couldn't add "${file.name}". Try again?`, 'error');
     }
   };
 
@@ -544,7 +544,7 @@ export default function App() {
       setViewingItem(null);
     }
 
-    notifyUndo(`Deleted "${target.title}".`, () => {
+    notifyUndo(`"${target.title}" is gone.`, () => {
       clearTimeout(pendingBlobDeletes.current.get(id));
       pendingBlobDeletes.current.delete(id);
       // Back into the slot it had, as far as the list still allows
@@ -738,7 +738,7 @@ export default function App() {
                 <Bell className="w-4 h-4 text-[#C05621] shrink-0" />
                 <div className="truncate">
                   <span className="text-[10px] uppercase tracking-wider text-[#C05621] font-bold block">
-                    Alert Due
+                    Reminder
                   </span>
                   <span className="text-xs font-semibold text-ink truncate block">
                     {activeToastItem.title}
@@ -787,10 +787,10 @@ export default function App() {
                     <Compass className="w-6 h-6 stroke-[1.5]" />
                   </div>
                   <h3 className="font-serif-journal text-base font-medium text-ink">
-                    No active aspirations found
+                    Your Journal is ready for a wish
                   </h3>
                   <p className="text-xs text-ink/60 max-w-xs mx-auto">
-                    Add your next wish or clear filters to see your lists.
+                    Add one now, or clear the filters to see the rest.
                   </p>
                   <div className="flex items-center justify-center gap-2 pt-1">
                     {(selectedCategoryId !== 'all' || searchQuery.trim() !== '') && (

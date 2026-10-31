@@ -96,6 +96,6 @@ export async function shareItem(item: BucketItem, category?: CategoryDefinition)
     // Dismissing the share sheet rejects; that's not an error worth showing
     if (isCancel(err)) return;
     console.error('Share failed:', err);
-    notify('Could not share this wish.', 'error');
+    notify("Couldn't share this wish. Try again?", 'error');
   }
 }

@@ -66,18 +66,18 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
           media.push({ kind: 'image', dataUrl: await fileToResizedDataUrl(file) });
         } else if (file.type.startsWith('video/') || file.type === 'application/pdf') {
           if (file.size > MAX_ATTACHMENT_BYTES) {
-            notify(`"${file.name}" is larger than 100 MB.`, 'error');
+            notify(`"${file.name}" is over 100 MB. Try a smaller file.`, 'error');
           } else if (file.type === 'application/pdf') {
             media.push({ kind: 'pdf', file });
           } else {
             media.push({ kind: 'video', file, previewUrl: URL.createObjectURL(file) });
           }
         } else {
-          notify(`"${file.name}" isn't an image, video or PDF.`, 'error');
+          notify('Pick an image, video or PDF instead.', 'error');
         }
       } catch (err) {
         console.error('Failed to read file:', err);
-        notify(`Could not read "${file.name}".`, 'error');
+        notify(`Couldn't open "${file.name}". Try again?`, 'error');
       }
     }
     enqueue(media);

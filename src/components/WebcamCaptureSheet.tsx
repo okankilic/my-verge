@@ -45,10 +45,10 @@ export const WebcamCaptureSheet: React.FC<WebcamCaptureSheetProps> = ({
         const name = err instanceof DOMException ? err.name : '';
         setError(
           name === 'NotAllowedError'
-            ? 'Camera access was blocked. Allow it in your browser settings, or choose a file instead.'
+            ? 'Allow camera access in your browser settings, or pick a file instead.'
             : name === 'NotFoundError'
-              ? 'No camera was found on this device.'
-              : 'Could not start the camera.'
+              ? 'No camera here. Pick a file instead.'
+              : "The camera didn't start. Try again?"
         );
       });
 

@@ -283,10 +283,10 @@ export const ReminderRadarView: React.FC<ReminderRadarViewProps> = ({
       {dueItems.length === 0 && upcomingItems.length === 0 && (
         <div className="p-8 text-center bg-card border border-ink/10 rounded-xl">
           <p className="font-serif-journal text-base text-ink/70">
-            No reminders scheduled
+            All clear for now
           </p>
           <p className="text-xs text-ink/50 mt-1 max-w-sm mx-auto">
-            Add a reminder date to any item in your journal to receive gentle alerts and timed reflections.
+            Add a reminder date to any wish and you'll get a gentle nudge.
           </p>
         </div>
       )}

@@ -50,15 +50,15 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
       {accomplishedItems.length === 0 ? (
         <div className="p-12 text-center bg-card border border-ink/10 rounded-2xl">
           <p className="font-serif-journal text-lg text-ink/70">
-            {hiddenItems.length > 0 ? 'Your memories are tucked away' : 'Your retrospective archive is waiting'}
+            {hiddenItems.length > 0 ? 'Your memories are tucked away' : 'Your memories start here'}
           </p>
           <p className="text-xs text-ink/50 mt-1 max-w-sm mx-auto">
             {hiddenItems.length > 0 ? (
-              'Every finished wish here is hidden. Open one below and switch off Hide in Memories to bring it back.'
+              'They\'re all hidden. Open one below and switch off Hide in Memories to bring it back.'
             ) : (
               <>
                 Tap <Check aria-hidden className="inline w-3 h-3 -mt-0.5 mx-0.5 stroke-[2.5]" />
-                <span className="sr-only">Accomplish</span> on any wish as you experience it to write a memory reflection and preserve it here forever.
+                <span className="sr-only">Accomplish</span> on a wish when you've done it to write a few words and keep the memory.
               </>
             )}
           </p>

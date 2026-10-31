@@ -115,13 +115,13 @@ export const VaultView: React.FC<VaultViewProps> = ({
       {isEmpty &&
         (range === 'all' ? (
           <EmptyShelf
-            title="Your Vault is empty"
+            title="Your Vault is ready to fill"
             hint="Read and Watch wishes, wishes with a budget, and finished wishes you keep will show up here."
           />
         ) : (
           <EmptyShelf
             title={`Nothing from ${rangeLabel(range).toLowerCase()} yet`}
-            hint="Try another time to see more of your Vault."
+            hint="Try another time range to see more."
           />
         ))}
 

@@ -70,7 +70,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                 Make It Real
               </span>
               <span className="text-[10px] sm:text-[11px] font-sans tracking-tight text-ink/55 leading-tight mt-0.5">
-                Someday is closer than you think
+                Start with a wish
               </span>
             </span>
           </button>

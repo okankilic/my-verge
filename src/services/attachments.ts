@@ -87,7 +87,7 @@ export async function openAttachment(att: AttachmentMeta): Promise<void> {
       await FileOpener.openFile({ path: uri, mimeType: att.mimeType || undefined });
     } catch (err) {
       console.error('Failed to open attachment:', err);
-      notify('This file is no longer available on this device.', 'error');
+      notify("This file isn't on this device anymore.", 'error');
     }
     return;
   }
@@ -106,6 +106,6 @@ export async function openAttachment(att: AttachmentMeta): Promise<void> {
   } catch (err) {
     win?.close();
     console.error('Failed to open attachment:', err);
-    notify('This file is no longer available on this device.', 'error');
+    notify("This file isn't on this device anymore.", 'error');
   }
 }

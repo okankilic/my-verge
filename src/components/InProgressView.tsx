@@ -40,7 +40,7 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
         <div className="w-12 h-12 bg-paper text-ink/40 rounded-lg mx-auto flex items-center justify-center mb-3">
           <Hourglass className="w-6 h-6 stroke-[1.5]" />
         </div>
-        <p className="font-serif-journal text-lg text-ink/70">Nothing in progress</p>
+        <p className="font-serif-journal text-lg text-ink/70">Ready when you are</p>
         <p className="text-xs text-ink/50 mt-1 max-w-sm mx-auto">
           Tap <Play aria-hidden className="inline w-3 h-3 -mt-0.5 mx-0.5" />
           <span className="sr-only">Start</span> on any wish in your Journal when you begin living it.

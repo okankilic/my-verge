@@ -56,7 +56,7 @@ export async function syncNativeReminders(items: BucketItem[]): Promise<void> {
       notifications.push({
         id: stableIntId(item.id),
         title: item.title,
-        body: 'A reminder from your journal',
+        body: "It's time for this wish!",
         schedule,
         extra: { itemId: item.id },
       });

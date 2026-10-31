@@ -107,7 +107,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       // Dismissing the native share sheet rejects; that's not an error worth showing
       if (/cancel/i.test(String(err?.message ?? err))) return;
       console.error('Backup export failed:', err);
-      notify('Could not export the backup.', 'error');
+      notify("Couldn't save the backup. Try again?", 'error');
     });
   };
 
@@ -121,7 +121,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     try {
       parsed = JSON.parse(await file.text());
     } catch {
-      notify('Failed to parse backup file.', 'error');
+      notify("That file couldn't be read. Is it a Make It Real backup?", 'error');
       return;
     }
 
@@ -137,7 +137,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         )
       : [];
     if (importedItems.length === 0) {
-      notify('Invalid backup file format.', 'error');
+      notify("That doesn't look like a Make It Real backup.", 'error');
       return;
     }
     const importedCategories =
@@ -154,14 +154,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     deleteOrphanedBlobs(pendingRestore.items);
     onReloadData(pendingRestore.items, pendingRestore.categories);
     setPendingRestore(null);
-    notify('Backup restored successfully.', 'success');
+    notify('Welcome back! Your journal is restored.', 'success');
   };
 
   const handleResetToSample = () => {
     deleteOrphanedBlobs(INITIAL_ITEMS);
     onReloadData(INITIAL_ITEMS, DEFAULT_CATEGORIES);
     setIsConfirmingReset(false);
-    notify('Journal reset to the samples.', 'success');
+    notify('Fresh start! The samples are back.', 'success');
   };
 
   return (
@@ -292,7 +292,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
             {pendingRestore && (
               <InlineConfirm
-                message={`Your current journal will be replaced with ${pendingRestore.items.length} ${
+                message={`This swaps your journal for ${pendingRestore.items.length} ${
                   pendingRestore.items.length === 1 ? 'entry' : 'entries'
                 } from "${pendingRestore.fileName}".`}
                 confirmLabel="Restore"
@@ -312,8 +312,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   : notificationState === 'denied'
                     ? 'Off. Turn them on in your system settings.'
                     : notificationState === 'unsupported'
-                      ? 'Not supported on this device.'
-                      : 'Get a notification when a reminder is due'}
+                      ? "This device can't show notifications."
+                      : 'Get a nudge when a reminder is due.'}
               </p>
             </div>
             {notificationState === 'default' && (
@@ -332,7 +332,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <div className="min-w-0">
               <h4 className="text-xs font-semibold text-ink">Reminder Chime</h4>
               <p className="text-[11px] text-ink/60 mt-0.5">
-                Harmonic meditation bell synthesized via Web Audio API
+                A soft bell that plays with each reminder.
               </p>
             </div>
             <button
@@ -350,7 +350,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="bg-card border border-red-500/30 rounded-2xl p-4">
                 <h4 className="text-xs font-semibold text-ink">Reset to sample journal?</h4>
                 <InlineConfirm
-                  message="Your entries, categories, photos and files will be replaced with the original samples."
+                  message="This swaps your wishes, photos and files for the samples."
                   confirmLabel="Reset"
                   onConfirm={handleResetToSample}
                   onCancel={() => setIsConfirmingReset(false)}
