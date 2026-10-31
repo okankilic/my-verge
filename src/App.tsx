@@ -15,8 +15,6 @@ import {
   BucketItem,
   CategoryDefinition,
   DefaultCategoryId,
-  FilterSortOption,
-  PriorityLevel,
   ViewTab,
 } from './types';
 import {
@@ -34,7 +32,7 @@ import {
   getDueReminderItems,
   getUnnotifiedDueItems,
 } from './services/notifications';
-import { saveAttachmentBlob, deleteAttachmentBlobs } from './services/attachments';
+import { saveAttachment, deleteAttachmentBlobs } from './services/attachments';
 import { syncNativeReminders, onReminderTapped } from './services/reminderScheduler';
 import { isNative, applyNativeTheme } from './services/platform';
 import { confirmAction, notify } from './services/dialogs';
@@ -43,7 +41,7 @@ import { photoKey } from './utils/photoKey';
 import { TopNav } from './components/TopNav';
 import { BottomTabBar } from './components/BottomTabBar';
 import { CategoryRibbon } from './components/CategoryRibbon';
-import { ItemRow } from './components/ItemRow';
+import { JournalList } from './components/JournalList';
 import { ItemDetailDrawer } from './components/ItemDetailDrawer';
 import { ItemFormDrawer } from './components/ItemFormDrawer';
 import { MilestoneModal } from './components/MilestoneModal';
@@ -58,14 +56,15 @@ import { DialogHost } from './components/DialogHost';
 
 export default function App() {
   // State
-  const [items, setItems] = useState<BucketItem[]>(() => loadBucketItems());
-  const [categories, setCategories] = useState<CategoryDefinition[]>(() => loadCategories());
+  const [items, setItems] = useState<BucketItem[]>([]);
+  const [categories, setCategories] = useState<CategoryDefinition[]>([]);
+  // Storage is async; nothing is saved, synced or rendered until the stored data is loaded
+  const [isHydrated, setIsHydrated] = useState(false);
   const [currentTab, setCurrentTab] = useState<ViewTab>('inprogress');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [sortOption] = useState<FilterSortOption>('targetDate');
 
   // Modals & Drawers
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -80,9 +79,26 @@ export default function App() {
   const [isMobileFrame, setIsMobileFrame] = useState(false);
 
   // Appearance: 'system' follows prefers-color-scheme, otherwise forced via data-theme
-  const [theme, setTheme] = useState<ThemePreference>(() => loadTheme());
+  const [theme, setTheme] = useState<ThemePreference>('system');
 
   useEffect(() => {
+    let cancelled = false;
+    Promise.all([loadBucketItems(), loadCategories(), loadTheme()]).then(
+      ([loadedItems, loadedCategories, loadedTheme]) => {
+        if (cancelled) return;
+        setItems(loadedItems);
+        setCategories(loadedCategories);
+        setTheme(loadedTheme);
+        setIsHydrated(true);
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
     const root = document.documentElement;
     if (theme === 'system') {
       delete root.dataset.theme;
@@ -91,31 +107,33 @@ export default function App() {
     }
     saveTheme(theme);
     applyNativeTheme(theme);
-  }, [theme]);
+  }, [theme, isHydrated]);
 
   // Active Reminder In-App Toast
   const [activeToastItem, setActiveToastItem] = useState<BucketItem | null>(null);
 
   // Persist items and hand reminders to the OS (native only)
   useEffect(() => {
+    if (!isHydrated) return;
     saveBucketItems(items);
     syncNativeReminders(items);
-  }, [items]);
+  }, [items, isHydrated]);
 
   // Tapping a native reminder notification opens that item
   const [tappedItemId, setTappedItemId] = useState<string | null>(null);
   useEffect(() => onReminderTapped(setTappedItemId), []);
   useEffect(() => {
-    if (!tappedItemId) return;
+    if (!tappedItemId || !isHydrated) return;
     const item = items.find((i) => i.id === tappedItemId);
     if (item) setViewingItem(item);
     setTappedItemId(null);
-  }, [tappedItemId, items]);
+  }, [tappedItemId, items, isHydrated]);
 
   // Persist categories
   useEffect(() => {
+    if (!isHydrated) return;
     saveCategories(categories);
-  }, [categories]);
+  }, [categories, isHydrated]);
 
   // Periodic Reminder Checker (checks every 30 seconds); each occurrence alerts once, via lastNotifiedAt
   useEffect(() => {
@@ -140,10 +158,11 @@ export default function App() {
       );
     };
 
+    if (!isHydrated) return;
     checkReminders();
     const interval = setInterval(checkReminders, 30000);
     return () => clearInterval(interval);
-  }, [items]);
+  }, [items, isHydrated]);
 
   // Dynamic counts
   const countsByCategory = useMemo(() => {
@@ -331,11 +350,11 @@ export default function App() {
     }
   };
 
-  // Videos and PDFs are stored in IndexedDB; the item keeps only their metadata
+  // Videos and PDFs are stored as files (native) or in IndexedDB (web); the item keeps only their metadata
   const handleAddAttachment = async (item: BucketItem, file: File, note?: string) => {
     try {
       const id = `att-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
-      await saveAttachmentBlob(id, file);
+      await saveAttachment(id, file);
       const nowIso = new Date().toISOString();
       const append = (i: BucketItem): BucketItem => ({
         ...i,
@@ -454,47 +473,39 @@ export default function App() {
     );
   }, [items, searchQuery]);
 
-  // Filtered & Sorted Feed Items
+  // Filtered Feed Items, in the user's priority order (the order of the items array)
   const filteredActiveItems = useMemo(() => {
-    return searchedItems
-      .filter((item) => {
-        if (item.status !== 'active' || item.startedAt) return false;
+    return searchedItems.filter((item) => {
+      if (item.status !== 'active' || item.startedAt) return false;
 
-        if (selectedCategoryId !== 'all' && item.categoryId !== selectedCategoryId) {
-          return false;
-        }
+      if (selectedCategoryId !== 'all' && item.categoryId !== selectedCategoryId) {
+        return false;
+      }
 
-        if (selectedSubCategory !== 'all' && item.subCategory !== selectedSubCategory) {
-          return false;
-        }
+      if (selectedSubCategory !== 'all' && item.subCategory !== selectedSubCategory) {
+        return false;
+      }
 
-        return true;
-      })
-      .sort((a, b) => {
-        if (sortOption === 'targetDate') {
-          if (!a.targetDate && !b.targetDate) return 0;
-          if (!a.targetDate) return 1;
-          if (!b.targetDate) return -1;
-          return new Date(a.targetDate).getTime() - new Date(b.targetDate).getTime();
+      return true;
+    });
+  }, [searchedItems, selectedCategoryId, selectedSubCategory]);
+
+  // Reorder only the visible subset: the dragged items swap among the array slots they
+  // already occupy, so items hidden by filters or search keep their positions
+  const handleReorderJournal = (orderedIds: string[]) => {
+    setItems((prev) => {
+      const visible = new Set(orderedIds);
+      const byId = new Map(prev.map((i) => [i.id, i]));
+      const next = [...prev];
+      let cursor = 0;
+      prev.forEach((item, index) => {
+        if (visible.has(item.id)) {
+          next[index] = byId.get(orderedIds[cursor++])!;
         }
-        if (sortOption === 'priority') {
-          const weights: Record<PriorityLevel, number> = {
-            urgent: 4,
-            this_month: 3,
-            this_year: 2,
-            someday: 1,
-          };
-          return weights[b.priority] - weights[a.priority];
-        }
-        if (sortOption === 'newest') {
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        }
-        if (sortOption === 'alphabetical') {
-          return a.title.localeCompare(b.title);
-        }
-        return 0;
       });
-  }, [searchedItems, selectedCategoryId, selectedSubCategory, sortOption]);
+      return next;
+    });
+  };
 
   // In-progress items, most recently started first
   const inProgressItems = useMemo(() => {
@@ -502,6 +513,8 @@ export default function App() {
       .filter((item) => item.status === 'active' && item.startedAt)
       .sort((a, b) => new Date(b.startedAt!).getTime() - new Date(a.startedAt!).getTime());
   }, [searchedItems]);
+
+  if (!isHydrated) return <div className="min-h-screen bg-page" />;
 
   return (
     <div className="min-h-screen paper-texture flex flex-col selection:bg-[#B45309]/20 selection:text-ink">
@@ -637,19 +650,15 @@ export default function App() {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-2 sm:space-y-2.5">
-                  {filteredActiveItems.map((item) => (
-                    <ItemRow
-                      key={item.id}
-                      item={item}
-                      categoryDef={categories.find((c) => c.id === item.categoryId)}
-                      onToggleComplete={handleToggleComplete}
-                      onToggleStarted={handleToggleStarted}
-                      onDelete={handleDeleteItem}
-                      onSelect={(it) => setViewingItem(it)}
-                    />
-                  ))}
-                </div>
+                <JournalList
+                  items={filteredActiveItems}
+                  categories={categories}
+                  onToggleComplete={handleToggleComplete}
+                  onToggleStarted={handleToggleStarted}
+                  onDelete={handleDeleteItem}
+                  onSelect={(it) => setViewingItem(it)}
+                  onReorder={handleReorderJournal}
+                />
               )}
             </div>
           )}
@@ -813,6 +822,7 @@ export default function App() {
       <CreateCategoryModal
         isOpen={isCreateCategoryOpen}
         onClose={() => setIsCreateCategoryOpen(false)}
+        categories={categories}
         onCreateCategory={handleCreateCategory}
       />
 

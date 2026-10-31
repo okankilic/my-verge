@@ -64,7 +64,7 @@ export const CategoryRibbon: React.FC<CategoryRibbonProps> = ({
           >
             <ArrowUp className="w-4 h-4 stroke-[2.5] text-ink group-hover:-translate-y-0.5 transition-transform" />
             <span className="font-serif-journal font-medium text-xs">
-              {selectedCategory?.name}
+              {selectedCategory?.verb}
             </span>
           </button>
 
@@ -151,7 +151,7 @@ export const CategoryRibbon: React.FC<CategoryRibbonProps> = ({
                 }`}
               >
                 <span style={{ color: cat.accentColor }}>{renderCategoryIcon(cat.icon, 'w-3.5 h-3.5')}</span>
-                <span>{cat.name}</span>
+                <span>{cat.verb}</span>
                 <span className={countBadgeClass(isSelected)}>{count}</span>
               </button>
             );

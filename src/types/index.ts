@@ -6,8 +6,7 @@ export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 export interface CategoryDefinition {
   id: DefaultCategoryId | string;
-  name: string; // Action used as category name, e.g. "Go", "Do", "Buy", "Remember", "Read", "Watch"
-  verb?: string; // Optional action verb alias
+  verb: string; // Action verb used as the category label, e.g. "Go", "Do", "Buy" (see CATEGORY_VERBS)
   icon: string; // Lucide icon identifier
   tagline: string;
   defaultSubCategories: string[];
@@ -77,4 +76,3 @@ export interface BucketItem {
 }
 
 export type ViewTab = 'feed' | 'reminders' | 'inprogress' | 'vault' | 'milestones' | 'settings';
-export type FilterSortOption = 'targetDate' | 'priority' | 'newest' | 'alphabetical';

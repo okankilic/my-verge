@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { X, Plus, Sparkles, Check } from 'lucide-react';
 import { CategoryDefinition } from '../types';
+import { CATEGORY_VERBS } from '../data/categories';
 import { AVAILABLE_CATEGORY_ICONS, renderCategoryIcon } from '../utils/categoryIcons';
 
 interface CreateCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
+  categories: CategoryDefinition[];
   onCreateCategory: (category: CategoryDefinition) => void;
 }
 
@@ -25,9 +27,10 @@ const COLOR_PRESETS = [
 export const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
   isOpen,
   onClose,
+  categories,
   onCreateCategory,
 }) => {
-  const [actionName, setActionName] = useState('');
+  const [selectedVerb, setSelectedVerb] = useState<string | null>(null);
   const [selectedIcon, setSelectedIcon] = useState('Sparkles');
   const [selectedColor, setSelectedColor] = useState('#B45309');
   const [tagline, setTagline] = useState('');
@@ -36,17 +39,15 @@ export const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
 
   if (!isOpen) return null;
 
+  const usedVerbs = new Set(categories.map((c) => c.verb.toLowerCase()));
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = actionName.trim();
-    if (!trimmed) {
-      setError('Please provide an action name for this category.');
+    if (!selectedVerb) {
+      setError('Please pick an action for this category.');
       return;
     }
-
-    // Standardize: strip any accidental "Want to " prefix and format with initial capital
-    const cleaned = trimmed.replace(/^want to\s+/i, '').trim();
-    const formatted = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+    const formatted = selectedVerb;
 
     // Parse subcategories from comma or newline separation
     const parsedSubCategories = subCategoriesInput
@@ -62,7 +63,6 @@ export const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
 
     const newCategory: CategoryDefinition = {
       id: `custom-${slug}-${Date.now().toString(36).slice(-4)}`,
-      name: formatted,
       verb: formatted,
       icon: selectedIcon,
       tagline: tagline.trim() || `${formatted} milestones & experiences`,
@@ -72,7 +72,7 @@ export const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
 
     onCreateCategory(newCategory);
     // Reset state
-    setActionName('');
+    setSelectedVerb(null);
     setSelectedIcon('Sparkles');
     setSelectedColor('#B45309');
     setTagline('');
@@ -81,10 +81,7 @@ export const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
     onClose();
   };
 
-  const previewDisplayName = actionName.trim()
-    ? (actionName.trim().replace(/^want to\s+/i, '').trim().charAt(0).toUpperCase() +
-       actionName.trim().replace(/^want to\s+/i, '').trim().slice(1)) || 'Action'
-    : 'New Category';
+  const previewDisplayName = selectedVerb ?? 'New Category';
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
@@ -137,26 +134,40 @@ export const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
             </div>
           )}
 
-          {/* Action as Category Name */}
+          {/* Action verb */}
           <div>
-            <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1">
-              Action / Category Name *
+            <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
+              Action *
             </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={actionName}
-                onChange={(e) => {
-                  setActionName(e.target.value);
-                  if (error) setError('');
-                }}
-                placeholder="e.g. Cook, Listen, Taste, Learn, Play, Craft"
-                className="w-full min-h-[40px] px-3 py-2 text-xs bg-card border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
-                autoFocus
-              />
+            <div className="flex flex-wrap gap-1.5 p-2 bg-card border border-ink/10 rounded-lg">
+              {CATEGORY_VERBS.map((verb) => {
+                const isSelected = selectedVerb === verb;
+                const isTaken = usedVerbs.has(verb.toLowerCase());
+                return (
+                  <button
+                    key={verb}
+                    type="button"
+                    disabled={isTaken}
+                    aria-pressed={isSelected}
+                    onClick={() => {
+                      setSelectedVerb(verb);
+                      if (error) setError('');
+                    }}
+                    className={`min-h-[44px] px-3.5 text-xs font-semibold rounded-lg transition-all ${
+                      isSelected
+                        ? 'bg-ink text-paper shadow-2xs'
+                        : isTaken
+                          ? 'text-ink/25 line-through cursor-not-allowed'
+                          : 'text-ink/70 hover:text-ink hover:bg-paper'
+                    }`}
+                  >
+                    {verb}
+                  </button>
+                );
+              })}
             </div>
             <p className="text-[10px] text-ink/50 mt-1">
-              Use an action verb as your category name (e.g. Cook, Learn, Listen, Play)
+              Pick the action this category is about
             </p>
           </div>
 
@@ -255,7 +266,7 @@ export const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={!actionName.trim()}
+              disabled={!selectedVerb}
               className="min-h-[40px] px-5 py-2 text-xs font-semibold text-paper bg-ink hover:bg-ink/85 disabled:opacity-40 disabled:hover:bg-ink rounded-lg shadow-2xs transition-all flex items-center gap-1.5"
             >
               <Plus className="w-3.5 h-3.5 stroke-[2.5]" />

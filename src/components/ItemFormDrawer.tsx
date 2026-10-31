@@ -267,7 +267,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                       {renderCategoryIcon(cat.icon, 'w-3.5 h-3.5')}
                     </span>
                     <span className="text-[11px] leading-tight truncate max-w-full">
-                      {cat.name}
+                      {cat.verb}
                     </span>
                   </button>
                 );

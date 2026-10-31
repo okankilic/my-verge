@@ -1,12 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Bell, Download, Upload, Volume2, RefreshCw } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
-import {
-  exportBackup,
-  saveBucketItems,
-  saveCategories,
-  ThemePreference,
-} from '../services/storage';
+import { exportBackup, normalizeCategories, ThemePreference } from '../services/storage';
 import { INITIAL_ITEMS } from '../data/initialData';
 import { DEFAULT_CATEGORIES } from '../data/categories';
 import {
@@ -102,7 +97,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     }
     const importedCategories =
       Array.isArray(parsed.categories) && parsed.categories.length > 0
-        ? (parsed.categories as CategoryDefinition[])
+        ? normalizeCategories(parsed.categories)
         : categories;
 
     const confirmed = await confirmAction({
@@ -116,8 +111,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     if (!confirmed) return;
 
     deleteOrphanedBlobs(importedItems);
-    saveBucketItems(importedItems);
-    saveCategories(importedCategories);
     onReloadData(importedItems, importedCategories);
     notify('Backup restored successfully.', 'success');
   };
@@ -131,8 +124,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     });
     if (confirmed) {
       deleteOrphanedBlobs(INITIAL_ITEMS);
-      saveBucketItems(INITIAL_ITEMS);
-      saveCategories(DEFAULT_CATEGORIES);
       onReloadData(INITIAL_ITEMS, DEFAULT_CATEGORIES);
     }
   };

@@ -3,7 +3,6 @@ import { CategoryDefinition } from '../types';
 export const DEFAULT_CATEGORIES: CategoryDefinition[] = [
   {
     id: 'go',
-    name: 'Go',
     verb: 'Go',
     icon: 'Compass',
     tagline: 'Places, journeys & architectural wonders',
@@ -18,7 +17,6 @@ export const DEFAULT_CATEGORIES: CategoryDefinition[] = [
   },
   {
     id: 'do',
-    name: 'Do',
     verb: 'Do',
     icon: 'Sparkles',
     tagline: 'Adventures, craft skills & life experiments',
@@ -33,7 +31,6 @@ export const DEFAULT_CATEGORIES: CategoryDefinition[] = [
   },
   {
     id: 'buy',
-    name: 'Buy',
     verb: 'Buy',
     icon: 'ShoppingBag',
     tagline: 'Timeless objects, craft & deliberate pieces',
@@ -48,7 +45,6 @@ export const DEFAULT_CATEGORIES: CategoryDefinition[] = [
   },
   {
     id: 'remember',
-    name: 'Remember',
     verb: 'Remember',
     icon: 'Feather',
     tagline: 'Mantras, lessons, gratitude & life anniversaries',
@@ -62,7 +58,6 @@ export const DEFAULT_CATEGORIES: CategoryDefinition[] = [
   },
   {
     id: 'read',
-    name: 'Read',
     verb: 'Read',
     icon: 'BookOpen',
     tagline: 'Books, essays, philosophy & classic literature',
@@ -77,7 +72,6 @@ export const DEFAULT_CATEGORIES: CategoryDefinition[] = [
   },
   {
     id: 'watch',
-    name: 'Watch',
     verb: 'Watch',
     icon: 'Film',
     tagline: 'Auteur cinema, documentaries & stage arts',
@@ -90,4 +84,12 @@ export const DEFAULT_CATEGORIES: CategoryDefinition[] = [
     ],
     accentColor: '#BE185D', // rose / burgundy
   },
+];
+
+// Verbs a custom category can be created from
+export const CATEGORY_VERBS: string[] = [
+  'Go', 'Do', 'Buy', 'Remember', 'Read', 'Watch',
+  'Cook', 'Learn', 'Listen', 'Play', 'Make', 'Try',
+  'Taste', 'Visit', 'Write', 'Practice', 'Build', 'Grow',
+  'Collect', 'Give', 'Call', 'See', 'Explore', 'Fix',
 ];

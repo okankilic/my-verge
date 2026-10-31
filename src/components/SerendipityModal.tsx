@@ -86,7 +86,7 @@ export const SerendipityModal: React.FC<SerendipityModalProps> = ({
                   >
                     {renderCategoryIcon(catDef?.icon || selectedItem.categoryId, 'w-3.5 h-3.5')}
                   </span>
-                  <span>{catDef?.name || selectedItem.categoryId}</span>
+                  <span>{catDef?.verb || selectedItem.categoryId}</span>
                 </span>
                 {selectedItem.subCategory && (
                   <span className="font-semibold text-[#B45309]">

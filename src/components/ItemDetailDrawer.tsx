@@ -98,7 +98,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               >
                 {renderCategoryIcon(categoryDef?.icon || item.categoryId, 'w-3.5 h-3.5')}
               </span>
-              <span>{categoryDef?.name || item.categoryId}</span>
+              <span>{categoryDef?.verb || item.categoryId}</span>
             </span>
             {item.subCategory && (
               <>

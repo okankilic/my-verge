@@ -332,7 +332,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
               >
                 <div className="min-w-0">
                   <div className="text-[11px] text-ink/60">
-                    <span>{categories.find((c) => c.id === item.categoryId)?.name || item.categoryId}</span>
+                    <span>{categories.find((c) => c.id === item.categoryId)?.verb || item.categoryId}</span>
                     {item.subCategory && <span> · {item.subCategory}</span>}
                   </div>
                   <h4 className="font-serif-journal text-base font-medium text-ink">

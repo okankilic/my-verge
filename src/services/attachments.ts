@@ -1,77 +1,81 @@
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import { FileOpener } from '@capawesome-team/capacitor-file-opener';
+import { AttachmentMeta } from '../types';
 import { notify } from './dialogs';
+import { withStore } from './idb';
 import { blobToBase64, isNative } from './platform';
 
-// Binary attachments (videos, PDFs) live in IndexedDB; items only keep AttachmentMeta in localStorage
+// Binary attachments (videos, PDFs); items only keep AttachmentMeta.
+// Native: attachments/<id>/<name> in the app's data directory, which the OS doesn't evict.
+// Web: IndexedDB.
 const DB_NAME = 'my_verge_attachments_v1';
 const STORE = 'files';
 
 export const MAX_ATTACHMENT_BYTES = 100 * 1024 * 1024;
 
-function openDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = () => req.result.createObjectStore(STORE);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
+// A multiple of 3, so each chunk's base64 can be appended to the previous one cleanly
+const CHUNK_BYTES = 3 * 1024 * 1024;
 
-async function withStore<T>(
-  mode: IDBTransactionMode,
-  run: (store: IDBObjectStore) => IDBRequest<T>
-): Promise<T> {
-  const db = await openDb();
+const attachmentDir = (id: string) => `attachments/${id}`;
+const attachmentPath = (id: string, name: string) =>
+  `${attachmentDir(id)}/${name.replace(/[\\/:]/g, '_') || id}`;
+
+async function removeAttachmentDir(id: string): Promise<void> {
   try {
-    return await new Promise<T>((resolve, reject) => {
-      const tx = db.transaction(STORE, mode);
-      const req = run(tx.objectStore(STORE));
-      tx.oncomplete = () => resolve(req.result);
-      tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
-    });
-  } finally {
-    db.close();
+    await Filesystem.rmdir({ path: attachmentDir(id), directory: Directory.Data, recursive: true });
+  } catch {
+    // Already gone
   }
 }
 
-export async function saveAttachmentBlob(id: string, blob: Blob): Promise<void> {
-  await withStore('readwrite', (store) => store.put(blob, id));
+export async function saveAttachment(id: string, file: File): Promise<void> {
+  if (!isNative) {
+    await withStore(DB_NAME, STORE, 'readwrite', (store) => store.put(file, id));
+    return;
+  }
+
+  // Write in chunks so a large video never becomes one huge base64 string
+  const path = attachmentPath(id, file.name);
+  try {
+    for (let offset = 0; offset === 0 || offset < file.size; offset += CHUNK_BYTES) {
+      const data = await blobToBase64(file.slice(offset, offset + CHUNK_BYTES));
+      if (offset === 0) {
+        await Filesystem.writeFile({ path, data, directory: Directory.Data, recursive: true });
+      } else {
+        await Filesystem.appendFile({ path, data, directory: Directory.Data });
+      }
+    }
+  } catch (err) {
+    await removeAttachmentDir(id);
+    throw err;
+  }
 }
 
-export async function loadAttachmentBlob(id: string): Promise<Blob | undefined> {
-  return withStore<Blob | undefined>('readonly', (store) => store.get(id));
+async function loadAttachmentBlob(id: string): Promise<Blob | undefined> {
+  return withStore<Blob | undefined>(DB_NAME, STORE, 'readonly', (store) => store.get(id));
 }
 
 export async function deleteAttachmentBlobs(ids: string[]): Promise<void> {
   if (ids.length === 0) return;
-  const db = await openDb();
-  try {
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(STORE, 'readwrite');
-      ids.forEach((id) => tx.objectStore(STORE).delete(id));
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  } finally {
-    db.close();
+  if (isNative) {
+    await Promise.all(ids.map(removeAttachmentDir));
+    return;
   }
+  await withStore(DB_NAME, STORE, 'readwrite', (store) => {
+    ids.forEach((id) => store.delete(id));
+  });
 }
 
 // Open the stored file. Web: a new tab, opened synchronously so popup blockers allow it.
-// Native: copy it to the cache and hand it to the system viewer (Quick Look / Android intent).
-export async function openAttachment(id: string, name = id): Promise<void> {
+// Native: hand the stored file to the system viewer (Quick Look / Android intent).
+export async function openAttachment(att: AttachmentMeta): Promise<void> {
   if (isNative) {
     try {
-      const blob = await loadAttachmentBlob(id);
-      if (!blob) throw new Error('Attachment not found');
-      const { uri } = await Filesystem.writeFile({
-        path: `${id}-${name.replace(/[\\/:]/g, '_')}`,
-        data: await blobToBase64(blob),
-        directory: Directory.Cache,
+      const { uri } = await Filesystem.stat({
+        path: attachmentPath(att.id, att.name),
+        directory: Directory.Data,
       });
-      await FileOpener.openFile({ path: uri, mimeType: blob.type || undefined });
+      await FileOpener.openFile({ path: uri, mimeType: att.mimeType || undefined });
     } catch (err) {
       console.error('Failed to open attachment:', err);
       notify('This file is no longer available on this device.', 'error');
@@ -81,7 +85,7 @@ export async function openAttachment(id: string, name = id): Promise<void> {
 
   const win = window.open('', '_blank');
   try {
-    const blob = await loadAttachmentBlob(id);
+    const blob = await loadAttachmentBlob(att.id);
     if (!blob) throw new Error('Attachment not found');
     const url = URL.createObjectURL(blob);
     if (win) {

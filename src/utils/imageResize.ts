@@ -20,7 +20,7 @@ function encodeResized(
   return canvas.toDataURL('image/jpeg', quality);
 }
 
-// Downscale an image file to a JPEG data URL small enough to keep in localStorage
+// Downscale an image file to a JPEG data URL small enough to keep inline in the saved items
 export async function fileToResizedDataUrl(
   file: File,
   maxDimension = 1024,

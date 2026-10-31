@@ -63,7 +63,7 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
             <div className="flex items-center gap-1.5">
               <div className="flex-1 flex items-baseline gap-1.5 min-w-0">
                 <span className="shrink-0 text-[11px] uppercase tracking-wider text-ink/60 font-semibold leading-tight">
-                  {cat?.name || item.categoryId}
+                  {cat?.verb || item.categoryId}
                 </span>
                 {item.subCategory && (
                   <span className="text-[11px] text-ink/40 font-medium leading-tight truncate">
@@ -136,7 +136,7 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      openAttachment(att.id, att.name);
+                      openAttachment(att);
                     }}
                     title={att.note ? `${att.name} — ${att.note}` : `Open ${att.name}`}
                     className="max-w-[14rem] min-h-[44px] px-2.5 py-1.5 flex items-center gap-1.5 text-left text-[11px] text-ink/75 bg-paper border border-ink/10 rounded-md hover:border-ink/25 hover:text-ink transition-colors"

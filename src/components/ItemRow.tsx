@@ -21,7 +21,7 @@ export const ItemRow: React.FC<ItemRowProps> = ({
   onSelect,
 }) => {
   const isCompleted = item.status === 'completed';
-  const categoryName = categoryDef?.name || item.categoryId;
+  const categoryName = categoryDef?.verb || item.categoryId;
 
   return (
     <article
