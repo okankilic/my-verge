@@ -59,7 +59,7 @@ public class ShareInboxPlugin extends Plugin {
         String type = intent.getType();
         if (type != null && type.startsWith("image/")) {
             Uri uri = streamUri(intent);
-            String base64 = uri != null ? readBase64(uri) : null;
+            String base64 = isForeignImage(uri) ? readBase64(uri) : null;
             if (base64 != null) {
                 item.put("imageBase64", base64);
                 item.put("imageMime", type);
@@ -82,6 +82,16 @@ public class ShareInboxPlugin extends Plugin {
             return intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri.class);
         }
         return intent.getParcelableExtra(Intent.EXTRA_STREAM);
+    }
+
+    // Only read images another app serves through its own content provider. A file:// URI or one of
+    // this app's own providers could otherwise trick it into copying its private files into a wish.
+    private boolean isForeignImage(Uri uri) {
+        if (uri == null || !"content".equals(uri.getScheme())) return false;
+        String authority = uri.getAuthority();
+        if (authority == null || authority.startsWith(getContext().getPackageName())) return false;
+        String mime = getContext().getContentResolver().getType(uri);
+        return mime != null && mime.startsWith("image/");
     }
 
     private String readBase64(Uri uri) {
