@@ -190,7 +190,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
         <div className="px-5 py-4 border-b border-ink/10 flex items-center justify-between">
           <div>
             <h2 id="item-form-title" className="font-serif-journal text-xl font-medium text-ink">
-              {editingItem ? 'Edit Intention' : 'Capture Intention'}
+              {editingItem ? 'Edit Wish' : 'Capture Wish'}
             </h2>
             <p className="text-xs text-ink/60 mt-0.5">
               Give your upcoming dream shape, timeline, and reminders
@@ -211,7 +211,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-2">
               Category
             </label>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
               {categories.map((cat) => {
                 const isSelected = categoryId === cat.id;
                 return (
@@ -241,7 +241,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
           <div className="space-y-4">
             <div>
               <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
-                Intention Title *
+                Wish Title *
               </label>
               <input
                 type="text"
@@ -323,7 +323,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 <option value="this_month">This Month (High Focus)</option>
                 <option value="this_year">This Year (Current Chapter)</option>
                 <option value="someday">Someday (Long Horizon)</option>
-                <option value="urgent">Urgent Intention</option>
+                <option value="urgent">Urgent Wish</option>
               </select>
             </div>
 
@@ -525,7 +525,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             onClick={handleSubmit}
             className="min-h-[44px] px-6 py-2.5 text-xs font-semibold text-paper bg-ink hover:bg-ink/85 active:scale-98 rounded-xl shadow-md transition-all"
           >
-            {editingItem ? 'Save Changes' : 'Record Intention'}
+            Save
           </button>
         </div>
     </Sheet>

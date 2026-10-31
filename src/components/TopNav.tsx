@@ -116,7 +116,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                 : 'border-transparent hover:text-ink'
             }`}
           >
-            Vault & Shelf
+            Vault
           </button>
           <button
             onClick={() => onTabChange('milestones')}
@@ -172,11 +172,11 @@ export const TopNav: React.FC<TopNavProps> = ({
             </button>
           )}
 
-          {/* New Intention / Capture Button */}
+          {/* New Wish / Capture Button */}
           <button
             onClick={onOpenCreate}
-            title="New Intention"
-            aria-label="New Intention"
+            title="New Wish"
+            aria-label="New Wish"
             className="hidden md:flex min-h-[44px] min-w-[44px] items-center justify-center bg-ink text-paper rounded-lg shadow-sm hover:bg-ink/85 active:scale-95 transition-all focus-visible:outline-none"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />

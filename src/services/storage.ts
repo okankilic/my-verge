@@ -93,8 +93,10 @@ export function saveBucketItems(items: BucketItem[]): void {
 // Older data stored the label in `name` (sometimes as "Want to X"); fold it into `verb`.
 // Sub-categories were removed, so their list is dropped.
 // Known verbs always get their fixed icon, replacing icons hand-picked by older builds.
+// Every verb is a built-in category: missing ones are added, and the list follows the default order.
+// Categories created by older builds are kept as they are, so their items keep pointing at them.
 export function normalizeCategories(raw: unknown[]): CategoryDefinition[] {
-  return raw.map((entry) => {
+  const stored = raw.map((entry) => {
     const { name, defaultSubCategories: _subCategories, ...cat } = entry as CategoryDefinition & {
       name?: string;
       defaultSubCategories?: string[];
@@ -103,6 +105,11 @@ export function normalizeCategories(raw: unknown[]): CategoryDefinition[] {
     const verb = label.charAt(0).toUpperCase() + label.slice(1);
     return { ...cat, verb, icon: CATEGORY_VERB_ICONS[verb] ?? cat.icon };
   });
+  const storedVerbs = new Set(stored.map((cat) => cat.verb));
+  const merged = [...stored, ...DEFAULT_CATEGORIES.filter((cat) => !storedVerbs.has(cat.verb))];
+  const order = new Map(DEFAULT_CATEGORIES.map((cat, index) => [cat.verb, index]));
+  const rank = (cat: CategoryDefinition) => order.get(cat.verb) ?? DEFAULT_CATEGORIES.length;
+  return merged.sort((a, b) => rank(a) - rank(b));
 }
 
 export async function loadCategories(): Promise<CategoryDefinition[]> {

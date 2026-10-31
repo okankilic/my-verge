@@ -47,7 +47,7 @@ export const ItemRow: React.FC<ItemRowProps> = ({
         </span>
       </div>
 
-      {/* Primary Intention Title */}
+      {/* Primary Wish Title */}
       <h3
         className={`font-serif-journal text-[15px] sm:text-base font-medium tracking-tight text-ink leading-snug transition-colors ${
           isCompleted ? 'line-through text-ink/40' : ''

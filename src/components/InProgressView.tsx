@@ -1,5 +1,5 @@
 import React from 'react';
-import { Hourglass, MapPin, FileText, Video } from 'lucide-react';
+import { Hourglass, MapPin, FileText, Video, Play } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
 import { openAttachment } from '../services/attachments';
@@ -37,7 +37,8 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
         </div>
         <p className="font-serif-journal text-lg text-ink/70">Nothing in progress</p>
         <p className="text-xs text-ink/50 mt-1 max-w-sm mx-auto">
-          Tap Start on any intention in your Journal when you begin living it.
+          Tap <Play aria-hidden className="inline w-3 h-3 -mt-0.5 mx-0.5" />
+          <span className="sr-only">Start</span> on any wish in your Journal when you begin living it.
         </p>
       </div>
     );

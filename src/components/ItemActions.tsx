@@ -214,8 +214,8 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
           e.stopPropagation();
           onDelete(item.id);
         }}
-        title="Delete intention"
-        aria-label="Delete intention"
+        title="Delete wish"
+        aria-label="Delete wish"
         className="ml-auto min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/40 hover:text-red-600 hover:bg-red-500/10 transition-colors"
       >
         <Trash2 className="w-3.5 h-3.5" />

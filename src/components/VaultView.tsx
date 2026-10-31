@@ -93,7 +93,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
         <section className="space-y-4">
           <div className="flex items-center justify-between gap-3">
             <h3 className="font-serif-journal text-lg font-medium text-ink">
-              Personal Library & Reading Intentions
+              Personal Library & Reading Wishes
             </h3>
             <span className="shrink-0 text-xs text-ink/60 font-mono">
               {readingItems.filter((i) => i.status === 'completed').length} / {readingItems.length} read
@@ -103,7 +103,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
           {readingItems.length === 0 && (
             <EmptyShelf
               title="Your reading shelf is empty"
-              hint="Add an intention in the Read category and it will appear here."
+              hint="Add a wish in the Read category and it will appear here."
             />
           )}
 
@@ -168,7 +168,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
                         }`}
                       >
                         <Check className="w-3.5 h-3.5" />
-                        <span>{isCompleted ? 'Finished' : 'Mark Read'}</span>
+                        <span>{isCompleted ? 'Finished' : 'Finish'}</span>
                       </button>
 
                       <button
@@ -201,7 +201,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
           {watchingItems.length === 0 && (
             <EmptyShelf
               title="Your watchlist is empty"
-              hint="Add an intention in the Watch category and it will appear here."
+              hint="Add a wish in the Watch category and it will appear here."
             />
           )}
 
@@ -254,7 +254,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
                       }`}
                     >
                       <Check className="w-3.5 h-3.5" />
-                      <span>{isCompleted ? 'Watched' : 'Mark Watched'}</span>
+                      <span>{isCompleted ? 'Watched' : 'Done'}</span>
                     </button>
                     <button
                       onClick={stop(() => onEdit(film))}
@@ -314,7 +314,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
           {budgetItems.length === 0 && (
             <EmptyShelf
               title="No budgets yet"
-              hint="Give any intention an estimated cost to track savings here."
+              hint="Give any wish an estimated cost to track savings here."
             />
           )}
 
@@ -343,7 +343,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
                     onClick={stop(() => onEdit(item))}
                     className="min-h-[44px] px-3 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink font-medium hover:bg-paper-deep"
                   >
-                    Update Funds
+                    Update
                   </button>
                 </div>
               </div>

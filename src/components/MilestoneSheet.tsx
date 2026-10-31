@@ -97,14 +97,14 @@ export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
               onClick={onClose}
               className="min-h-[44px] px-4 py-2 text-xs font-semibold text-ink/70 hover:text-ink rounded-xl hover:bg-ink/5"
             >
-              Skip Reflection
+              Skip
             </button>
             <button
               type="submit"
               className="min-h-[44px] px-6 py-2.5 text-xs font-semibold text-white bg-[#4A6B56] hover:bg-[#3d5a47] rounded-xl shadow-md transition-all flex items-center gap-1.5"
             >
               <Heart className="w-3.5 h-3.5" />
-              <span>Preserve in Memories</span>
+              <span>Preserve</span>
             </button>
           </div>
         </form>

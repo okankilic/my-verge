@@ -108,7 +108,7 @@ export const WebcamCaptureSheet: React.FC<WebcamCaptureSheetProps> = ({
             }}
             className="min-h-[44px] px-4 text-xs text-ink/60 hover:text-ink rounded-lg hover:bg-ink/5 transition-colors"
           >
-            Choose a file instead
+            Browse
           </button>
 
           {!error && (
@@ -130,7 +130,7 @@ export const WebcamCaptureSheet: React.FC<WebcamCaptureSheetProps> = ({
                     className="min-h-[44px] px-4 flex items-center gap-1.5 text-xs font-semibold bg-ink text-paper rounded-lg hover:bg-ink/85 transition-colors"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    <span>Use photo</span>
+                    <span>Use</span>
                   </button>
                 </>
               ) : (

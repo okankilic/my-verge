@@ -270,15 +270,17 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
                   <span className="text-[11px] text-ink/60 font-medium">Snooze:</span>
                   <button
                     onClick={() => onSnooze(item, 1)}
+                    title="Snooze 1 day"
                     className="min-h-[36px] px-2.5 py-1 text-xs font-medium bg-paper border border-ink/15 rounded-lg hover:bg-paper-deep transition-colors"
                   >
-                    +1 Day
+                    +1d
                   </button>
                   <button
                     onClick={() => onSnooze(item, 7)}
+                    title="Snooze 1 week"
                     className="min-h-[36px] px-2.5 py-1 text-xs font-medium bg-paper border border-ink/15 rounded-lg hover:bg-paper-deep transition-colors"
                   >
-                    +1 Week
+                    +1w
                   </button>
                 </div>
               )}
@@ -295,16 +297,16 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
                 onEdit(item);
               }}
               className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg border border-ink/15 bg-card text-ink/80 hover:text-ink hover:bg-paper hover:border-ink/30 transition-colors"
-              title="Edit intention"
-              aria-label="Edit intention"
+              title="Edit wish"
+              aria-label="Edit wish"
             >
               <Edit3 className="w-4 h-4" />
             </button>
             <button
               onClick={() => onDelete(item.id)}
               className="min-h-[40px] min-w-[40px] flex items-center justify-center text-ink/40 hover:text-red-600 rounded-lg hover:bg-red-500/10 transition-colors"
-              title="Delete intention"
-              aria-label="Delete intention"
+              title="Delete wish"
+              aria-label="Delete wish"
             >
               <Trash2 className="w-4 h-4" />
             </button>

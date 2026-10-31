@@ -1,5 +1,4 @@
 import React from 'react';
-import { Plus } from 'lucide-react';
 import { CategoryDefinition } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
 
@@ -8,7 +7,6 @@ interface CategoryRibbonProps {
   selectedCategoryId: string;
   onSelectCategory: (id: string) => void;
   countsByCategory: Record<string, number>;
-  onOpenCreateCategory: () => void;
 }
 
 const countBadgeClass = (isSelected: boolean) =>
@@ -57,7 +55,6 @@ export const CategoryRibbon: React.FC<CategoryRibbonProps> = ({
   selectedCategoryId,
   onSelectCategory,
   countsByCategory,
-  onOpenCreateCategory,
 }) => {
   const { el: rowEl, ref: rowRef, onScroll: onRowScroll, style: rowStyle } = useEdgeFade();
 
@@ -98,10 +95,11 @@ export const CategoryRibbon: React.FC<CategoryRibbonProps> = ({
         </span>
       </button>
 
-      {/* Individual Categories */}
+      {/* Individual Categories: only those with items in view, plus the selected one */}
       {categories.map((cat) => {
         const isSelected = selectedCategoryId === cat.id;
         const count = countsByCategory[cat.id] || 0;
+        if (count === 0 && !isSelected) return null;
         return (
           <button
             key={cat.id}
@@ -120,17 +118,6 @@ export const CategoryRibbon: React.FC<CategoryRibbonProps> = ({
           </button>
         );
       })}
-
-      {/* Icon only button at the end to create a custom category */}
-      <button
-        type="button"
-        onClick={onOpenCreateCategory}
-        title="Create custom category"
-        aria-label="Create custom category"
-        className="min-h-[38px] min-w-[38px] p-2 rounded-lg border border-dashed border-ink/25 bg-card/70 hover:bg-card hover:border-ink/60 text-ink/60 hover:text-ink active:scale-95 transition-all flex items-center justify-center shrink-0 shadow-2xs group cursor-pointer"
-      >
-        <Plus className="w-4 h-4 stroke-[2.2] group-hover:rotate-90 transition-transform duration-200" />
-      </button>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, RotateCcw, Quote, Compass } from 'lucide-react';
+import { Star, RotateCcw, Quote, Compass, Check } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
 
@@ -49,7 +49,8 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
             Your retrospective archive is waiting
           </p>
           <p className="text-xs text-ink/50 mt-1 max-w-sm mx-auto">
-            Check off any intention as you experience it to write a memory reflection and preserve it here forever.
+            Tap <Check aria-hidden className="inline w-3 h-3 -mt-0.5 mx-0.5 stroke-[2.5]" />
+            <span className="sr-only">Accomplish</span> on any wish as you experience it to write a memory reflection and preserve it here forever.
           </p>
         </div>
       ) : (
@@ -158,18 +159,18 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
                               }}
                               className="min-h-[44px] text-xs text-ink/70 hover:text-ink px-2"
                             >
-                              Edit Note
+                              Edit
                             </button>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onToggleComplete(item);
                               }}
-                              title="Move back to active intentions"
+                              title="Move back to active wishes"
                               className="min-h-[44px] px-2.5 py-1 text-xs text-ink/60 hover:text-ink flex items-center gap-1 rounded-lg hover:bg-paper"
                             >
                               <RotateCcw className="w-3 h-3" />
-                              <span>Re-activate</span>
+                              <span>Reopen</span>
                             </button>
                           </div>
                         </div>

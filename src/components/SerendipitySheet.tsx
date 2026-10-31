@@ -122,7 +122,7 @@ export const SerendipitySheet: React.FC<SerendipitySheetProps> = ({
                 className="flex-1 min-h-[44px] px-4 py-2 text-xs font-semibold text-ink bg-card border border-ink/20 hover:bg-paper rounded-xl transition-colors flex items-center justify-center gap-1.5"
               >
                 <Dices className="w-3.5 h-3.5" />
-                <span>Roll Again</span>
+                <span>Reroll</span>
               </button>
               <button
                 onClick={() => {
@@ -131,14 +131,14 @@ export const SerendipitySheet: React.FC<SerendipitySheetProps> = ({
                 }}
                 className="flex-1 min-h-[44px] px-4 py-2 text-xs font-semibold text-paper bg-ink hover:bg-ink/85 rounded-xl shadow-md transition-colors flex items-center justify-center gap-1.5"
               >
-                <span>View Details</span>
+                <span>Open</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
         ) : (
           <div className="p-6 text-center text-xs text-ink/60">
-            No active intentions yet. Create one to enable Serendipity rolls!
+            No active wishes yet. Create one to enable Serendipity rolls!
           </div>
         )}
       </div>

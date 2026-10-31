@@ -206,7 +206,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="min-w-0">
                 <h4 className="text-xs font-semibold text-ink">Restore from Backup</h4>
                 <p className="text-[11px] text-ink/60 mt-0.5">
-                  Load intentions from a previously saved JSON file
+                  Load wishes from a previously saved JSON file
                 </p>
               </div>
               <button
@@ -296,7 +296,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 className="w-full min-h-[44px] px-4 py-2 text-xs text-red-600/80 hover:text-red-600 border border-red-500/30 rounded-xl hover:bg-red-500/10 flex items-center justify-center gap-1.5 transition-colors"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                <span>Reset to Sample Intentions</span>
+                <span>Reset</span>
               </button>
             )}
           </div>

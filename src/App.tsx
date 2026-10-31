@@ -51,7 +51,6 @@ import { MilestonesArchiveView } from './components/MilestonesArchiveView';
 import { InProgressView } from './components/InProgressView';
 import { SerendipitySheet } from './components/SerendipitySheet';
 import { SettingsView } from './components/SettingsView';
-import { CreateCategorySheet } from './components/CreateCategorySheet';
 import { DialogHost } from './components/DialogHost';
 
 export default function App() {
@@ -72,7 +71,6 @@ export default function App() {
   const [celebratingItem, setCelebratingItem] = useState<BucketItem | null>(null);
   const [isMilestoneOpen, setIsMilestoneOpen] = useState(false);
   const [isSerendipityOpen, setIsSerendipityOpen] = useState(false);
-  const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
 
   // Attachment blobs of deleted items are removed only once their Undo window has passed
   const pendingBlobDeletes = useRef(new Map<string, ReturnType<typeof setTimeout>>());
@@ -147,7 +145,7 @@ export default function App() {
       playChimeSound();
       sendBrowserNotification(
         `Nowish: ${firstDue.title}`,
-        `Reminder for your bucket list intention: ${firstDue.title}`
+        `Reminder for your bucket list wish: ${firstDue.title}`
       );
       const nowIso = new Date().toISOString();
       const freshIds = new Set(fresh.map((i) => i.id));
@@ -193,7 +191,7 @@ export default function App() {
       const newItem: BucketItem = {
         id: `verge-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
         categoryId: itemData.categoryId || 'go',
-        title: itemData.title || 'Untitled Intention',
+        title: itemData.title || 'Untitled Wish',
         description: itemData.description || '',
         priority: itemData.priority || 'this_year',
         targetDate: itemData.targetDate,
@@ -441,11 +439,6 @@ export default function App() {
     }
   };
 
-  const handleCreateCategory = (newCategory: CategoryDefinition) => {
-    setCategories((prev) => [...prev, newCategory]);
-    setSelectedCategoryId(newCategory.id);
-  };
-
   // Closing the global search also clears it, so no hidden filter stays applied
   const handleToggleSearch = () => {
     if (isSearchOpen) setSearchQuery('');
@@ -592,9 +585,10 @@ export default function App() {
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   onClick={() => handleSnooze(activeToastItem, 1)}
+                  title="Snooze 1 day"
                   className="min-h-[44px] px-2.5 py-1 text-xs font-medium bg-card border border-ink/15 rounded-lg hover:bg-paper text-ink"
                 >
-                  Snooze 1d
+                  Snooze
                 </button>
                 <button
                   onClick={() => setActiveToastItem(null)}
@@ -615,7 +609,6 @@ export default function App() {
                 selectedCategoryId={selectedCategoryId}
                 onSelectCategory={setSelectedCategoryId}
                 countsByCategory={countsByCategory}
-                onOpenCreateCategory={() => setIsCreateCategoryOpen(true)}
               />
             </div>
           )}
@@ -633,7 +626,7 @@ export default function App() {
                     No active aspirations found
                   </h3>
                   <p className="text-xs text-ink/60 max-w-xs mx-auto">
-                    Record your next intention or clear filters to see your lists.
+                    Add your next wish or clear filters to see your lists.
                   </p>
                   <div className="flex items-center justify-center gap-2 pt-1">
                     {(selectedCategoryId !== 'all' || searchQuery.trim() !== '') && (
@@ -645,7 +638,7 @@ export default function App() {
                         }}
                         className="min-h-[40px] px-3.5 py-2 bg-card border border-ink/15 text-ink text-xs font-semibold rounded-lg hover:bg-paper transition-all"
                       >
-                        Clear Filters
+                        Clear
                       </button>
                     )}
                     <button
@@ -654,9 +647,10 @@ export default function App() {
                         setEditingItem(null);
                         setIsFormOpen(true);
                       }}
-                      className="min-h-[40px] px-4 py-2 bg-ink text-paper text-xs font-semibold rounded-lg hover:bg-ink/85 transition-all"
+                      className="min-h-[40px] px-4 py-2 bg-ink text-paper text-xs font-semibold rounded-lg hover:bg-ink/85 transition-all inline-flex items-center gap-1.5"
                     >
-                      + Add Intention
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>New</span>
                     </button>
                   </div>
                 </div>
@@ -823,14 +817,6 @@ export default function App() {
           setCurrentTab(item.startedAt ? 'inprogress' : 'feed');
           setViewingItem(item);
         }}
-      />
-
-      {/* Create Custom Category Sheet */}
-      <CreateCategorySheet
-        isOpen={isCreateCategoryOpen}
-        onClose={() => setIsCreateCategoryOpen(false)}
-        categories={categories}
-        onCreateCategory={handleCreateCategory}
       />
 
       {/* In-app notices with Undo (replaces window.alert; there are no confirm dialogs) */}
