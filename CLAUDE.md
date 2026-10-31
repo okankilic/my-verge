@@ -57,6 +57,7 @@ There's no test framework, so `lint` (type-checking) is the only automated check
   - Keep content clear of the fixed bottom tab bar and safe-area insets (`viewport-fit=cover` is set; `TopNav` pads by `safe-area-inset-top`).
 - **No modals.** Never build a centered or blocking modal dialog. Overlays go through `Sheet` (bottom sheet on phones, side drawer from `sm:`). There are no blocking confirmations either: run reversible actions immediately and offer Undo via `notifyUndo`, and give irreversible ones an inline two-step confirm in the page.
 - **One-word buttons.** A button's visible label is a single word (icons and compact tokens like `+1d` are fine). Put any longer description in `aria-label`/`title`, or in nearby text.
+- **Positive, encouraging copy.** All user-facing text (toasts, empty states, errors, hints, notifications, confirms) is warm, positive and direct. Speak to "you" and avoid "we" and "let's". Frame empty states as invitations ("Ready when you are", "All clear for now") rather than absences ("Nothing in progress"). Errors say what happened and offer a next step ("Couldn't add "x". Try again?") instead of "Failed" or "Invalid". Keep it short, and avoid formal or grandiose wording.
 - **No native browser dialogs.** Never use `window.alert`, `window.confirm`, or `window.prompt`. Use `notify` / `notifyUndo` from `src/services/dialogs.ts` instead.
 
 ## Environment notes
