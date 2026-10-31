@@ -1,10 +1,9 @@
 import React from 'react';
-import { Hourglass, MapPin, FileText, Video, Play } from 'lucide-react';
+import { Hourglass, MapPin, Play } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
-import { openAttachment } from '../services/attachments';
-import { photoKey } from '../utils/photoKey';
 import { ItemActions } from './ItemActions';
+import { ItemMediaStrip } from './ItemMediaStrip';
 
 interface InProgressViewProps {
   items: BucketItem[];
@@ -99,61 +98,11 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
               </div>
             )}
 
-            {/* Photo strip, newest first */}
-            {item.photos?.length > 0 && (
-              <div className="pt-1.5 flex items-start gap-1.5 overflow-x-auto">
-                {[...item.photos].reverse().map((src, i) => {
-                  const note = item.photoNotes?.[photoKey(src)];
-                  return (
-                    <figure key={`${i}-${src.slice(-16)}`} className="w-16 shrink-0" title={note}>
-                      <img
-                        src={src}
-                        alt={note || ''}
-                        referrerPolicy="no-referrer"
-                        className="h-16 w-16 rounded-lg object-cover border border-ink/10 bg-paper-deep"
-                      />
-                      {note && (
-                        <figcaption className="mt-0.5 text-[10px] leading-tight text-ink/60 line-clamp-2 break-words">
-                          {note}
-                        </figcaption>
-                      )}
-                    </figure>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Video / PDF attachments */}
-            {item.attachments && item.attachments.length > 0 && (
-              <div className="pt-1.5 flex flex-wrap gap-1.5">
-                {item.attachments.map((att) => (
-                  <button
-                    key={att.id}
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openAttachment(att);
-                    }}
-                    title={att.note ? `${att.name} — ${att.note}` : `Open ${att.name}`}
-                    className="max-w-[14rem] min-h-[44px] px-2.5 py-1.5 flex items-center gap-1.5 text-left text-[11px] text-ink/75 bg-paper border border-ink/10 rounded-md hover:border-ink/25 hover:text-ink transition-colors"
-                  >
-                    {att.mimeType === 'application/pdf' ? (
-                      <FileText className="w-3 h-3 mt-px shrink-0 text-[#B45309]" />
-                    ) : (
-                      <Video className="w-3 h-3 mt-px shrink-0 text-[#B45309]" />
-                    )}
-                    <span className="min-w-0">
-                      <span className="block truncate">{att.name}</span>
-                      {att.note && (
-                        <span className="block text-[10px] leading-tight text-ink/55 line-clamp-2 break-words">
-                          {att.note}
-                        </span>
-                      )}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
+            <ItemMediaStrip
+              photos={item.photos || []}
+              photoNotes={item.photoNotes}
+              attachments={item.attachments}
+            />
 
             <ItemActions
               item={item}

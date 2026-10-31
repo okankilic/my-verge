@@ -210,6 +210,12 @@ export default function App() {
         updatedAt: nowIso,
       };
       setItems((prev) => [newItem, ...prev]);
+      // New wishes land at the top of the Journal; say so when it isn't the tab on screen
+      if (currentTab !== 'feed') {
+        notify('Added to your Journal.', 'success', {
+          action: { label: 'Open', onAction: () => setCurrentTab('feed') },
+        });
+      }
     }
   };
 
@@ -227,6 +233,9 @@ export default function App() {
       startedAt: item.startedAt,
       completedAt: item.completedAt,
       keptInVault: item.keptInVault,
+      // A note written in the reflection sheet goes away with the completion it belongs to
+      completionReflection: item.completionReflection,
+      completionRating: item.completionRating,
       updatedAt: item.updatedAt,
     };
     notifyUndo(isNowCompleted ? `Accomplished "${item.title}".` : `"${item.title}" is back in your Journal.`, () => {
@@ -303,10 +312,11 @@ export default function App() {
   };
 
   const handleToggleStarted = (item: BucketItem) => {
-    if (item.startedAt) {
-      const previous = { startedAt: item.startedAt, updatedAt: item.updatedAt };
-      notifyUndo(`Stopped "${item.title}".`, () => patchItem(item.id, previous));
-    }
+    const previous = { startedAt: item.startedAt, updatedAt: item.updatedAt };
+    notifyUndo(
+      item.startedAt ? `Stopped "${item.title}".` : `Started "${item.title}". It's on Now.`,
+      () => patchItem(item.id, previous)
+    );
     const nowIso = new Date().toISOString();
     const startedAt = item.startedAt ? undefined : nowIso;
 

@@ -2,6 +2,8 @@ import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { BucketItem, CategoryDefinition } from '../types';
 import { INITIAL_ITEMS } from '../data/initialData';
+import { LEGACY_PRESET_PATHS } from '../data/presetPhotos';
+import { photoKey } from '../utils/photoKey';
 import { CATEGORY_VERB_ICONS, DEFAULT_CATEGORIES, KEEP_IN_VAULT_VERBS } from '../data/categories';
 import { withStore } from './idb';
 import { isNative } from './platform';
@@ -80,9 +82,24 @@ export async function loadBucketItems(): Promise<BucketItem[]> {
 
 // Older builds had sub-categories; drop the field so it doesn't linger in saves and backups.
 // Finished wishes from before "Keep in Vault" stay where the Vault used to show them.
+// Preset photos saved under their old dev-only paths move to their public/presets ones, captions included.
 export function normalizeItems<T extends BucketItem>(raw: T[]): BucketItem[] {
   return raw.map((entry) => {
     const { subCategory: _subCategory, ...item } = entry as T & { subCategory?: string };
+    if (item.photos?.some((p) => p in LEGACY_PRESET_PATHS)) {
+      const notes: Record<string, string> = { ...item.photoNotes };
+      item.photos = item.photos.map((p) => {
+        const next = LEGACY_PRESET_PATHS[p];
+        if (!next) return p;
+        const note = notes[photoKey(p)];
+        if (note !== undefined) {
+          delete notes[photoKey(p)];
+          notes[photoKey(next)] = note;
+        }
+        return next;
+      });
+      if (item.photoNotes) item.photoNotes = notes;
+    }
     if (item.status === 'completed' && item.keptInVault === undefined) {
       item.keptInVault =
         item.categoryId === 'read' || item.categoryId === 'watch' || (item.budget?.estimatedCost ?? 0) > 0;

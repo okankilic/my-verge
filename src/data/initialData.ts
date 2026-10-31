@@ -1,4 +1,5 @@
 import { BucketItem } from '../types';
+import { PRESET_PHOTO_URLS } from './presetPhotos';
 
 export const INITIAL_ITEMS: BucketItem[] = [
   {
@@ -17,7 +18,7 @@ export const INITIAL_ITEMS: BucketItem[] = [
       savedAmount: 1100,
       currency: '$',
     },
-    photos: ['/src/assets/images/kyoto_temple_garden_1793277649785.jpg'],
+    photos: [PRESET_PHOTO_URLS.kyotoGarden],
     linkUrl: 'https://saihoji-kokedera.com/en/',
     reminder: {
       date: '2026-11-01T09:00',
@@ -41,7 +42,7 @@ export const INITIAL_ITEMS: BucketItem[] = [
       formatOrEdition: 'Vintage Classics Linen Hardcover',
       progress: 'Page 48 / 165',
     },
-    photos: ['/src/assets/images/bookstack_library_desk_1793277650295.jpg'],
+    photos: [PRESET_PHOTO_URLS.libraryDesk],
     linkUrl: 'https://en.wikipedia.org/wiki/Invisible_Cities',
     reminder: {
       date: '2026-10-30T20:00',
@@ -65,7 +66,7 @@ export const INITIAL_ITEMS: BucketItem[] = [
       savedAmount: 180,
       currency: '$',
     },
-    photos: ['/src/assets/images/artisan_ceramic_vessel_1793277650446.jpg'],
+    photos: [PRESET_PHOTO_URLS.ceramicVessel],
     linkUrl: 'https://artisan-pottery-craft.example.com',
     reminder: {
       date: '2026-11-10T11:00',
@@ -88,7 +89,7 @@ export const INITIAL_ITEMS: BucketItem[] = [
       authorOrCreator: 'Giuseppe Tornatore / Andrei Tarkovsky',
       formatOrEdition: 'Curzon Cinema 35mm Projection',
     },
-    photos: ['/src/assets/images/arthouse_cinema_theater_1793277651133.jpg'],
+    photos: [PRESET_PHOTO_URLS.cinemaTheater],
     reminder: {
       date: '2026-11-08T18:30',
       recurrence: 'weekly',

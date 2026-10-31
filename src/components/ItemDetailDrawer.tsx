@@ -19,6 +19,8 @@ import {
   Play,
   Square,
   Hourglass,
+  Trophy,
+  Star,
 } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
@@ -26,6 +28,7 @@ import { externalLinkProps } from '../services/platform';
 import { isReminderDue as isDue, reminderNextAt } from '../services/notifications';
 import { Sheet } from './Sheet';
 import { KeepInVaultSwitch } from './KeepInVaultSwitch';
+import { ItemMediaStrip } from './ItemMediaStrip';
 
 interface ItemDetailDrawerProps {
   item: BucketItem | null;
@@ -65,6 +68,15 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
         year: 'numeric',
       })
     : null;
+
+  const formattedCompletedAt =
+    isCompleted && item.completedAt
+      ? new Date(item.completedAt).toLocaleDateString(undefined, {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+        })
+      : null;
 
   const formattedTargetDate = item.targetDate
     ? new Date(item.targetDate).toLocaleDateString(undefined, {
@@ -143,6 +155,17 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
           {item.description && (
             <div className="prose text-sm text-ink/80 leading-relaxed font-sans border-l-2 border-ink/20 pl-3.5 py-0.5">
               {item.description}
+            </div>
+          )}
+
+          {/* Photos and files added along the way (the first photo is the cover above) */}
+          {((item.photos?.length ?? 0) > 1 || (item.attachments?.length ?? 0) > 0) && (
+            <div className="-mt-1.5">
+              <ItemMediaStrip
+                photos={item.photos.slice(1)}
+                photoNotes={item.photoNotes}
+                attachments={item.attachments}
+              />
             </div>
           )}
 
@@ -286,6 +309,33 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
                     +1w
                   </button>
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* The memory written when it was finished */}
+          {isCompleted && (formattedCompletedAt || (item.completionRating ?? 0) > 0 || item.completionReflection) && (
+            <div className="p-4 bg-card rounded-xl border border-ink/10 space-y-2">
+              <div className="flex items-center justify-between gap-2 text-xs text-ink/70">
+                <span className="flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-[#4A6B56]" />
+                  <span>{formattedCompletedAt ? `Done on ${formattedCompletedAt}` : 'Done'}</span>
+                </span>
+                {(item.completionRating ?? 0) > 0 && (
+                  <span
+                    className="flex items-center gap-0.5"
+                    aria-label={`Rated ${item.completionRating} of 5`}
+                  >
+                    {Array.from({ length: item.completionRating! }, (_, n) => (
+                      <Star key={n} className="w-3 h-3 text-[#B45309] fill-[#B45309]" />
+                    ))}
+                  </span>
+                )}
+              </div>
+              {item.completionReflection && (
+                <p className="font-serif-journal text-sm text-ink/80 italic leading-relaxed">
+                  “{item.completionReflection}”
+                </p>
               )}
             </div>
           )}

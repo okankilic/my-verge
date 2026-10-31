@@ -21,14 +21,15 @@ export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
 }) => {
   // App.tsx keys this sheet by item id, so state is seeded fresh for each item
   const [reflection, setReflection] = useState(item?.completionReflection || '');
-  const [rating, setRating] = useState(item?.completionRating || 5);
+  // 0 means unrated: closing without tapping a star stores no rating
+  const [rating, setRating] = useState(item?.completionRating ?? 0);
 
   if (!isOpen || !item) return null;
 
   // Every way out (Close, backdrop, Escape) saves the rating and note first
   const handleClose = () => {
     const trimmed = reflection.trim();
-    if (trimmed !== (item.completionReflection || '') || rating !== item.completionRating) {
+    if (trimmed !== (item.completionReflection || '') || rating !== (item.completionRating ?? 0)) {
       onSaveReflection(item.id, trimmed, rating);
     }
     onClose();

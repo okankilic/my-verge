@@ -20,6 +20,7 @@ import {
 } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
 import { Sheet } from './Sheet';
+import { PRESET_PHOTOS } from '../data/presetPhotos';
 
 interface ItemFormDrawerProps {
   isOpen: boolean;
@@ -29,13 +30,6 @@ interface ItemFormDrawerProps {
   editingItem?: BucketItem | null;
   defaultCategoryId?: string;
 }
-
-const PRESET_PHOTOS = [
-  { label: 'Kyoto Moss Garden', url: '/src/assets/images/kyoto_temple_garden_1793277649785.jpg' },
-  { label: 'Library Reading Table', url: '/src/assets/images/bookstack_library_desk_1793277650295.jpg' },
-  { label: 'Artisan Ceramic Teapot', url: '/src/assets/images/artisan_ceramic_vessel_1793277650446.jpg' },
-  { label: 'Arthouse Cinema Theater', url: '/src/assets/images/arthouse_cinema_theater_1793277651133.jpg' },
-];
 
 export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   isOpen,
