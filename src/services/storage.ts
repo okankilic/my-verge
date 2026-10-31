@@ -4,7 +4,7 @@ import { BucketItem, CategoryDefinition } from '../types';
 import { INITIAL_ITEMS } from '../data/initialData';
 import { LEGACY_PRESET_PATHS } from '../data/presetPhotos';
 import { photoKey } from '../utils/photoKey';
-import { CATEGORY_VERB_ICONS, DEFAULT_CATEGORIES, KEEP_IN_VAULT_VERBS } from '../data/categories';
+import { CATEGORY_VERB_ICONS, DEFAULT_CATEGORIES, KEEP_IN_VAULT_VERBS, MERGED_VERBS } from '../data/categories';
 import { withStore } from './idb';
 import { isNative } from './platform';
 
@@ -80,7 +80,12 @@ export async function loadBucketItems(): Promise<BucketItem[]> {
   }
 }
 
+const MERGED_CATEGORY_IDS: Record<string, string> = Object.fromEntries(
+  Object.entries(MERGED_VERBS).map(([from, to]) => [from.toLowerCase(), to.toLowerCase()])
+);
+
 // Older builds had sub-categories; drop the field so it doesn't linger in saves and backups.
+// Wishes in a retired verb move to the verb it merged into.
 // Finished wishes from before "Keep in Vault" stay where the Vault used to show them.
 // Preset photos saved under their old dev-only paths move to their public/presets ones, captions included.
 export function normalizeItems<T extends BucketItem>(raw: T[]): BucketItem[] {
@@ -100,6 +105,7 @@ export function normalizeItems<T extends BucketItem>(raw: T[]): BucketItem[] {
       });
       if (item.photoNotes) item.photoNotes = notes;
     }
+    item.categoryId = MERGED_CATEGORY_IDS[item.categoryId] ?? item.categoryId;
     if (item.status === 'completed' && item.keptInVault === undefined) {
       item.keptInVault =
         item.categoryId === 'read' || item.categoryId === 'watch' || (item.budget?.estimatedCost ?? 0) > 0;
@@ -116,6 +122,7 @@ export function saveBucketItems(items: BucketItem[]): void {
 // Sub-categories were removed, so their list is dropped.
 // Known verbs always get their fixed icon, replacing icons hand-picked by older builds.
 // Every verb is a built-in category: missing ones are added, and the list follows the default order.
+// Retired verbs are dropped (normalizeItems moves their wishes).
 // Categories created by older builds are kept as they are, so their items keep pointing at them.
 export function normalizeCategories(raw: unknown[]): CategoryDefinition[] {
   const stored = raw.map((entry) => {
@@ -131,7 +138,7 @@ export function normalizeCategories(raw: unknown[]): CategoryDefinition[] {
       icon: CATEGORY_VERB_ICONS[verb] ?? cat.icon,
       keepInVault: cat.keepInVault ?? KEEP_IN_VAULT_VERBS.has(verb),
     };
-  });
+  }).filter((cat) => !(cat.id in MERGED_CATEGORY_IDS));
   const storedVerbs = new Set(stored.map((cat) => cat.verb));
   const merged = [...stored, ...DEFAULT_CATEGORIES.filter((cat) => !storedVerbs.has(cat.verb))];
   const order = new Map(DEFAULT_CATEGORIES.map((cat, index) => [cat.verb, index]));

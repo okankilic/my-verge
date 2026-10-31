@@ -14,7 +14,6 @@ import {
 import {
   BucketItem,
   CategoryDefinition,
-  DefaultCategoryId,
   PriorityLevel,
   RecurrenceType,
 } from '../types';
@@ -251,6 +250,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                     ? 'e.g., Hike the Coastal Trails of Cabo de Gata'
                     : categoryId === 'buy'
                     ? 'e.g., Wood-Fired Stoneware Teapot'
+                    : categoryId === 'pay'
+                    ? 'e.g., Renew the car insurance'
                     : categoryId === 'remember'
                     ? 'e.g., Attention is the rarest and purest generosity'
                     : 'e.g., Hand-bind a leather hardcover journal'

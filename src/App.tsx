@@ -14,7 +14,6 @@ import {
 import {
   BucketItem,
   CategoryDefinition,
-  DefaultCategoryId,
   ViewTab,
 } from './types';
 import {
