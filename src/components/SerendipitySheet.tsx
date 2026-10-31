@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { X, Dices, Sparkles, Compass, ArrowRight, Check } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
+import { Sheet } from './Sheet';
 
-interface SerendipityModalProps {
+interface SerendipitySheetProps {
   isOpen: boolean;
   onClose: () => void;
   items: BucketItem[];
@@ -11,7 +12,7 @@ interface SerendipityModalProps {
   onSelectFocus: (item: BucketItem) => void;
 }
 
-export const SerendipityModal: React.FC<SerendipityModalProps> = ({
+export const SerendipitySheet: React.FC<SerendipitySheetProps> = ({
   isOpen,
   onClose,
   items,
@@ -50,8 +51,8 @@ export const SerendipityModal: React.FC<SerendipityModalProps> = ({
     : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-      <div className="w-full max-w-md bg-paper border border-ink/15 rounded-3xl shadow-2xl p-6 sm:p-7 relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <Sheet isOpen onClose={onClose} width="md" labelledBy="serendipity-title">
+      <div className="relative overflow-y-auto p-6 sm:p-7">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center text-ink/50 hover:text-ink rounded-full hover:bg-ink/5"
@@ -67,7 +68,7 @@ export const SerendipityModal: React.FC<SerendipityModalProps> = ({
               }`}
             />
           </div>
-          <h2 className="font-serif-journal text-2xl font-semibold text-ink">
+          <h2 id="serendipity-title" className="font-serif-journal text-2xl font-semibold text-ink">
             Serendipity Roll
           </h2>
           <p className="text-xs text-ink/65 mt-1">
@@ -88,11 +89,6 @@ export const SerendipityModal: React.FC<SerendipityModalProps> = ({
                   </span>
                   <span>{catDef?.verb || selectedItem.categoryId}</span>
                 </span>
-                {selectedItem.subCategory && (
-                  <span className="font-semibold text-[#B45309]">
-                    {selectedItem.subCategory}
-                  </span>
-                )}
               </div>
               <h3 className="font-serif-journal text-lg font-medium text-ink leading-snug">
                 {selectedItem.title}
@@ -126,7 +122,7 @@ export const SerendipityModal: React.FC<SerendipityModalProps> = ({
                 className="flex-1 min-h-[44px] px-4 py-2 text-xs font-semibold text-ink bg-card border border-ink/20 hover:bg-paper rounded-xl transition-colors flex items-center justify-center gap-1.5"
               >
                 <Dices className="w-3.5 h-3.5" />
-                <span>Roll Again</span>
+                <span>Reroll</span>
               </button>
               <button
                 onClick={() => {
@@ -135,17 +131,17 @@ export const SerendipityModal: React.FC<SerendipityModalProps> = ({
                 }}
                 className="flex-1 min-h-[44px] px-4 py-2 text-xs font-semibold text-paper bg-ink hover:bg-ink/85 rounded-xl shadow-md transition-colors flex items-center justify-center gap-1.5"
               >
-                <span>View Details</span>
+                <span>Open</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
         ) : (
           <div className="p-6 text-center text-xs text-ink/60">
-            No active intentions yet. Create one to enable Serendipity rolls!
+            No active wishes yet. Create one to enable Serendipity rolls!
           </div>
         )}
       </div>
-    </div>
+    </Sheet>
   );
 };

@@ -32,17 +32,12 @@ export const ItemRow: React.FC<ItemRowProps> = ({
           : 'border-ink/12'
       }`}
     >
-      {/* Category + Sub-category | Icon */}
+      {/* Category | Icon */}
       <div className="flex items-center gap-1.5">
         <div className="flex-1 flex items-baseline gap-1.5 min-w-0">
           <span className="shrink-0 text-[11px] uppercase tracking-wider text-ink/60 font-semibold leading-tight">
             {categoryName}
           </span>
-          {item.subCategory && (
-            <span className="text-[11px] text-ink/40 font-medium leading-tight truncate">
-              · {item.subCategory}
-            </span>
-          )}
         </div>
         <span
           className="shrink-0 ml-2 transition-colors"
@@ -52,7 +47,7 @@ export const ItemRow: React.FC<ItemRowProps> = ({
         </span>
       </div>
 
-      {/* Primary Intention Title */}
+      {/* Primary Wish Title */}
       <h3
         className={`font-serif-journal text-[15px] sm:text-base font-medium tracking-tight text-ink leading-snug transition-colors ${
           isCompleted ? 'line-through text-ink/40' : ''

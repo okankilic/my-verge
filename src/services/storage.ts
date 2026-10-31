@@ -2,7 +2,7 @@ import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { BucketItem, CategoryDefinition } from '../types';
 import { INITIAL_ITEMS } from '../data/initialData';
-import { DEFAULT_CATEGORIES } from '../data/categories';
+import { CATEGORY_VERB_ICONS, DEFAULT_CATEGORIES } from '../data/categories';
 import { withStore } from './idb';
 import { isNative } from './platform';
 
@@ -71,24 +71,45 @@ export async function loadBucketItems(): Promise<BucketItem[]> {
       saveBucketItems(INITIAL_ITEMS);
       return INITIAL_ITEMS;
     }
-    return parsed;
+    return normalizeItems(parsed);
   } catch (err) {
     console.error('Failed to load bucket items from storage:', err);
     return INITIAL_ITEMS;
   }
 }
 
+// Older builds had sub-categories; drop the field so it doesn't linger in saves and backups.
+export function normalizeItems<T extends BucketItem>(raw: T[]): BucketItem[] {
+  return raw.map((entry) => {
+    const { subCategory: _subCategory, ...item } = entry as T & { subCategory?: string };
+    return item;
+  });
+}
+
 export function saveBucketItems(items: BucketItem[]): void {
   queueWrite(ITEMS_STORAGE_KEY, JSON.stringify(items), 'bucket items');
 }
 
-// Older data stored the label in `name` (sometimes as "Want to X"); fold it into `verb`
+// Older data stored the label in `name` (sometimes as "Want to X"); fold it into `verb`.
+// Sub-categories were removed, so their list is dropped.
+// Known verbs always get their fixed icon, replacing icons hand-picked by older builds.
+// Every verb is a built-in category: missing ones are added, and the list follows the default order.
+// Categories created by older builds are kept as they are, so their items keep pointing at them.
 export function normalizeCategories(raw: unknown[]): CategoryDefinition[] {
-  return raw.map((entry) => {
-    const { name, ...cat } = entry as CategoryDefinition & { name?: string };
+  const stored = raw.map((entry) => {
+    const { name, defaultSubCategories: _subCategories, ...cat } = entry as CategoryDefinition & {
+      name?: string;
+      defaultSubCategories?: string[];
+    };
     const label = (cat.verb || name || '').replace(/^want to\s+/i, '').trim();
-    return { ...cat, verb: label.charAt(0).toUpperCase() + label.slice(1) };
+    const verb = label.charAt(0).toUpperCase() + label.slice(1);
+    return { ...cat, verb, icon: CATEGORY_VERB_ICONS[verb] ?? cat.icon };
   });
+  const storedVerbs = new Set(stored.map((cat) => cat.verb));
+  const merged = [...stored, ...DEFAULT_CATEGORIES.filter((cat) => !storedVerbs.has(cat.verb))];
+  const order = new Map(DEFAULT_CATEGORIES.map((cat, index) => [cat.verb, index]));
+  const rank = (cat: CategoryDefinition) => order.get(cat.verb) ?? DEFAULT_CATEGORIES.length;
+  return merged.sort((a, b) => rank(a) - rank(b));
 }
 
 export async function loadCategories(): Promise<CategoryDefinition[]> {

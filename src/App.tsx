@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import {
   Plus,
@@ -35,7 +35,7 @@ import {
 import { saveAttachment, deleteAttachmentBlobs } from './services/attachments';
 import { syncNativeReminders, onReminderTapped } from './services/reminderScheduler';
 import { isNative, applyNativeTheme } from './services/platform';
-import { confirmAction, notify } from './services/dialogs';
+import { notify, notifyUndo, UNDO_MS } from './services/dialogs';
 import { photoKey } from './utils/photoKey';
 
 import { TopNav } from './components/TopNav';
@@ -44,14 +44,13 @@ import { CategoryRibbon } from './components/CategoryRibbon';
 import { JournalList } from './components/JournalList';
 import { ItemDetailDrawer } from './components/ItemDetailDrawer';
 import { ItemFormDrawer } from './components/ItemFormDrawer';
-import { MilestoneModal } from './components/MilestoneModal';
+import { MilestoneSheet } from './components/MilestoneSheet';
 import { ReminderRadarView } from './components/ReminderRadarView';
 import { VaultView } from './components/VaultView';
 import { MilestonesArchiveView } from './components/MilestonesArchiveView';
 import { InProgressView } from './components/InProgressView';
-import { SerendipityModal } from './components/SerendipityModal';
+import { SerendipitySheet } from './components/SerendipitySheet';
 import { SettingsView } from './components/SettingsView';
-import { CreateCategoryModal } from './components/CreateCategoryModal';
 import { DialogHost } from './components/DialogHost';
 
 export default function App() {
@@ -62,18 +61,19 @@ export default function App() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [currentTab, setCurrentTab] = useState<ViewTab>('inprogress');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
-  const [selectedSubCategory, setSelectedSubCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  // Modals & Drawers
+  // Sheets
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<BucketItem | null>(null);
   const [viewingItem, setViewingItem] = useState<BucketItem | null>(null);
   const [celebratingItem, setCelebratingItem] = useState<BucketItem | null>(null);
   const [isMilestoneOpen, setIsMilestoneOpen] = useState(false);
   const [isSerendipityOpen, setIsSerendipityOpen] = useState(false);
-  const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
+
+  // Attachment blobs of deleted items are removed only once their Undo window has passed
+  const pendingBlobDeletes = useRef(new Map<string, ReturnType<typeof setTimeout>>());
 
   // Desktop Mobile Frame Toggle
   const [isMobileFrame, setIsMobileFrame] = useState(false);
@@ -145,7 +145,7 @@ export default function App() {
       playChimeSound();
       sendBrowserNotification(
         `Nowish: ${firstDue.title}`,
-        `Reminder for your bucket list intention: ${firstDue.title}`
+        `Reminder for your bucket list wish: ${firstDue.title}`
       );
       const nowIso = new Date().toISOString();
       const freshIds = new Set(fresh.map((i) => i.id));
@@ -163,33 +163,6 @@ export default function App() {
     const interval = setInterval(checkReminders, 30000);
     return () => clearInterval(interval);
   }, [items, isHydrated]);
-
-  // Dynamic counts
-  const countsByCategory = useMemo(() => {
-    const counts: Record<string, number> = { all: 0 };
-    items.forEach((item) => {
-      if (item.status === 'active' && !item.startedAt) {
-        counts['all'] = (counts['all'] || 0) + 1;
-        counts[item.categoryId] = (counts[item.categoryId] || 0) + 1;
-      }
-    });
-    return counts;
-  }, [items]);
-
-  const countsBySubCategory = useMemo(() => {
-    const counts: Record<string, number> = {};
-    items.forEach((item) => {
-      if (
-        item.status === 'active' &&
-        !item.startedAt &&
-        item.subCategory &&
-        (selectedCategoryId === 'all' || item.categoryId === selectedCategoryId)
-      ) {
-        counts[item.subCategory] = (counts[item.subCategory] || 0) + 1;
-      }
-    });
-    return counts;
-  }, [items, selectedCategoryId]);
 
   // Overdue and due count for radar badge
   const dueRemindersCount = useMemo(() => {
@@ -218,8 +191,7 @@ export default function App() {
       const newItem: BucketItem = {
         id: `verge-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
         categoryId: itemData.categoryId || 'go',
-        subCategory: itemData.subCategory,
-        title: itemData.title || 'Untitled Intention',
+        title: itemData.title || 'Untitled Wish',
         description: itemData.description || '',
         priority: itemData.priority || 'this_year',
         targetDate: itemData.targetDate,
@@ -237,18 +209,28 @@ export default function App() {
     }
   };
 
-  const handleToggleComplete = async (item: BucketItem) => {
+  // Applies a patch to an item and to the open detail sheet, if it shows that item
+  const patchItem = (id: string, patch: Partial<BucketItem>) => {
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
+    setViewingItem((prev) => (prev?.id === id ? { ...prev, ...patch } : prev));
+  };
+
+  // No confirm step: the change applies at once and the toast offers Undo
+  const handleToggleComplete = (item: BucketItem) => {
     const isNowCompleted = item.status !== 'completed';
-    const confirmed = await confirmAction(
-      isNowCompleted
-        ? { title: 'Mark as accomplished?', message: item.title, confirmLabel: 'Accomplish' }
-        : {
-            title: 'Re-activate this intention?',
-            message: `"${item.title}" will leave your Memories and return to your Journal.`,
-            confirmLabel: 'Re-activate',
-          }
-    );
-    if (!confirmed) return;
+    const previous: Partial<BucketItem> = {
+      status: item.status,
+      startedAt: item.startedAt,
+      completedAt: item.completedAt,
+      updatedAt: item.updatedAt,
+    };
+    notifyUndo(isNowCompleted ? `Accomplished "${item.title}".` : `"${item.title}" is back in your Journal.`, () => {
+      patchItem(item.id, previous);
+      // Dropping the celebrated item hides its reflection sheet (MilestoneSheet renders nothing without one)
+      if (isNowCompleted) {
+        setCelebratingItem((prev) => (prev?.id === item.id ? null : prev));
+      }
+    });
     const nowIso = new Date().toISOString();
 
     if (isNowCompleted) {
@@ -304,16 +286,10 @@ export default function App() {
     }
   };
 
-  const handleToggleStarted = async (item: BucketItem) => {
-    if (
-      item.startedAt &&
-      !(await confirmAction({
-        title: 'Stop this intention?',
-        message: `"${item.title}" will move back to your Journal.`,
-        confirmLabel: 'Stop',
-      }))
-    ) {
-      return;
+  const handleToggleStarted = (item: BucketItem) => {
+    if (item.startedAt) {
+      const previous = { startedAt: item.startedAt, updatedAt: item.updatedAt };
+      notifyUndo(`Stopped "${item.title}".`, () => patchItem(item.id, previous));
     }
     const nowIso = new Date().toISOString();
     const startedAt = item.startedAt ? undefined : nowIso;
@@ -390,27 +366,43 @@ export default function App() {
     );
   };
 
-  const handleDeleteItem = async (id: string) => {
-    const target = items.find((i) => i.id === id);
-    const confirmed = await confirmAction({
-      title: target ? `Delete "${target.title}"?` : 'Delete this intention?',
-      message: 'This also removes its photos and files.',
-      confirmLabel: 'Delete',
-      tone: 'danger',
-    });
-    if (confirmed) {
-      const attachmentIds = target?.attachments?.map((a) => a.id) || [];
-      deleteAttachmentBlobs(attachmentIds).catch((err) =>
-        console.error('Failed to delete attachments:', err)
+  const handleDeleteItem = (id: string) => {
+    const index = items.findIndex((i) => i.id === id);
+    if (index === -1) return;
+    const target = items[index];
+
+    const attachmentIds = target.attachments?.map((a) => a.id) || [];
+    if (attachmentIds.length > 0) {
+      pendingBlobDeletes.current.set(
+        id,
+        setTimeout(() => {
+          pendingBlobDeletes.current.delete(id);
+          deleteAttachmentBlobs(attachmentIds).catch((err) =>
+            console.error('Failed to delete attachments:', err)
+          );
+          // A second past the toast, so a last-moment Undo never finds its files gone
+        }, UNDO_MS + 1000)
       );
-      setItems((prev) => prev.filter((i) => i.id !== id));
-      if (activeToastItem?.id === id) {
-        setActiveToastItem(null);
-      }
-      if (viewingItem?.id === id) {
-        setViewingItem(null);
-      }
     }
+
+    setItems((prev) => prev.filter((i) => i.id !== id));
+    if (activeToastItem?.id === id) {
+      setActiveToastItem(null);
+    }
+    if (viewingItem?.id === id) {
+      setViewingItem(null);
+    }
+
+    notifyUndo(`Deleted "${target.title}".`, () => {
+      clearTimeout(pendingBlobDeletes.current.get(id));
+      pendingBlobDeletes.current.delete(id);
+      // Back into the slot it had, as far as the list still allows
+      setItems((prev) =>
+        prev.some((i) => i.id === id)
+          ? prev
+          : [...prev.slice(0, index), target, ...prev.slice(index)]
+      );
+    });
   };
 
   const handleSnooze = (item: BucketItem, days: number) => {
@@ -447,12 +439,6 @@ export default function App() {
     }
   };
 
-  const handleCreateCategory = (newCategory: CategoryDefinition) => {
-    setCategories((prev) => [...prev, newCategory]);
-    setSelectedCategoryId(newCategory.id);
-    setSelectedSubCategory('all');
-  };
-
   // Closing the global search also clears it, so no hidden filter stays applied
   const handleToggleSearch = () => {
     if (isSearchOpen) setSearchQuery('');
@@ -467,28 +453,51 @@ export default function App() {
       (item) =>
         item.title.toLowerCase().includes(q) ||
         item.description.toLowerCase().includes(q) ||
-        item.subCategory?.toLowerCase().includes(q) ||
         item.location?.name.toLowerCase().includes(q) ||
         item.mediaMeta?.authorOrCreator?.toLowerCase().includes(q)
     );
   }, [items, searchQuery]);
 
+  // Items each tab lists, so the category ribbon counts match what the tab shows
+  const inTabScope = (item: BucketItem) => {
+    switch (currentTab) {
+      case 'feed':
+        return item.status === 'active' && !item.startedAt;
+      case 'inprogress':
+        return item.status === 'active' && Boolean(item.startedAt);
+      case 'reminders':
+        return item.status === 'active' && Boolean(item.reminder?.date);
+      case 'vault':
+        return item.status !== 'archived';
+      case 'milestones':
+        return item.status === 'completed';
+      default:
+        return false;
+    }
+  };
+
+  // Dynamic counts
+  const countsByCategory = useMemo(() => {
+    const counts: Record<string, number> = { all: 0 };
+    searchedItems.forEach((item) => {
+      if (inTabScope(item)) {
+        counts['all'] = (counts['all'] || 0) + 1;
+        counts[item.categoryId] = (counts[item.categoryId] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [searchedItems, currentTab]);
+
+  // Global category filter: every tab except Settings renders from these items
+  const filteredItems = useMemo(() => {
+    if (selectedCategoryId === 'all') return searchedItems;
+    return searchedItems.filter((item) => item.categoryId === selectedCategoryId);
+  }, [searchedItems, selectedCategoryId]);
+
   // Filtered Feed Items, in the user's priority order (the order of the items array)
   const filteredActiveItems = useMemo(() => {
-    return searchedItems.filter((item) => {
-      if (item.status !== 'active' || item.startedAt) return false;
-
-      if (selectedCategoryId !== 'all' && item.categoryId !== selectedCategoryId) {
-        return false;
-      }
-
-      if (selectedSubCategory !== 'all' && item.subCategory !== selectedSubCategory) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [searchedItems, selectedCategoryId, selectedSubCategory]);
+    return filteredItems.filter((item) => item.status === 'active' && !item.startedAt);
+  }, [filteredItems]);
 
   // Reorder only the visible subset: the dragged items swap among the array slots they
   // already occupy, so items hidden by filters or search keep their positions
@@ -509,10 +518,10 @@ export default function App() {
 
   // In-progress items, most recently started first
   const inProgressItems = useMemo(() => {
-    return searchedItems
+    return filteredItems
       .filter((item) => item.status === 'active' && item.startedAt)
       .sort((a, b) => new Date(b.startedAt!).getTime() - new Date(a.startedAt!).getTime());
-  }, [searchedItems]);
+  }, [filteredItems]);
 
   if (!isHydrated) return <div className="min-h-screen bg-page" />;
 
@@ -576,9 +585,10 @@ export default function App() {
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   onClick={() => handleSnooze(activeToastItem, 1)}
+                  title="Snooze 1 day"
                   className="min-h-[44px] px-2.5 py-1 text-xs font-medium bg-card border border-ink/15 rounded-lg hover:bg-paper text-ink"
                 >
-                  Snooze 1d
+                  Snooze
                 </button>
                 <button
                   onClick={() => setActiveToastItem(null)}
@@ -591,24 +601,21 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 1: STREAMLINED JOURNAL FEED */}
-          {currentTab === 'feed' && (
-            <div className="space-y-3">
-              {/* Category Ribbon: Categories row or Sub-categories row with Up icon */}
+          {/* Global Category Ribbon */}
+          {currentTab !== 'settings' && (
+            <div className="mb-3">
               <CategoryRibbon
                 categories={categories}
                 selectedCategoryId={selectedCategoryId}
-                onSelectCategory={(catId) => {
-                  setSelectedCategoryId(catId);
-                  setSelectedSubCategory('all');
-                }}
-                selectedSubCategory={selectedSubCategory}
-                onSelectSubCategory={setSelectedSubCategory}
+                onSelectCategory={setSelectedCategoryId}
                 countsByCategory={countsByCategory}
-                countsBySubCategory={countsBySubCategory}
-                onOpenCreateCategory={() => setIsCreateCategoryOpen(true)}
               />
+            </div>
+          )}
 
+          {/* TAB 1: STREAMLINED JOURNAL FEED */}
+          {currentTab === 'feed' && (
+            <div className="space-y-3">
               {/* Clean Single Paper Card Container for Items */}
               {filteredActiveItems.length === 0 ? (
                 <div className="p-10 text-center bg-card border border-ink/10 rounded-lg space-y-3 mt-3">
@@ -619,22 +626,19 @@ export default function App() {
                     No active aspirations found
                   </h3>
                   <p className="text-xs text-ink/60 max-w-xs mx-auto">
-                    Record your next intention or clear filters to see your lists.
+                    Add your next wish or clear filters to see your lists.
                   </p>
                   <div className="flex items-center justify-center gap-2 pt-1">
-                    {(selectedCategoryId !== 'all' ||
-                      selectedSubCategory !== 'all' ||
-                      searchQuery.trim() !== '') && (
+                    {(selectedCategoryId !== 'all' || searchQuery.trim() !== '') && (
                       <button
                         type="button"
                         onClick={() => {
                           setSelectedCategoryId('all');
-                          setSelectedSubCategory('all');
                           setSearchQuery('');
                         }}
                         className="min-h-[40px] px-3.5 py-2 bg-card border border-ink/15 text-ink text-xs font-semibold rounded-lg hover:bg-paper transition-all"
                       >
-                        Clear Filters
+                        Clear
                       </button>
                     )}
                     <button
@@ -643,9 +647,10 @@ export default function App() {
                         setEditingItem(null);
                         setIsFormOpen(true);
                       }}
-                      className="min-h-[40px] px-4 py-2 bg-ink text-paper text-xs font-semibold rounded-lg hover:bg-ink/85 transition-all"
+                      className="min-h-[40px] px-4 py-2 bg-ink text-paper text-xs font-semibold rounded-lg hover:bg-ink/85 transition-all inline-flex items-center gap-1.5"
                     >
-                      + Add Intention
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>New</span>
                     </button>
                   </div>
                 </div>
@@ -666,7 +671,7 @@ export default function App() {
           {/* TAB 2: REMINDER RADAR */}
           {currentTab === 'reminders' && (
             <ReminderRadarView
-              items={searchedItems}
+              items={filteredItems}
               categories={categories}
               onSnooze={handleSnooze}
               onNotificationsEnabled={() => syncNativeReminders(items)}
@@ -694,7 +699,7 @@ export default function App() {
           {/* TAB 3: CURATED VAULT & SHELF */}
           {currentTab === 'vault' && (
             <VaultView
-              items={searchedItems}
+              items={filteredItems}
               categories={categories}
               onSelect={(it) => setViewingItem(it)}
               onToggleComplete={handleToggleComplete}
@@ -708,7 +713,7 @@ export default function App() {
           {/* TAB 4: RETROSPECTIVE MEMORIES */}
           {currentTab === 'milestones' && (
             <MilestonesArchiveView
-              items={searchedItems}
+              items={filteredItems}
               categories={categories}
               onSelect={(it) => setViewingItem(it)}
               onToggleComplete={handleToggleComplete}
@@ -729,7 +734,6 @@ export default function App() {
                 setCategories(newCats);
                 // The selected category may no longer exist
                 setSelectedCategoryId('all');
-                setSelectedSubCategory('all');
                 setActiveToastItem(null);
               }}
               theme={theme}
@@ -790,8 +794,8 @@ export default function App() {
         defaultCategoryId={selectedCategoryId}
       />
 
-      {/* Milestone Accomplishment Modal */}
-      <MilestoneModal
+      {/* Milestone Accomplishment Sheet */}
+      <MilestoneSheet
         key={celebratingItem?.id ?? 'none'}
         isOpen={isMilestoneOpen}
         item={celebratingItem}
@@ -802,31 +806,20 @@ export default function App() {
         onSaveReflection={handleSaveReflection}
       />
 
-      {/* Serendipity Inspiration Modal */}
-      <SerendipityModal
+      {/* Serendipity Inspiration Sheet */}
+      <SerendipitySheet
         isOpen={isSerendipityOpen}
         onClose={() => setIsSerendipityOpen(false)}
         items={items}
         categories={categories}
         onSelectFocus={(item) => {
           setSelectedCategoryId(item.categoryId);
-          if (item.subCategory) {
-            setSelectedSubCategory(item.subCategory);
-          }
           setCurrentTab(item.startedAt ? 'inprogress' : 'feed');
           setViewingItem(item);
         }}
       />
 
-      {/* Create Custom Category Modal */}
-      <CreateCategoryModal
-        isOpen={isCreateCategoryOpen}
-        onClose={() => setIsCreateCategoryOpen(false)}
-        categories={categories}
-        onCreateCategory={handleCreateCategory}
-      />
-
-      {/* In-app confirm sheet + notices (replaces window.confirm / alert) */}
+      {/* In-app notices with Undo (replaces window.alert; there are no confirm dialogs) */}
       <DialogHost />
     </div>
   );

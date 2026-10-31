@@ -1,21 +1,22 @@
 import React, { useState } from 'react';
 import { X, Trophy, Star, Sparkles, Heart } from 'lucide-react';
 import { BucketItem } from '../types';
+import { Sheet } from './Sheet';
 
-interface MilestoneModalProps {
+interface MilestoneSheetProps {
   item: BucketItem | null;
   isOpen: boolean;
   onClose: () => void;
   onSaveReflection: (itemId: string, reflection: string, rating: number) => void;
 }
 
-export const MilestoneModal: React.FC<MilestoneModalProps> = ({
+export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
   item,
   isOpen,
   onClose,
   onSaveReflection,
 }) => {
-  // App.tsx keys this modal by item id, so state is seeded fresh for each item
+  // App.tsx keys this sheet by item id, so state is seeded fresh for each item
   const [reflection, setReflection] = useState(item?.completionReflection || '');
   const [rating, setRating] = useState(item?.completionRating || 5);
 
@@ -28,8 +29,8 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-      <div className="w-full max-w-lg bg-paper border border-ink/15 rounded-3xl shadow-2xl p-6 sm:p-7 relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <Sheet isOpen onClose={onClose} width="md" labelledBy="milestone-title">
+      <div className="relative overflow-y-auto p-6 sm:p-7">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center text-ink/50 hover:text-ink rounded-full hover:bg-ink/5"
@@ -41,7 +42,7 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
           <div className="w-12 h-12 bg-[#4A6B56]/15 text-[#4A6B56] rounded-2xl mx-auto flex items-center justify-center mb-3">
             <Trophy className="w-6 h-6 stroke-[2]" />
           </div>
-          <h2 className="font-serif-journal text-2xl font-semibold text-ink">
+          <h2 id="milestone-title" className="font-serif-journal text-2xl font-semibold text-ink">
             Dream Accomplished
           </h2>
           <p className="text-xs text-ink/70 mt-1 max-w-xs mx-auto">
@@ -64,7 +65,7 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
                   type="button"
                   key={star}
                   onClick={() => setRating(star)}
-                  className="min-w-[40px] min-h-[40px] flex items-center justify-center text-ink/20 hover:text-[#B45309] transition-colors"
+                  className="min-w-[44px] min-h-[44px] flex items-center justify-center text-ink/20 hover:text-[#B45309] transition-colors"
                 >
                   <Star
                     className={`w-6 h-6 ${
@@ -96,18 +97,18 @@ export const MilestoneModal: React.FC<MilestoneModalProps> = ({
               onClick={onClose}
               className="min-h-[44px] px-4 py-2 text-xs font-semibold text-ink/70 hover:text-ink rounded-xl hover:bg-ink/5"
             >
-              Skip Reflection
+              Skip
             </button>
             <button
               type="submit"
               className="min-h-[44px] px-6 py-2.5 text-xs font-semibold text-white bg-[#4A6B56] hover:bg-[#3d5a47] rounded-xl shadow-md transition-all flex items-center gap-1.5"
             >
               <Heart className="w-3.5 h-3.5" />
-              <span>Preserve in Memories</span>
+              <span>Preserve</span>
             </button>
           </div>
         </form>
       </div>
-    </div>
+    </Sheet>
   );
 };

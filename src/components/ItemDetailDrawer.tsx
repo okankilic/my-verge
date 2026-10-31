@@ -24,6 +24,7 @@ import { BucketItem, CategoryDefinition } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
 import { externalLinkProps } from '../services/platform';
 import { isReminderDue as isDue, reminderNextAt } from '../services/notifications';
+import { Sheet } from './Sheet';
 
 interface ItemDetailDrawerProps {
   item: BucketItem | null;
@@ -76,18 +77,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
   const nextReminderAt = item.reminder?.date ? reminderNextAt(item.reminder) : null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      {/* Dim backdrop */}
-      <div
-        onClick={onClose}
-        className="absolute inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
-      />
-
-      {/* Sheet Container */}
-      <div className="absolute inset-x-0 bottom-0 max-h-[92vh] sm:max-h-full sm:inset-y-0 sm:right-0 sm:left-auto sm:w-full sm:max-w-lg bg-paper border-t sm:border-l border-ink/15 rounded-t-3xl sm:rounded-none shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom sm:slide-in-from-right duration-200">
-        {/* Mobile Grab Handle */}
-        <div className="sm:hidden w-12 h-1.5 bg-ink/20 rounded-full mx-auto my-3" />
-
+    <Sheet isOpen onClose={onClose}>
         {/* Top Header Bar */}
         <div className="px-5 py-3.5 border-b border-ink/10 flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-ink/60 font-medium">
@@ -100,12 +90,6 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               </span>
               <span>{categoryDef?.verb || item.categoryId}</span>
             </span>
-            {item.subCategory && (
-              <>
-                <span aria-hidden="true">·</span>
-                <span className="text-[#B45309] font-medium">{item.subCategory}</span>
-              </>
-            )}
             <span aria-hidden="true">·</span>
             <span className="capitalize">{item.priority.replace('_', ' ')}</span>
           </div>
@@ -286,15 +270,17 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
                   <span className="text-[11px] text-ink/60 font-medium">Snooze:</span>
                   <button
                     onClick={() => onSnooze(item, 1)}
+                    title="Snooze 1 day"
                     className="min-h-[36px] px-2.5 py-1 text-xs font-medium bg-paper border border-ink/15 rounded-lg hover:bg-paper-deep transition-colors"
                   >
-                    +1 Day
+                    +1d
                   </button>
                   <button
                     onClick={() => onSnooze(item, 7)}
+                    title="Snooze 1 week"
                     className="min-h-[36px] px-2.5 py-1 text-xs font-medium bg-paper border border-ink/15 rounded-lg hover:bg-paper-deep transition-colors"
                   >
-                    +1 Week
+                    +1w
                   </button>
                 </div>
               )}
@@ -311,16 +297,16 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
                 onEdit(item);
               }}
               className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg border border-ink/15 bg-card text-ink/80 hover:text-ink hover:bg-paper hover:border-ink/30 transition-colors"
-              title="Edit intention"
-              aria-label="Edit intention"
+              title="Edit wish"
+              aria-label="Edit wish"
             >
               <Edit3 className="w-4 h-4" />
             </button>
             <button
               onClick={() => onDelete(item.id)}
               className="min-h-[40px] min-w-[40px] flex items-center justify-center text-ink/40 hover:text-red-600 rounded-lg hover:bg-red-500/10 transition-colors"
-              title="Delete intention"
-              aria-label="Delete intention"
+              title="Delete wish"
+              aria-label="Delete wish"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -340,7 +326,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
             )}
             <button
               onClick={() => {
-                // Completing closes the sheet only if confirmed (handled in App); un-completing closes now
+                // App closes the sheet when completing; un-completing closes it here
                 if (isCompleted) onClose();
                 onToggleComplete(item);
               }}
@@ -356,7 +342,6 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </Sheet>
   );
 };

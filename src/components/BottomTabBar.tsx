@@ -133,11 +133,11 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className="relative h-16 max-w-lg mx-auto flex items-center justify-center gap-8">
-          {/* New Intention: tucked away while the fan is open so it can't collide with fan items */}
+          {/* New Wish: tucked away while the fan is open so it can't collide with fan items */}
           <button
             type="button"
             onClick={onOpenCreate}
-            aria-label="New Intention"
+            aria-label="New Wish"
             disabled={isFanOpen}
             className={`w-11 h-11 rounded-full flex items-center justify-center bg-card border border-ink/15 text-ink shadow-sm transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/40 ${
               isFanOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'

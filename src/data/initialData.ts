@@ -4,7 +4,6 @@ export const INITIAL_ITEMS: BucketItem[] = [
   {
     id: 'verge-item-1',
     categoryId: 'go',
-    subCategory: 'City Breaks',
     title: 'Wander Arashiyama Bamboo Grove & Saiho-ji Moss Temple',
     description: 'Walk the moss-covered stone paths in the quiet morning mist of Kyoto. Attend the early sutra transcription chant before exploring the stone gardens.',
     priority: 'this_year',
@@ -33,7 +32,6 @@ export const INITIAL_ITEMS: BucketItem[] = [
   {
     id: 'verge-item-2',
     categoryId: 'read',
-    subCategory: 'Fiction & Novels',
     title: 'Invisible Cities by Italo Calvino',
     description: 'Reflective dialogues between Marco Polo and Kublai Khan about cities of memory, desire, and signs. Read with a fountain pen in a sunlit corner.',
     priority: 'this_month',
@@ -58,7 +56,6 @@ export const INITIAL_ITEMS: BucketItem[] = [
   {
     id: 'verge-item-3',
     categoryId: 'buy',
-    subCategory: 'Homeware & Design',
     title: 'Wood-Fired Stoneware Teapot & Ceramic Cups',
     description: 'An artisanal wood-fired kyusu teapot with natural wood-ash glaze from an independent potter. An everyday ritual instrument for loose-leaf gyokuro.',
     priority: 'this_month',
@@ -83,7 +80,6 @@ export const INITIAL_ITEMS: BucketItem[] = [
   {
     id: 'verge-item-4',
     categoryId: 'watch',
-    subCategory: 'Classic Cinema',
     title: 'Cinema Paradiso & Stalker in 35mm Restoration',
     description: 'Screen Giuseppe Tornatore’s love letter to moving images at an independent cinema with original auditorium projection acoustics.',
     priority: 'this_month',
@@ -106,7 +102,6 @@ export const INITIAL_ITEMS: BucketItem[] = [
   {
     id: 'verge-item-5',
     categoryId: 'do',
-    subCategory: 'New Skills',
     title: 'Hand-bind a bespoke linen hardcover journal',
     description: 'Learn Coptic stitch bookbinding, trim 120gsm cold-press rag cotton paper signatures, and case-bind with bookcloth spine.',
     priority: 'this_year',
@@ -130,7 +125,6 @@ export const INITIAL_ITEMS: BucketItem[] = [
   {
     id: 'verge-item-6',
     categoryId: 'remember',
-    subCategory: 'Words & Quotes',
     title: '“Attention is the rarest and purest form of generosity”',
     description: 'Simone Weil, Gravity and Grace. Remind yourself that being fully present with someone or with a craft is the greatest gift one can offer.',
     priority: 'urgent',
@@ -148,7 +142,6 @@ export const INITIAL_ITEMS: BucketItem[] = [
   {
     id: 'verge-item-7',
     categoryId: 'go',
-    subCategory: 'Wilderness & Hikes',
     title: 'Hike the Coastal Trails of Cabo de Gata',
     description: 'Volcanic cliffs, tranquil secluded coves, and quiet Mediterranean sunsets along the protected Andalusian coastline.',
     priority: 'someday',

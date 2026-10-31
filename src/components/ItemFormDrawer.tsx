@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   X,
-  Plus,
   Calendar,
   Bell,
   MapPin,
@@ -20,6 +19,7 @@ import {
   RecurrenceType,
 } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
+import { Sheet } from './Sheet';
 
 interface ItemFormDrawerProps {
   isOpen: boolean;
@@ -46,9 +46,6 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   defaultCategoryId,
 }) => {
   const [categoryId, setCategoryId] = useState<string>('go');
-  const [subCategory, setSubCategory] = useState<string>('');
-  const [newSubInput, setNewSubInput] = useState<string>('');
-  const [isAddingNewSub, setIsAddingNewSub] = useState<boolean>(false);
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [priority, setPriority] = useState<PriorityLevel>('this_year');
@@ -78,7 +75,6 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   useEffect(() => {
     if (editingItem) {
       setCategoryId(editingItem.categoryId);
-      setSubCategory(editingItem.subCategory || '');
       setTitle(editingItem.title);
       setDescription(editingItem.description || '');
       setPriority(editingItem.priority || 'this_year');
@@ -106,8 +102,6 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       // New item defaults
       const initialCat = defaultCategoryId && defaultCategoryId !== 'all' ? defaultCategoryId : 'go';
       setCategoryId(initialCat);
-      const activeCatDef = categories.find((c) => c.id === initialCat);
-      setSubCategory(activeCatDef?.defaultSubCategories[0] || '');
       setTitle('');
       setDescription('');
       setPriority('this_year');
@@ -125,25 +119,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       setSelectedPhoto('');
       setCustomPhotoUrl('');
     }
-  }, [editingItem, defaultCategoryId, isOpen, categories]);
-
-  // When category changes, auto-select first subcategory if empty
-  const handleCategoryChange = (newCatId: string) => {
-    setCategoryId(newCatId);
-    const catDef = categories.find((c) => c.id === newCatId);
-    if (catDef && catDef.defaultSubCategories.length > 0) {
-      setSubCategory(catDef.defaultSubCategories[0]);
-    } else {
-      setSubCategory('');
-    }
-  };
-
-  const handleAddNewSub = () => {
-    if (!newSubInput.trim()) return;
-    setSubCategory(newSubInput.trim());
-    setNewSubInput('');
-    setIsAddingNewSub(false);
-  };
+  }, [editingItem, defaultCategoryId, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,7 +134,6 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
 
     const itemData: Partial<BucketItem> = {
       categoryId,
-      subCategory: subCategory.trim() || undefined,
       title: title.trim(),
       description: description.trim(),
       priority,
@@ -209,26 +184,13 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
 
   if (!isOpen) return null;
 
-  const currentCatDef = categories.find((c) => c.id === categoryId);
-
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      {/* Backdrop */}
-      <div
-        onClick={onClose}
-        className="absolute inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
-      />
-
-      {/* Drawer Container (slides up on mobile, slides in on tablet/desktop) */}
-      <div className="absolute inset-x-0 bottom-0 max-h-[92vh] sm:max-h-full sm:inset-y-0 sm:right-0 sm:left-auto sm:w-full sm:max-w-xl bg-paper border-t sm:border-l border-ink/15 rounded-t-3xl sm:rounded-none shadow-2xl flex flex-col overflow-hidden">
-        {/* Mobile Grab Handle */}
-        <div className="sm:hidden w-12 h-1.5 bg-ink/20 rounded-full mx-auto my-3" />
-
+    <Sheet isOpen onClose={onClose} width="xl" labelledBy="item-form-title">
         {/* Header */}
         <div className="px-5 py-4 border-b border-ink/10 flex items-center justify-between">
           <div>
-            <h2 className="font-serif-journal text-xl font-medium text-ink">
-              {editingItem ? 'Edit Intention' : 'Capture Intention'}
+            <h2 id="item-form-title" className="font-serif-journal text-xl font-medium text-ink">
+              {editingItem ? 'Edit Wish' : 'Capture Wish'}
             </h2>
             <p className="text-xs text-ink/60 mt-0.5">
               Give your upcoming dream shape, timeline, and reminders
@@ -249,14 +211,14 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-2">
               Category
             </label>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
               {categories.map((cat) => {
                 const isSelected = categoryId === cat.id;
                 return (
                   <button
                     type="button"
                     key={cat.id}
-                    onClick={() => handleCategoryChange(cat.id)}
+                    onClick={() => setCategoryId(cat.id)}
                     className={`min-h-[48px] p-2 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-1 ${
                       isSelected
                         ? 'border-ink bg-ink text-paper font-semibold shadow-xs'
@@ -275,65 +237,11 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             </div>
           </div>
 
-          {/* Step 2: Sub-category Selection & Creation */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs uppercase tracking-wider text-ink/60 font-semibold">
-                Sub-Category
-              </label>
-              <button
-                type="button"
-                onClick={() => setIsAddingNewSub(!isAddingNewSub)}
-                className="text-xs text-[#B45309] hover:underline font-medium flex items-center gap-1"
-              >
-                <Plus className="w-3 h-3" />
-                <span>Custom Sub-category</span>
-              </button>
-            </div>
-
-            {/* List of subcategories for this category */}
-            <div className="flex flex-wrap gap-1.5">
-              {currentCatDef?.defaultSubCategories.map((sub) => (
-                <button
-                  type="button"
-                  key={sub}
-                  onClick={() => setSubCategory(sub)}
-                  className={`min-h-[36px] px-3 py-1.5 rounded-lg text-xs transition-all ${
-                    subCategory === sub
-                      ? 'bg-ink text-paper font-medium shadow-xs'
-                      : 'bg-card border border-ink/15 text-ink/70 hover:border-ink/30'
-                  }`}
-                >
-                  {sub}
-                </button>
-              ))}
-            </div>
-
-            {isAddingNewSub && (
-              <div className="mt-2.5 flex items-center gap-2">
-                <input
-                  type="text"
-                  value={newSubInput}
-                  onChange={(e) => setNewSubInput(e.target.value)}
-                  placeholder="e.g. Classic Noir, Solo Hiking, Artisan Woodwork"
-                  className="flex-1 min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-lg text-ink focus:outline-none focus:border-ink"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddNewSub}
-                  className="min-h-[44px] px-4 py-2 bg-ink text-paper text-xs font-medium rounded-lg hover:bg-ink/85"
-                >
-                  Apply
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Step 3: Title & Description */}
+          {/* Step 2: Title & Description */}
           <div className="space-y-4">
             <div>
               <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
-                Intention Title *
+                Wish Title *
               </label>
               <input
                 type="text"
@@ -401,7 +309,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             </div>
           </div>
 
-          {/* Step 4: Priority & Target Date */}
+          {/* Step 3: Priority & Target Date */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
@@ -415,7 +323,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 <option value="this_month">This Month (High Focus)</option>
                 <option value="this_year">This Year (Current Chapter)</option>
                 <option value="someday">Someday (Long Horizon)</option>
-                <option value="urgent">Urgent Intention</option>
+                <option value="urgent">Urgent Wish</option>
               </select>
             </div>
 
@@ -432,7 +340,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             </div>
           </div>
 
-          {/* Step 5: Scheduled Reminders Engine */}
+          {/* Step 4: Scheduled Reminders Engine */}
           <div className="p-4 rounded-2xl bg-card border border-ink/10 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -484,7 +392,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             )}
           </div>
 
-          {/* Step 6: Location & Budget Fields */}
+          {/* Step 5: Location & Budget Fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Location */}
             <div className="p-3.5 bg-card rounded-2xl border border-ink/10 space-y-2">
@@ -544,7 +452,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             </div>
           </div>
 
-          {/* Step 7: Visual Photograph Attachment */}
+          {/* Step 6: Visual Photograph Attachment */}
           <div className="space-y-2">
             <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold">
               Inspirational Photo
@@ -617,10 +525,9 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             onClick={handleSubmit}
             className="min-h-[44px] px-6 py-2.5 text-xs font-semibold text-paper bg-ink hover:bg-ink/85 active:scale-98 rounded-xl shadow-md transition-all"
           >
-            {editingItem ? 'Save Changes' : 'Record Intention'}
+            Save
           </button>
         </div>
-      </div>
-    </div>
+    </Sheet>
   );
 };

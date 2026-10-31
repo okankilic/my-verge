@@ -1,4 +1,9 @@
-export type DefaultCategoryId = 'go' | 'do' | 'buy' | 'remember' | 'read' | 'watch' | 'custom';
+// Ids of the built-in categories (the lowercase verb); categories saved by older builds may have other ids
+export type DefaultCategoryId =
+  | 'go' | 'do' | 'buy' | 'remember' | 'read' | 'watch'
+  | 'cook' | 'learn' | 'listen' | 'play' | 'make' | 'try'
+  | 'taste' | 'visit' | 'write' | 'practice' | 'build' | 'grow'
+  | 'collect' | 'give' | 'call' | 'see' | 'explore' | 'fix';
 
 export type PriorityLevel = 'someday' | 'this_year' | 'this_month' | 'urgent';
 
@@ -6,10 +11,9 @@ export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 export interface CategoryDefinition {
   id: DefaultCategoryId | string;
-  verb: string; // Action verb used as the category label, e.g. "Go", "Do", "Buy" (see CATEGORY_VERBS)
+  verb: string; // Action verb used as the category label, e.g. "Go", "Do", "Buy" (see CATEGORY_VERB_ICONS)
   icon: string; // Lucide icon identifier
   tagline: string;
-  defaultSubCategories: string[];
   accentColor: string;
 }
 
@@ -53,7 +57,6 @@ export interface BucketItem {
   id: string;
   categoryId: DefaultCategoryId | string;
   customCategoryName?: string;
-  subCategory?: string;
   title: string;
   description: string;
   priority: PriorityLevel;
