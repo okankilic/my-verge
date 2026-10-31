@@ -197,13 +197,13 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
             onRemove={(stepId) => onRemoveStep(item, stepId)}
           />
 
-          {/* Money spent along the way: added while in progress, kept after it's finished */}
-          {(isStarted || expenses.length > 0) && (
+          {/* Money spent on the wish: added while in progress or once it's finished */}
+          {(isStarted || isCompleted || expenses.length > 0) && (
             <ExpenseList
               expenses={expenses}
               title={item.title}
               currency={currency}
-              onAdd={isStarted ? (amount, note) => onAddExpense(item, amount, note) : undefined}
+              onAdd={isStarted || isCompleted ? (amount, note) => onAddExpense(item, amount, note) : undefined}
               onRemove={(expenseId) => onRemoveExpense(item, expenseId)}
             />
           )}

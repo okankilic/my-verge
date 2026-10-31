@@ -3,6 +3,8 @@ import { Trophy, Star } from 'lucide-react';
 import { BucketItem } from '../types';
 import { Sheet } from './Sheet';
 import { KeepInVaultSwitch, HideInMemoriesSwitch } from './KeepInVaultSwitch';
+import { ExpenseList } from './ExpenseList';
+import { wishCurrency } from '../utils/expenses';
 
 interface MilestoneSheetProps {
   item: BucketItem | null;
@@ -11,6 +13,8 @@ interface MilestoneSheetProps {
   onSaveReflection: (itemId: string, reflection: string, rating: number) => void;
   onToggleKeep: (item: BucketItem) => void;
   onToggleHide: (item: BucketItem) => void;
+  onAddExpense: (item: BucketItem, amount: number, note?: string) => void;
+  onRemoveExpense: (item: BucketItem, expenseId: string) => void;
 }
 
 export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
@@ -20,6 +24,8 @@ export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
   onSaveReflection,
   onToggleKeep,
   onToggleHide,
+  onAddExpense,
+  onRemoveExpense,
 }) => {
   // App.tsx keys this sheet by item id, so state is seeded fresh for each item
   const [reflection, setReflection] = useState(item?.completionReflection || '');
@@ -98,6 +104,15 @@ export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
               className="w-full px-3.5 py-2.5 text-sm bg-card border border-ink/15 rounded-xl text-ink placeholder-ink/40 focus:outline-none focus:border-ink"
             />
           </div>
+
+          {/* What it cost, for wishes finished without a stop on Now; applies at once, not on close */}
+          <ExpenseList
+            expenses={item.expenses || []}
+            title={item.title}
+            currency={wishCurrency(item)}
+            onAdd={(amount, note) => onAddExpense(item, amount, note)}
+            onRemove={(expenseId) => onRemoveExpense(item, expenseId)}
+          />
 
           {/* Applies at once, not on close */}
           <div className="space-y-2">

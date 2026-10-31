@@ -274,9 +274,10 @@ export default function App() {
       completedAt: item.completedAt,
       keptInVault: item.keptInVault,
       hiddenInMemories: item.hiddenInMemories,
-      // A note written in the reflection sheet goes away with the completion it belongs to
+      // A note, rating or expense added in the reflection sheet goes away with the completion it belongs to
       completionReflection: item.completionReflection,
       completionRating: item.completionRating,
+      expenses: item.expenses,
       updatedAt: item.updatedAt,
     };
     notifyUndo(isNowCompleted ? `Accomplished "${item.title}".` : `"${item.title}" is back in your Journal.`, () => {
@@ -428,6 +429,8 @@ export default function App() {
     };
     setItems((prev) => prev.map((i) => (i.id === id ? apply(i) : i)));
     setViewingItem((prev) => (prev?.id === id ? apply(prev) : prev));
+    // The finish sheet can log expenses too
+    setCelebratingItem((prev) => (prev?.id === id ? apply(prev) : prev));
   };
 
   const handleAddExpense = (item: BucketItem, amount: number, note?: string) => {
@@ -978,6 +981,8 @@ export default function App() {
         onSaveReflection={handleSaveReflection}
         onToggleKeep={handleToggleKeptInVault}
         onToggleHide={handleToggleHiddenInMemories}
+        onAddExpense={handleAddExpense}
+        onRemoveExpense={handleRemoveExpense}
       />
 
       {/* Serendipity Inspiration Sheet */}
