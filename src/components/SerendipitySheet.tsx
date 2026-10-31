@@ -89,11 +89,6 @@ export const SerendipitySheet: React.FC<SerendipitySheetProps> = ({
                   </span>
                   <span>{catDef?.verb || selectedItem.categoryId}</span>
                 </span>
-                {selectedItem.subCategory && (
-                  <span className="font-semibold text-[#B45309]">
-                    {selectedItem.subCategory}
-                  </span>
-                )}
               </div>
               <h3 className="font-serif-journal text-lg font-medium text-ink leading-snug">
                 {selectedItem.title}

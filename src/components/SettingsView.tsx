@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Bell, Download, Upload, Volume2, RefreshCw } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
-import { exportBackup, normalizeCategories, ThemePreference } from '../services/storage';
+import { exportBackup, normalizeCategories, normalizeItems, ThemePreference } from '../services/storage';
 import { INITIAL_ITEMS } from '../data/initialData';
 import { DEFAULT_CATEGORIES } from '../data/categories';
 import {
@@ -118,12 +118,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
     // Keep only entries that look like items, and fill in fields the views rely on
     const importedItems: BucketItem[] = Array.isArray(parsed.items)
-      ? parsed.items
-          .filter(
-            (i): i is BucketItem =>
-              Boolean(i) && typeof i.id === 'string' && typeof i.title === 'string'
-          )
-          .map((i) => ({ ...i, description: i.description ?? '', photos: i.photos ?? [] }))
+      ? normalizeItems(
+          parsed.items
+            .filter(
+              (i): i is BucketItem =>
+                Boolean(i) && typeof i.id === 'string' && typeof i.title === 'string'
+            )
+            .map((i) => ({ ...i, description: i.description ?? '', photos: i.photos ?? [] }))
+        )
       : [];
     if (importedItems.length === 0) {
       notify('Invalid backup file format.', 'error');

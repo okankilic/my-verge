@@ -59,17 +59,12 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
             onClick={() => onSelect(item)}
             className="bg-card border border-ink/12 rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3 space-y-1 cursor-pointer shadow-[var(--item-shadow)] hover:border-ink/25 transition-all duration-150"
           >
-            {/* Category + Sub-category | Icon (same as ItemRow) */}
+            {/* Category | Icon (same as ItemRow) */}
             <div className="flex items-center gap-1.5">
               <div className="flex-1 flex items-baseline gap-1.5 min-w-0">
                 <span className="shrink-0 text-[11px] uppercase tracking-wider text-ink/60 font-semibold leading-tight">
                   {cat?.verb || item.categoryId}
                 </span>
-                {item.subCategory && (
-                  <span className="text-[11px] text-ink/40 font-medium leading-tight truncate">
-                    · {item.subCategory}
-                  </span>
-                )}
               </div>
               <span
                 className="shrink-0 ml-2"

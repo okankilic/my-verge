@@ -106,12 +106,6 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
                                 {renderCategoryIcon(cat?.icon || item.categoryId, 'w-3.5 h-3.5')}
                                 <span>{cat?.verb || item.categoryId}</span>
                               </span>
-                              {item.subCategory && (
-                                <>
-                                  <span>·</span>
-                                  <span>{item.subCategory}</span>
-                                </>
-                              )}
                             </div>
 
                             {(item.completionRating ?? 0) > 0 && (

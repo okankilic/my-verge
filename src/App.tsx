@@ -62,7 +62,6 @@ export default function App() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [currentTab, setCurrentTab] = useState<ViewTab>('inprogress');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
-  const [selectedSubCategory, setSelectedSubCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -167,33 +166,6 @@ export default function App() {
     return () => clearInterval(interval);
   }, [items, isHydrated]);
 
-  // Dynamic counts
-  const countsByCategory = useMemo(() => {
-    const counts: Record<string, number> = { all: 0 };
-    items.forEach((item) => {
-      if (item.status === 'active' && !item.startedAt) {
-        counts['all'] = (counts['all'] || 0) + 1;
-        counts[item.categoryId] = (counts[item.categoryId] || 0) + 1;
-      }
-    });
-    return counts;
-  }, [items]);
-
-  const countsBySubCategory = useMemo(() => {
-    const counts: Record<string, number> = {};
-    items.forEach((item) => {
-      if (
-        item.status === 'active' &&
-        !item.startedAt &&
-        item.subCategory &&
-        (selectedCategoryId === 'all' || item.categoryId === selectedCategoryId)
-      ) {
-        counts[item.subCategory] = (counts[item.subCategory] || 0) + 1;
-      }
-    });
-    return counts;
-  }, [items, selectedCategoryId]);
-
   // Overdue and due count for radar badge
   const dueRemindersCount = useMemo(() => {
     return getDueReminderItems(items).length;
@@ -221,7 +193,6 @@ export default function App() {
       const newItem: BucketItem = {
         id: `verge-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
         categoryId: itemData.categoryId || 'go',
-        subCategory: itemData.subCategory,
         title: itemData.title || 'Untitled Intention',
         description: itemData.description || '',
         priority: itemData.priority || 'this_year',
@@ -473,7 +444,6 @@ export default function App() {
   const handleCreateCategory = (newCategory: CategoryDefinition) => {
     setCategories((prev) => [...prev, newCategory]);
     setSelectedCategoryId(newCategory.id);
-    setSelectedSubCategory('all');
   };
 
   // Closing the global search also clears it, so no hidden filter stays applied
@@ -490,28 +460,51 @@ export default function App() {
       (item) =>
         item.title.toLowerCase().includes(q) ||
         item.description.toLowerCase().includes(q) ||
-        item.subCategory?.toLowerCase().includes(q) ||
         item.location?.name.toLowerCase().includes(q) ||
         item.mediaMeta?.authorOrCreator?.toLowerCase().includes(q)
     );
   }, [items, searchQuery]);
 
+  // Items each tab lists, so the category ribbon counts match what the tab shows
+  const inTabScope = (item: BucketItem) => {
+    switch (currentTab) {
+      case 'feed':
+        return item.status === 'active' && !item.startedAt;
+      case 'inprogress':
+        return item.status === 'active' && Boolean(item.startedAt);
+      case 'reminders':
+        return item.status === 'active' && Boolean(item.reminder?.date);
+      case 'vault':
+        return item.status !== 'archived';
+      case 'milestones':
+        return item.status === 'completed';
+      default:
+        return false;
+    }
+  };
+
+  // Dynamic counts
+  const countsByCategory = useMemo(() => {
+    const counts: Record<string, number> = { all: 0 };
+    searchedItems.forEach((item) => {
+      if (inTabScope(item)) {
+        counts['all'] = (counts['all'] || 0) + 1;
+        counts[item.categoryId] = (counts[item.categoryId] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [searchedItems, currentTab]);
+
+  // Global category filter: every tab except Settings renders from these items
+  const filteredItems = useMemo(() => {
+    if (selectedCategoryId === 'all') return searchedItems;
+    return searchedItems.filter((item) => item.categoryId === selectedCategoryId);
+  }, [searchedItems, selectedCategoryId]);
+
   // Filtered Feed Items, in the user's priority order (the order of the items array)
   const filteredActiveItems = useMemo(() => {
-    return searchedItems.filter((item) => {
-      if (item.status !== 'active' || item.startedAt) return false;
-
-      if (selectedCategoryId !== 'all' && item.categoryId !== selectedCategoryId) {
-        return false;
-      }
-
-      if (selectedSubCategory !== 'all' && item.subCategory !== selectedSubCategory) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [searchedItems, selectedCategoryId, selectedSubCategory]);
+    return filteredItems.filter((item) => item.status === 'active' && !item.startedAt);
+  }, [filteredItems]);
 
   // Reorder only the visible subset: the dragged items swap among the array slots they
   // already occupy, so items hidden by filters or search keep their positions
@@ -532,10 +525,10 @@ export default function App() {
 
   // In-progress items, most recently started first
   const inProgressItems = useMemo(() => {
-    return searchedItems
+    return filteredItems
       .filter((item) => item.status === 'active' && item.startedAt)
       .sort((a, b) => new Date(b.startedAt!).getTime() - new Date(a.startedAt!).getTime());
-  }, [searchedItems]);
+  }, [filteredItems]);
 
   if (!isHydrated) return <div className="min-h-screen bg-page" />;
 
@@ -614,24 +607,22 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 1: STREAMLINED JOURNAL FEED */}
-          {currentTab === 'feed' && (
-            <div className="space-y-3">
-              {/* Category Ribbon: Categories row or Sub-categories row with Up icon */}
+          {/* Global Category Ribbon */}
+          {currentTab !== 'settings' && (
+            <div className="mb-3">
               <CategoryRibbon
                 categories={categories}
                 selectedCategoryId={selectedCategoryId}
-                onSelectCategory={(catId) => {
-                  setSelectedCategoryId(catId);
-                  setSelectedSubCategory('all');
-                }}
-                selectedSubCategory={selectedSubCategory}
-                onSelectSubCategory={setSelectedSubCategory}
+                onSelectCategory={setSelectedCategoryId}
                 countsByCategory={countsByCategory}
-                countsBySubCategory={countsBySubCategory}
                 onOpenCreateCategory={() => setIsCreateCategoryOpen(true)}
               />
+            </div>
+          )}
 
+          {/* TAB 1: STREAMLINED JOURNAL FEED */}
+          {currentTab === 'feed' && (
+            <div className="space-y-3">
               {/* Clean Single Paper Card Container for Items */}
               {filteredActiveItems.length === 0 ? (
                 <div className="p-10 text-center bg-card border border-ink/10 rounded-lg space-y-3 mt-3">
@@ -645,14 +636,11 @@ export default function App() {
                     Record your next intention or clear filters to see your lists.
                   </p>
                   <div className="flex items-center justify-center gap-2 pt-1">
-                    {(selectedCategoryId !== 'all' ||
-                      selectedSubCategory !== 'all' ||
-                      searchQuery.trim() !== '') && (
+                    {(selectedCategoryId !== 'all' || searchQuery.trim() !== '') && (
                       <button
                         type="button"
                         onClick={() => {
                           setSelectedCategoryId('all');
-                          setSelectedSubCategory('all');
                           setSearchQuery('');
                         }}
                         className="min-h-[40px] px-3.5 py-2 bg-card border border-ink/15 text-ink text-xs font-semibold rounded-lg hover:bg-paper transition-all"
@@ -689,7 +677,7 @@ export default function App() {
           {/* TAB 2: REMINDER RADAR */}
           {currentTab === 'reminders' && (
             <ReminderRadarView
-              items={searchedItems}
+              items={filteredItems}
               categories={categories}
               onSnooze={handleSnooze}
               onNotificationsEnabled={() => syncNativeReminders(items)}
@@ -717,7 +705,7 @@ export default function App() {
           {/* TAB 3: CURATED VAULT & SHELF */}
           {currentTab === 'vault' && (
             <VaultView
-              items={searchedItems}
+              items={filteredItems}
               categories={categories}
               onSelect={(it) => setViewingItem(it)}
               onToggleComplete={handleToggleComplete}
@@ -731,7 +719,7 @@ export default function App() {
           {/* TAB 4: RETROSPECTIVE MEMORIES */}
           {currentTab === 'milestones' && (
             <MilestonesArchiveView
-              items={searchedItems}
+              items={filteredItems}
               categories={categories}
               onSelect={(it) => setViewingItem(it)}
               onToggleComplete={handleToggleComplete}
@@ -752,7 +740,6 @@ export default function App() {
                 setCategories(newCats);
                 // The selected category may no longer exist
                 setSelectedCategoryId('all');
-                setSelectedSubCategory('all');
                 setActiveToastItem(null);
               }}
               theme={theme}
@@ -833,9 +820,6 @@ export default function App() {
         categories={categories}
         onSelectFocus={(item) => {
           setSelectedCategoryId(item.categoryId);
-          if (item.subCategory) {
-            setSelectedSubCategory(item.subCategory);
-          }
           setCurrentTab(item.startedAt ? 'inprogress' : 'feed');
           setViewingItem(item);
         }}

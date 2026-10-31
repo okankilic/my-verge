@@ -139,11 +139,6 @@ export const VaultView: React.FC<VaultViewProps> = ({
                   {/* Details */}
                   <div className="flex-1 min-w-0 flex flex-col justify-between">
                     <div>
-                      {book.subCategory && (
-                        <span className="text-[11px] text-[#C05621] font-semibold">
-                          {book.subCategory}
-                        </span>
-                      )}
                       <h4
                         className={`font-serif-journal text-base font-medium text-ink mt-0.5 line-clamp-2 ${
                           isCompleted ? 'line-through text-ink/50' : ''
@@ -225,7 +220,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs text-ink/60">
-                      <span className="text-[#BE185D] font-semibold">{film.subCategory || 'Cinema'}</span>
+                      <span className="text-[#BE185D] font-semibold">Cinema</span>
                       {film.mediaMeta?.formatOrEdition && (
                         <span className="font-mono text-[11px]">{film.mediaMeta.formatOrEdition}</span>
                       )}
@@ -333,7 +328,6 @@ export const VaultView: React.FC<VaultViewProps> = ({
                 <div className="min-w-0">
                   <div className="text-[11px] text-ink/60">
                     <span>{categories.find((c) => c.id === item.categoryId)?.verb || item.categoryId}</span>
-                    {item.subCategory && <span> · {item.subCategory}</span>}
                   </div>
                   <h4 className="font-serif-journal text-base font-medium text-ink">
                     {item.title}

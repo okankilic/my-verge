@@ -9,7 +9,6 @@ export interface CategoryDefinition {
   verb: string; // Action verb used as the category label, e.g. "Go", "Do", "Buy" (see CATEGORY_VERBS)
   icon: string; // Lucide icon identifier
   tagline: string;
-  defaultSubCategories: string[];
   accentColor: string;
 }
 
@@ -53,7 +52,6 @@ export interface BucketItem {
   id: string;
   categoryId: DefaultCategoryId | string;
   customCategoryName?: string;
-  subCategory?: string;
   title: string;
   description: string;
   priority: PriorityLevel;

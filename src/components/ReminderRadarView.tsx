@@ -141,17 +141,12 @@ export const ReminderRadarView: React.FC<ReminderRadarViewProps> = ({
               : 'bg-card border-ink/12 hover:border-ink/25'
           }`}
         >
-          {/* Category + Sub-category | Icon (same as ItemRow) */}
+          {/* Category | Icon (same as ItemRow) */}
           <div className="flex items-center gap-1.5">
             <div className="flex-1 flex items-baseline gap-1.5 min-w-0">
               <span className="shrink-0 text-[11px] uppercase tracking-wider text-ink/60 font-semibold leading-tight">
                 {cat?.verb || item.categoryId}
               </span>
-              {item.subCategory && (
-                <span className="text-[11px] text-ink/40 font-medium leading-tight truncate">
-                  · {item.subCategory}
-                </span>
-              )}
             </div>
             <span
               className="shrink-0 ml-2"

@@ -34,7 +34,6 @@ export const CreateCategorySheet: React.FC<CreateCategorySheetProps> = ({
   const [selectedVerb, setSelectedVerb] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState('#B45309');
   const [tagline, setTagline] = useState('');
-  const [subCategoriesInput, setSubCategoriesInput] = useState('');
   const [error, setError] = useState('');
 
   const usedVerbs = new Set(categories.map((c) => c.verb.toLowerCase()));
@@ -47,12 +46,6 @@ export const CreateCategorySheet: React.FC<CreateCategorySheetProps> = ({
     }
     const formatted = selectedVerb;
 
-    // Parse subcategories from comma or newline separation
-    const parsedSubCategories = subCategoriesInput
-      .split(/[,;\n]/)
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
-
     const slug =
       formatted
         .toLowerCase()
@@ -64,7 +57,6 @@ export const CreateCategorySheet: React.FC<CreateCategorySheetProps> = ({
       verb: formatted,
       icon: verbIcon(formatted),
       tagline: tagline.trim() || `${formatted} milestones & experiences`,
-      defaultSubCategories: parsedSubCategories,
       accentColor: selectedColor,
     };
 
@@ -73,7 +65,6 @@ export const CreateCategorySheet: React.FC<CreateCategorySheetProps> = ({
     setSelectedVerb(null);
     setSelectedColor('#B45309');
     setTagline('');
-    setSubCategoriesInput('');
     setError('');
     onClose();
   };
@@ -199,23 +190,6 @@ export const CreateCategorySheet: React.FC<CreateCategorySheetProps> = ({
               placeholder="e.g. Rare skills, culinary rituals, and craft practices"
               className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
             />
-          </div>
-
-          {/* Starter Sub-categories */}
-          <div>
-            <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1">
-              Initial Sub-Categories (Optional)
-            </label>
-            <input
-              type="text"
-              value={subCategoriesInput}
-              onChange={(e) => setSubCategoriesInput(e.target.value)}
-              placeholder="e.g. Languages, Woodworking, Pastry (comma separated)"
-              className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
-            />
-            <p className="text-[10px] text-ink/50 mt-1">
-              Separate with commas. You can also add more sub-categories later when adding items.
-            </p>
           </div>
 
           {/* Footer Actions */}

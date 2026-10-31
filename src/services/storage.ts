@@ -71,11 +71,19 @@ export async function loadBucketItems(): Promise<BucketItem[]> {
       saveBucketItems(INITIAL_ITEMS);
       return INITIAL_ITEMS;
     }
-    return parsed;
+    return normalizeItems(parsed);
   } catch (err) {
     console.error('Failed to load bucket items from storage:', err);
     return INITIAL_ITEMS;
   }
+}
+
+// Older builds had sub-categories; drop the field so it doesn't linger in saves and backups.
+export function normalizeItems<T extends BucketItem>(raw: T[]): BucketItem[] {
+  return raw.map((entry) => {
+    const { subCategory: _subCategory, ...item } = entry as T & { subCategory?: string };
+    return item;
+  });
 }
 
 export function saveBucketItems(items: BucketItem[]): void {
@@ -83,10 +91,14 @@ export function saveBucketItems(items: BucketItem[]): void {
 }
 
 // Older data stored the label in `name` (sometimes as "Want to X"); fold it into `verb`.
+// Sub-categories were removed, so their list is dropped.
 // Known verbs always get their fixed icon, replacing icons hand-picked by older builds.
 export function normalizeCategories(raw: unknown[]): CategoryDefinition[] {
   return raw.map((entry) => {
-    const { name, ...cat } = entry as CategoryDefinition & { name?: string };
+    const { name, defaultSubCategories: _subCategories, ...cat } = entry as CategoryDefinition & {
+      name?: string;
+      defaultSubCategories?: string[];
+    };
     const label = (cat.verb || name || '').replace(/^want to\s+/i, '').trim();
     const verb = label.charAt(0).toUpperCase() + label.slice(1);
     return { ...cat, verb, icon: CATEGORY_VERB_ICONS[verb] ?? cat.icon };

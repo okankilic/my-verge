@@ -90,12 +90,6 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               </span>
               <span>{categoryDef?.verb || item.categoryId}</span>
             </span>
-            {item.subCategory && (
-              <>
-                <span aria-hidden="true">·</span>
-                <span className="text-[#B45309] font-medium">{item.subCategory}</span>
-              </>
-            )}
             <span aria-hidden="true">·</span>
             <span className="capitalize">{item.priority.replace('_', ' ')}</span>
           </div>
