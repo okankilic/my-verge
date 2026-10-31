@@ -88,6 +88,7 @@ const MERGED_CATEGORY_IDS: Record<string, string> = Object.fromEntries(
 // Wishes in a retired verb move to the verb it merged into.
 // Finished wishes from before "Keep in Vault" stay where the Vault used to show them.
 // Preset photos saved under their old dev-only paths move to their public/presets ones, captions included.
+// Malformed steps are dropped.
 export function normalizeItems<T extends BucketItem>(raw: T[]): BucketItem[] {
   return raw.map((entry) => {
     const { subCategory: _subCategory, ...item } = entry as T & { subCategory?: string };
@@ -106,6 +107,13 @@ export function normalizeItems<T extends BucketItem>(raw: T[]): BucketItem[] {
       if (item.photoNotes) item.photoNotes = notes;
     }
     item.categoryId = MERGED_CATEGORY_IDS[item.categoryId] ?? item.categoryId;
+    // Steps from a hand-edited or damaged backup: keep only well-formed ones
+    if (item.steps !== undefined) {
+      const steps = Array.isArray(item.steps)
+        ? item.steps.filter((s) => s && typeof s.id === 'string' && typeof s.title === 'string' && s.title.trim())
+        : [];
+      item.steps = steps.length > 0 ? steps : undefined;
+    }
     if (item.status === 'completed' && item.keptInVault === undefined) {
       item.keptInVault =
         item.categoryId === 'read' || item.categoryId === 'watch' || (item.budget?.estimatedCost ?? 0) > 0;

@@ -4,6 +4,7 @@ import { BucketItem, CategoryDefinition } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
 import { ItemActions } from './ItemActions';
 import { ItemMediaStrip } from './ItemMediaStrip';
+import { StepList } from './StepList';
 
 interface InProgressViewProps {
   items: BucketItem[];
@@ -14,6 +15,7 @@ interface InProgressViewProps {
   onDelete: (id: string) => void;
   onAddPhoto: (item: BucketItem, photoDataUrl: string, note?: string) => void;
   onAddAttachment: (item: BucketItem, file: File, note?: string) => void;
+  onToggleStep: (item: BucketItem, stepId: string) => void;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -27,6 +29,7 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
   onDelete,
   onAddPhoto,
   onAddAttachment,
+  onToggleStep,
 }) => {
   if (items.length === 0) {
     return (
@@ -96,6 +99,11 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
                   </span>
                 )}
               </div>
+            )}
+
+            {/* Steps are ticked right here, where the work happens */}
+            {(item.steps?.length ?? 0) > 0 && (
+              <StepList steps={item.steps!} onToggle={(stepId) => onToggleStep(item, stepId)} compact />
             )}
 
             <ItemMediaStrip

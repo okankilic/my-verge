@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Star, RotateCcw, Quote, Compass, Check, EyeOff, ChevronRight } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
+import { StepCount } from './StepList';
 
 interface MilestonesArchiveViewProps {
   items: BucketItem[];
@@ -116,6 +117,7 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
                                 {renderCategoryIcon(cat?.icon || item.categoryId, 'w-3.5 h-3.5')}
                                 <span>{cat?.verb || item.categoryId}</span>
                               </span>
+                              <StepCount steps={item.steps} />
                             </div>
 
                             {(item.completionRating ?? 0) > 0 && (

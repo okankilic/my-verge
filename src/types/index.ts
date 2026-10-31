@@ -47,6 +47,15 @@ export interface AttachmentMeta {
 
 export const MEDIA_NOTE_MAX_LENGTH = 100;
 
+// A smaller step toward a wish, ticked off on its own (BucketItem.steps)
+export interface WishStep {
+  id: string;
+  title: string;
+  doneAt?: string; // ISO timestamp, set while ticked
+}
+
+export const STEP_TITLE_MAX_LENGTH = 100;
+
 export interface BucketItem {
   id: string;
   categoryId: string;
@@ -62,6 +71,7 @@ export interface BucketItem {
   photoNotes?: Record<string, string>; // keyed by photoKey(photo), see src/utils/photoKey.ts
   attachments?: AttachmentMeta[];
   linkUrl?: string;
+  steps?: WishStep[]; // Checklist of smaller steps toward the wish, in order; finishing the wish leaves them as they are
   reminder?: ReminderConfig;
   status: 'active' | 'completed' | 'archived';
   startedAt?: string; // ISO timestamp, set while the item is in progress

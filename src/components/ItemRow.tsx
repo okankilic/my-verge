@@ -2,6 +2,7 @@ import React from 'react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
 import { ItemActions } from './ItemActions';
+import { StepCount } from './StepList';
 
 interface ItemRowProps {
   item: BucketItem;
@@ -38,6 +39,7 @@ export const ItemRow: React.FC<ItemRowProps> = ({
           <span className="shrink-0 text-[11px] uppercase tracking-wider text-ink/60 font-semibold leading-tight">
             {categoryName}
           </span>
+          <StepCount steps={item.steps} />
         </div>
         <span
           className="shrink-0 ml-2 transition-colors"

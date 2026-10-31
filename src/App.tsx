@@ -15,6 +15,7 @@ import {
   BucketItem,
   CategoryDefinition,
   ViewTab,
+  WishStep,
 } from './types';
 import {
   loadBucketItems,
@@ -37,6 +38,7 @@ import { isNative, applyNativeTheme } from './services/platform';
 import { onSharedContent, toDraft } from './services/shareInbox';
 import { notify, notifyUndo, UNDO_MS } from './services/dialogs';
 import { photoKey } from './utils/photoKey';
+import { newStep, toggleStep } from './utils/steps';
 
 import { TopNav } from './components/TopNav';
 import { BottomTabBar } from './components/BottomTabBar';
@@ -227,6 +229,7 @@ export default function App() {
         mediaMeta: itemData.mediaMeta,
         photos: itemData.photos || [],
         linkUrl: itemData.linkUrl,
+        steps: itemData.steps,
         reminder: itemData.reminder,
         status: 'active',
         createdAt: nowIso,
@@ -368,6 +371,38 @@ export default function App() {
     if (viewingItem?.id === item.id) {
       setViewingItem((prev) => (prev ? { ...prev, startedAt, updatedAt: nowIso } : prev));
     }
+  };
+
+  // Applies a change to an item's steps, working from the latest copy so quick taps don't undo each other
+  const updateSteps = (id: string, change: (steps: WishStep[]) => WishStep[]) => {
+    const nowIso = new Date().toISOString();
+    const apply = (i: BucketItem): BucketItem => {
+      const steps = change(i.steps || []);
+      return { ...i, steps: steps.length > 0 ? steps : undefined, updatedAt: nowIso };
+    };
+    setItems((prev) => prev.map((i) => (i.id === id ? apply(i) : i)));
+    setViewingItem((prev) => (prev?.id === id ? apply(prev) : prev));
+  };
+
+  const handleToggleStep = (item: BucketItem, stepId: string) => {
+    updateSteps(item.id, (steps) => toggleStep(steps, stepId));
+  };
+
+  const handleAddStep = (item: BucketItem, title: string) => {
+    updateSteps(item.id, (steps) => [...steps, newStep(title)]);
+  };
+
+  const handleRemoveStep = (item: BucketItem, stepId: string) => {
+    const step = item.steps?.find((s) => s.id === stepId);
+    if (!step) return;
+    const index = item.steps!.indexOf(step);
+    updateSteps(item.id, (steps) => steps.filter((s) => s.id !== stepId));
+    // Undo puts it back where it was
+    notifyUndo(`Removed "${step.title}".`, () =>
+      updateSteps(item.id, (steps) =>
+        steps.some((s) => s.id === stepId) ? steps : [...steps.slice(0, index), step, ...steps.slice(index)]
+      )
+    );
   };
 
   const handleAddPhoto = (item: BucketItem, photoDataUrl: string, note?: string) => {
@@ -513,7 +548,8 @@ export default function App() {
         item.title.toLowerCase().includes(q) ||
         item.description.toLowerCase().includes(q) ||
         item.location?.name.toLowerCase().includes(q) ||
-        item.mediaMeta?.authorOrCreator?.toLowerCase().includes(q)
+        item.mediaMeta?.authorOrCreator?.toLowerCase().includes(q) ||
+        item.steps?.some((s) => s.title.toLowerCase().includes(q))
     );
   }, [items, searchQuery]);
 
@@ -762,6 +798,7 @@ export default function App() {
               onDelete={handleDeleteItem}
               onAddPhoto={handleAddPhoto}
               onAddAttachment={handleAddAttachment}
+              onToggleStep={handleToggleStep}
             />
           )}
 
@@ -852,6 +889,9 @@ export default function App() {
         onToggleKeptInVault={handleToggleKeptInVault}
         onToggleHiddenInMemories={handleToggleHiddenInMemories}
         onSnooze={handleSnooze}
+        onToggleStep={handleToggleStep}
+        onAddStep={handleAddStep}
+        onRemoveStep={handleRemoveStep}
         categoryDef={
           viewingItem
             ? categories.find((c) => c.id === viewingItem.categoryId)

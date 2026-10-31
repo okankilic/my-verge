@@ -16,9 +16,12 @@ import {
   CategoryDefinition,
   PriorityLevel,
   RecurrenceType,
+  WishStep,
 } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
 import { Sheet } from './Sheet';
+import { StepList } from './StepList';
+import { newStep, toggleStep } from '../utils/steps';
 import { PRESET_PHOTOS } from '../data/presetPhotos';
 
 interface ItemFormDrawerProps {
@@ -67,6 +70,10 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   const [selectedPhoto, setSelectedPhoto] = useState<string>('');
   const [customPhotoUrl, setCustomPhotoUrl] = useState<string>('');
 
+  // Smaller steps toward the wish
+  const [steps, setSteps] = useState<WishStep[]>([]);
+  const [stepDraft, setStepDraft] = useState<string>('');
+
   // Populate form if editing
   useEffect(() => {
     if (editingItem) {
@@ -94,6 +101,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       setSavedAmount(editingItem.budget?.savedAmount?.toString() || '');
       setLinkUrl(editingItem.linkUrl || '');
       setSelectedPhoto(editingItem.photos?.[0] || '');
+      setSteps(editingItem.steps || []);
+      setStepDraft('');
     } else {
       // New item defaults
       const initialCat = defaultCategoryId && defaultCategoryId !== 'all' ? defaultCategoryId : 'go';
@@ -114,6 +123,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       setLinkUrl(draft?.linkUrl || '');
       setSelectedPhoto(draft?.photos?.[0] || '');
       setCustomPhotoUrl('');
+      setSteps([]);
+      setStepDraft('');
     }
   }, [editingItem, draft, defaultCategoryId, isOpen]);
 
@@ -130,6 +141,9 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       (p) => p !== cover && p.startsWith('data:')
     );
     const photos = cover ? [cover, ...capturedPhotos] : capturedPhotos;
+    // A step typed but not yet added still counts
+    const pendingStep = stepDraft.trim();
+    const allSteps = pendingStep ? [...steps, newStep(pendingStep)] : steps;
 
     const itemData: Partial<BucketItem> = {
       categoryId,
@@ -139,6 +153,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       targetDate: targetDate || undefined,
       photos,
       linkUrl: linkUrl.trim() || undefined,
+      steps: allSteps.length > 0 ? allSteps : undefined,
     };
 
     if (authorOrCreator.trim() || formatOrEdition.trim()) {
@@ -309,6 +324,15 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
               />
             </div>
           </div>
+
+          <StepList
+            steps={steps}
+            onToggle={(stepId) => setSteps((prev) => toggleStep(prev, stepId))}
+            onAdd={(stepTitle) => setSteps((prev) => [...prev, newStep(stepTitle)])}
+            onRemove={(stepId) => setSteps((prev) => prev.filter((s) => s.id !== stepId))}
+            draft={stepDraft}
+            onDraftChange={setStepDraft}
+          />
 
           {/* Step 3: Priority & Target Date */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

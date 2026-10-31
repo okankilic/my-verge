@@ -31,6 +31,7 @@ import { isReminderDue as isDue, reminderNextAt } from '../services/notification
 import { Sheet } from './Sheet';
 import { KeepInVaultSwitch, HideInMemoriesSwitch } from './KeepInVaultSwitch';
 import { ItemMediaStrip } from './ItemMediaStrip';
+import { StepList } from './StepList';
 
 interface ItemDetailDrawerProps {
   item: BucketItem | null;
@@ -43,6 +44,9 @@ interface ItemDetailDrawerProps {
   onToggleKeptInVault: (item: BucketItem) => void;
   onToggleHiddenInMemories: (item: BucketItem) => void;
   onSnooze: (item: BucketItem, days: number) => void;
+  onToggleStep: (item: BucketItem, stepId: string) => void;
+  onAddStep: (item: BucketItem, title: string) => void;
+  onRemoveStep: (item: BucketItem, stepId: string) => void;
   categoryDef?: CategoryDefinition;
 }
 
@@ -57,6 +61,9 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
   onToggleKeptInVault,
   onToggleHiddenInMemories,
   onSnooze,
+  onToggleStep,
+  onAddStep,
+  onRemoveStep,
   categoryDef,
 }) => {
   if (!isOpen || !item) return null;
@@ -172,6 +179,14 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               />
             </div>
           )}
+
+          {/* Smaller steps toward the wish; finishing it leaves them as they are */}
+          <StepList
+            steps={item.steps || []}
+            onToggle={(stepId) => onToggleStep(item, stepId)}
+            onAdd={(title) => onAddStep(item, title)}
+            onRemove={(stepId) => onRemoveStep(item, stepId)}
+          />
 
           {/* In Progress */}
           {formattedStartedAt && (
