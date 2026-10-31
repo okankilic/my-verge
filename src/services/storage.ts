@@ -187,13 +187,13 @@ export function saveTheme(theme: ThemePreference): void {
 // Web: download the JSON. Native: write it to the cache and open the share sheet (Save to Files, AirDrop, Drive...)
 export async function exportBackup(items: BucketItem[], categories: CategoryDefinition[]): Promise<void> {
   const data = {
-    appName: 'Nowish',
+    appName: 'Make It Real',
     exportDate: new Date().toISOString(),
     items,
     categories,
   };
   const json = JSON.stringify(data, null, 2);
-  const fileName = `nowish-backup-${new Date().toISOString().split('T')[0]}.json`;
+  const fileName = `make-it-real-backup-${new Date().toISOString().split('T')[0]}.json`;
 
   if (isNative) {
     const { uri } = await Filesystem.writeFile({
@@ -202,7 +202,7 @@ export async function exportBackup(items: BucketItem[], categories: CategoryDefi
       directory: Directory.Cache,
       encoding: Encoding.UTF8,
     });
-    await Share.share({ title: 'Nowish backup', files: [uri] });
+    await Share.share({ title: 'Make It Real backup', files: [uri] });
     return;
   }
 

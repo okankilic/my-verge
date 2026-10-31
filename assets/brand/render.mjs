@@ -1,4 +1,4 @@
-// Renders the Nowish brand SVGs (assets/brand/*.svg) and the PNG masters that
+// Renders the Make It Real brand SVGs (assets/brand/*.svg) and the PNG masters that
 // @capacitor/assets turns into native icons and splash screens.
 // Run from the repo root: node assets/brand/render.mjs && npx capacitor-assets generate --android --ios
 import { writeFileSync } from 'node:fs';
@@ -9,10 +9,12 @@ const NIGHT = '#14110E';
 const PAPER = '#FAF7F2';
 const AMBER = '#D97706';
 
-// The mark on a 100×100 grid: an amber dot (now) over a wave (-ish)
+// The mark on a 100×100 grid: a ring (the wish) whose inside is filling with
+// amber from the bottom (the wish becoming real)
 const mark = (fg) =>
-  `<circle cx="50" cy="38" r="10" fill="${AMBER}"/>` +
-  `<path d="M22 66 C30 55 39 55 50 63 C61 71 70 71 78 60" stroke="${fg}" stroke-width="8" stroke-linecap="round" fill="none"/>`;
+  `<defs><clipPath id="mir-fill"><circle cx="50" cy="50" r="28"/></clipPath></defs>` +
+  `<rect x="0" y="42" width="100" height="58" fill="${AMBER}" clip-path="url(#mir-fill)"/>` +
+  `<circle cx="50" cy="50" r="28" stroke="${fg}" stroke-width="8" fill="none"/>`;
 
 // Places the 100-unit mark at `scale` px per unit, centred on a `size` canvas
 const svg = (size, scale, fg, bg, radius = 0) => {

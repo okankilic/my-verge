@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>Nowish</string>
+        <string>Make It Real</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -67,11 +67,11 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Nowish uses the camera so you can add photos and videos to your intentions.</string>
+	<string>Make It Real uses the camera so you can add photos and videos to your wishes.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Nowish records audio when you capture a video for an intention.</string>
+	<string>Make It Real records audio when you capture a video for a wish.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Nowish lets you attach photos and videos from your library to your intentions.</string>
+	<string>Make It Real lets you attach photos and videos from your library to your wishes.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 </dict>

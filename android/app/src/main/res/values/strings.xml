@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Nowish</string>
-    <string name="title_activity_main">Nowish</string>
+    <string name="app_name">Make It Real</string>
+    <string name="title_activity_main">Make It Real</string>
     <string name="package_name">com.okankilic.myverge</string>
     <string name="custom_url_scheme">com.okankilic.myverge</string>
 </resources>

@@ -47,21 +47,27 @@ export const TopNav: React.FC<TopNavProps> = ({
             onClick={() => onTabChange('inprogress')}
             className="text-left group focus-visible:outline-none flex items-center gap-2.5"
           >
-            {/* Nowish mark: an amber dot (now) over a wave (-ish); source in assets/brand/render.mjs */}
+            {/* Make It Real mark: a ring (the wish) filling with amber (becoming real); source in assets/brand/render.mjs */}
             <svg viewBox="0 0 100 100" className="w-8 h-8 sm:w-9 sm:h-9 shrink-0" aria-hidden="true">
-              <circle cx="50" cy="38" r="10" fill="#D97706" />
-              <path
-                d="M22 66 C30 55 39 55 50 63 C61 71 70 71 78 60"
+              <defs>
+                <clipPath id="mir-fill">
+                  <circle cx="50" cy="50" r="28" />
+                </clipPath>
+              </defs>
+              <rect x="0" y="42" width="100" height="58" fill="#D97706" clipPath="url(#mir-fill)" />
+              <circle
+                cx="50"
+                cy="50"
+                r="28"
                 stroke="currentColor"
                 strokeWidth="8"
-                strokeLinecap="round"
                 fill="none"
                 className="text-ink"
               />
             </svg>
             <span className="flex flex-col justify-center">
               <span className="font-serif-journal text-xl sm:text-2xl font-semibold tracking-tight text-ink group-hover:text-[#B45309] transition-colors leading-tight">
-                Nowish
+                Make It Real
               </span>
               <span className="text-[10px] sm:text-[11px] font-sans tracking-tight text-ink/55 leading-tight mt-0.5">
                 Someday is closer than you think
