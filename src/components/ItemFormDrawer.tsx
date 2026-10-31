@@ -20,6 +20,7 @@ import {
   RecurrenceType,
 } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
+import { Sheet } from './Sheet';
 
 interface ItemFormDrawerProps {
   isOpen: boolean;
@@ -212,22 +213,11 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   const currentCatDef = categories.find((c) => c.id === categoryId);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      {/* Backdrop */}
-      <div
-        onClick={onClose}
-        className="absolute inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
-      />
-
-      {/* Drawer Container (slides up on mobile, slides in on tablet/desktop) */}
-      <div className="absolute inset-x-0 bottom-0 max-h-[92vh] sm:max-h-full sm:inset-y-0 sm:right-0 sm:left-auto sm:w-full sm:max-w-xl bg-paper border-t sm:border-l border-ink/15 rounded-t-3xl sm:rounded-none shadow-2xl flex flex-col overflow-hidden">
-        {/* Mobile Grab Handle */}
-        <div className="sm:hidden w-12 h-1.5 bg-ink/20 rounded-full mx-auto my-3" />
-
+    <Sheet isOpen onClose={onClose} width="xl" labelledBy="item-form-title">
         {/* Header */}
         <div className="px-5 py-4 border-b border-ink/10 flex items-center justify-between">
           <div>
-            <h2 className="font-serif-journal text-xl font-medium text-ink">
+            <h2 id="item-form-title" className="font-serif-journal text-xl font-medium text-ink">
               {editingItem ? 'Edit Intention' : 'Capture Intention'}
             </h2>
             <p className="text-xs text-ink/60 mt-0.5">
@@ -620,7 +610,6 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             {editingItem ? 'Save Changes' : 'Record Intention'}
           </button>
         </div>
-      </div>
-    </div>
+    </Sheet>
   );
 };

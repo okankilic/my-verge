@@ -16,9 +16,18 @@ export const MAX_ATTACHMENT_BYTES = 100 * 1024 * 1024;
 // A multiple of 3, so each chunk's base64 can be appended to the previous one cleanly
 const CHUNK_BYTES = 3 * 1024 * 1024;
 
-const attachmentDir = (id: string) => `attachments/${id}`;
-const attachmentPath = (id: string, name: string) =>
-  `${attachmentDir(id)}/${name.replace(/[\\/:]/g, '_') || id}`;
+// IDs can arrive from an imported backup, so only accept the format App.tsx generates;
+// anything else (e.g. "..") could point the recursive rmdir outside attachments/
+const ATTACHMENT_ID = /^att-\d+-[a-z0-9]+$/;
+
+const attachmentDir = (id: string) => {
+  if (!ATTACHMENT_ID.test(id)) throw new Error(`Invalid attachment id: ${id}`);
+  return `attachments/${id}`;
+};
+const attachmentPath = (id: string, name: string) => {
+  const safeName = name.replace(/[\\/:]/g, '_');
+  return `${attachmentDir(id)}/${safeName && !/^\.+$/.test(safeName) ? safeName : id}`;
+};
 
 async function removeAttachmentDir(id: string): Promise<void> {
   try {

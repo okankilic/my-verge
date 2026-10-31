@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { X, Camera, RotateCcw, Check } from 'lucide-react';
 import { videoFrameToResizedDataUrl } from '../utils/imageResize';
+import { Sheet } from './Sheet';
 
-interface WebcamCaptureModalProps {
+interface WebcamCaptureSheetProps {
   isOpen: boolean;
   onClose: () => void;
   onCapture: (photoDataUrl: string) => void;
@@ -10,7 +11,7 @@ interface WebcamCaptureModalProps {
 }
 
 // Desktop webcam capture: live preview -> snapshot -> use or retake
-export const WebcamCaptureModal: React.FC<WebcamCaptureModalProps> = ({
+export const WebcamCaptureSheet: React.FC<WebcamCaptureSheetProps> = ({
   isOpen,
   onClose,
   onCapture,
@@ -66,17 +67,15 @@ export const WebcamCaptureModal: React.FC<WebcamCaptureModalProps> = ({
   };
 
   return (
-    // Stop clicks from reaching the card underneath (React events bubble through the tree)
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
-      <div onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-xs" />
-
-      <div className="relative w-full max-w-lg bg-paper border border-ink/15 rounded-2xl shadow-2xl overflow-hidden">
+    // Stacked: it can open over the item detail sheet
+    <Sheet isOpen onClose={onClose} stacked labelledBy="webcam-title">
+      <div className="flex-1 overflow-y-auto">
         <div className="px-4 py-3 border-b border-ink/10 flex items-center justify-between">
-          <span className="font-serif-journal text-base text-ink">Take a photo</span>
+          <span id="webcam-title" className="font-serif-journal text-base text-ink">Take a photo</span>
           <button
             onClick={onClose}
             aria-label="Close camera"
-            className="min-w-[36px] min-h-[36px] flex items-center justify-center rounded-full text-ink/50 hover:text-ink hover:bg-ink/5 transition-colors"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-ink/50 hover:text-ink hover:bg-ink/5 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -107,7 +106,7 @@ export const WebcamCaptureModal: React.FC<WebcamCaptureModalProps> = ({
               onClose();
               onChooseFile();
             }}
-            className="min-h-[36px] px-3 text-xs text-ink/60 hover:text-ink rounded-lg hover:bg-ink/5 transition-colors"
+            className="min-h-[44px] px-4 text-xs text-ink/60 hover:text-ink rounded-lg hover:bg-ink/5 transition-colors"
           >
             Choose a file instead
           </button>
@@ -118,7 +117,7 @@ export const WebcamCaptureModal: React.FC<WebcamCaptureModalProps> = ({
                 <>
                   <button
                     onClick={() => setSnapshot(null)}
-                    className="min-h-[36px] px-3 flex items-center gap-1.5 text-xs font-medium bg-card border border-ink/15 rounded-lg text-ink hover:bg-paper-deep transition-colors"
+                    className="min-h-[44px] px-4 flex items-center gap-1.5 text-xs font-medium bg-card border border-ink/15 rounded-lg text-ink hover:bg-paper-deep transition-colors"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Retake</span>
@@ -128,7 +127,7 @@ export const WebcamCaptureModal: React.FC<WebcamCaptureModalProps> = ({
                       onCapture(snapshot);
                       onClose();
                     }}
-                    className="min-h-[36px] px-3 flex items-center gap-1.5 text-xs font-semibold bg-ink text-paper rounded-lg hover:bg-ink/85 transition-colors"
+                    className="min-h-[44px] px-4 flex items-center gap-1.5 text-xs font-semibold bg-ink text-paper rounded-lg hover:bg-ink/85 transition-colors"
                   >
                     <Check className="w-3.5 h-3.5" />
                     <span>Use photo</span>
@@ -137,7 +136,7 @@ export const WebcamCaptureModal: React.FC<WebcamCaptureModalProps> = ({
               ) : (
                 <button
                   onClick={handleSnap}
-                  className="min-h-[36px] px-3 flex items-center gap-1.5 text-xs font-semibold bg-ink text-paper rounded-lg hover:bg-ink/85 transition-colors"
+                  className="min-h-[44px] px-4 flex items-center gap-1.5 text-xs font-semibold bg-ink text-paper rounded-lg hover:bg-ink/85 transition-colors"
                 >
                   <Camera className="w-3.5 h-3.5" />
                   <span>Capture</span>
@@ -147,6 +146,6 @@ export const WebcamCaptureModal: React.FC<WebcamCaptureModalProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </Sheet>
   );
 };

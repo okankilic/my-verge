@@ -4,8 +4,8 @@ import { BucketItem } from '../types';
 import { fileToResizedDataUrl } from '../utils/imageResize';
 import { MAX_ATTACHMENT_BYTES } from '../services/attachments';
 import { notify } from '../services/dialogs';
-import { WebcamCaptureModal } from './WebcamCaptureModal';
-import { MediaNoteModal, MediaNotePreview } from './MediaNoteModal';
+import { WebcamCaptureSheet } from './WebcamCaptureSheet';
+import { MediaNoteSheet, MediaNotePreview } from './MediaNoteSheet';
 
 // Phones/tablets get the native camera via <input capture>; desktops use the webcam dialog
 const canUseWebcamDialog = () =>
@@ -169,7 +169,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
             onChange={handleInputChange}
             className="hidden"
           />
-          <WebcamCaptureModal
+          <WebcamCaptureSheet
             isOpen={isWebcamOpen}
             onClose={() => setIsWebcamOpen(false)}
             onCapture={(photoDataUrl) => enqueue([{ kind: 'image', dataUrl: photoDataUrl }])}
@@ -199,7 +199,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
           />
 
           {preview && (
-            <MediaNoteModal
+            <MediaNoteSheet
               preview={preview}
               position={{ index: batchTotal - pending.length + 1, total: batchTotal }}
               onSave={(note) => finishCurrent(note)}

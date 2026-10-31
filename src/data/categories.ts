@@ -86,10 +86,14 @@ export const DEFAULT_CATEGORIES: CategoryDefinition[] = [
   },
 ];
 
-// Verbs a custom category can be created from
-export const CATEGORY_VERBS: string[] = [
-  'Go', 'Do', 'Buy', 'Remember', 'Read', 'Watch',
-  'Cook', 'Learn', 'Listen', 'Play', 'Make', 'Try',
-  'Taste', 'Visit', 'Write', 'Practice', 'Build', 'Grow',
-  'Collect', 'Give', 'Call', 'See', 'Explore', 'Fix',
-];
+// Verbs a custom category can be created from, each with its fixed Lucide icon
+export const CATEGORY_VERB_ICONS: Record<string, string> = {
+  Go: 'Compass', Do: 'Sparkles', Buy: 'ShoppingBag', Remember: 'Feather', Read: 'BookOpen', Watch: 'Film',
+  Cook: 'ChefHat', Learn: 'GraduationCap', Listen: 'Headphones', Play: 'Gamepad2', Make: 'Palette', Try: 'FlaskConical',
+  Taste: 'Utensils', Visit: 'MapPin', Write: 'PenLine', Practice: 'Dumbbell', Build: 'Hammer', Grow: 'Sprout',
+  Collect: 'Gem', Give: 'Gift', Call: 'Phone', See: 'Eye', Explore: 'Mountain', Fix: 'Wrench',
+};
+
+export const CATEGORY_VERBS: string[] = Object.keys(CATEGORY_VERB_ICONS);
+
+export const verbIcon = (verb: string): string => CATEGORY_VERB_ICONS[verb] ?? 'Sparkles';

@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { FileText } from 'lucide-react';
 import { MEDIA_NOTE_MAX_LENGTH } from '../types';
+import { Sheet } from './Sheet';
 
 export type MediaNotePreview =
   | { kind: 'image'; src: string }
   | { kind: 'video'; src: string }
   | { kind: 'pdf'; name: string };
 
-interface MediaNoteModalProps {
+interface MediaNoteSheetProps {
   preview: MediaNotePreview;
   position?: { index: number; total: number };
   onSave: (note: string) => void;
@@ -15,7 +16,7 @@ interface MediaNoteModalProps {
 }
 
 // Shown right after a photo/video/PDF is picked: optional short note before it's added to the item
-export const MediaNoteModal: React.FC<MediaNoteModalProps> = ({
+export const MediaNoteSheet: React.FC<MediaNoteSheetProps> = ({
   preview,
   position,
   onSave,
@@ -29,19 +30,17 @@ export const MediaNoteModal: React.FC<MediaNoteModalProps> = ({
   }, [preview]);
 
   return (
-    // Stop clicks from reaching the card underneath (React events bubble through the tree)
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-xs" />
-
+    // Stacked: it can open over the item detail sheet. Dismissing it skips the note.
+    <Sheet isOpen onClose={onSkip} width="md" stacked labelledBy="media-note-title">
       <form
         onSubmit={(e) => {
           e.preventDefault();
           onSave(note.trim());
         }}
-        className="relative w-full max-w-md bg-paper border border-ink/15 rounded-2xl shadow-2xl overflow-hidden"
+        className="flex-1 overflow-y-auto"
       >
         <div className="px-4 py-3 border-b border-ink/10 flex items-center justify-between">
-          <span className="font-serif-journal text-base text-ink">Add a note</span>
+          <span id="media-note-title" className="font-serif-journal text-base text-ink">Add a note</span>
           {position && position.total > 1 && (
             <span className="font-mono-journal text-[11px] text-ink/50">
               {position.index} of {position.total}
@@ -83,18 +82,18 @@ export const MediaNoteModal: React.FC<MediaNoteModalProps> = ({
           <button
             type="button"
             onClick={onSkip}
-            className="min-h-[36px] px-3 text-xs font-medium text-ink/70 hover:text-ink rounded-lg hover:bg-ink/5 transition-colors"
+            className="min-h-[44px] px-4 text-xs font-medium text-ink/70 hover:text-ink rounded-lg hover:bg-ink/5 transition-colors"
           >
             Skip
           </button>
           <button
             type="submit"
-            className="min-h-[36px] px-3 text-xs font-semibold bg-ink text-paper rounded-lg hover:bg-ink/85 transition-colors"
+            className="min-h-[44px] px-4 text-xs font-semibold bg-ink text-paper rounded-lg hover:bg-ink/85 transition-colors"
           >
             Save
           </button>
         </div>
       </form>
-    </div>
+    </Sheet>
   );
 };

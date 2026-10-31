@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import {
   Plus,
@@ -35,7 +35,7 @@ import {
 import { saveAttachment, deleteAttachmentBlobs } from './services/attachments';
 import { syncNativeReminders, onReminderTapped } from './services/reminderScheduler';
 import { isNative, applyNativeTheme } from './services/platform';
-import { confirmAction, notify } from './services/dialogs';
+import { notify, notifyUndo, UNDO_MS } from './services/dialogs';
 import { photoKey } from './utils/photoKey';
 
 import { TopNav } from './components/TopNav';
@@ -44,14 +44,14 @@ import { CategoryRibbon } from './components/CategoryRibbon';
 import { JournalList } from './components/JournalList';
 import { ItemDetailDrawer } from './components/ItemDetailDrawer';
 import { ItemFormDrawer } from './components/ItemFormDrawer';
-import { MilestoneModal } from './components/MilestoneModal';
+import { MilestoneSheet } from './components/MilestoneSheet';
 import { ReminderRadarView } from './components/ReminderRadarView';
 import { VaultView } from './components/VaultView';
 import { MilestonesArchiveView } from './components/MilestonesArchiveView';
 import { InProgressView } from './components/InProgressView';
-import { SerendipityModal } from './components/SerendipityModal';
+import { SerendipitySheet } from './components/SerendipitySheet';
 import { SettingsView } from './components/SettingsView';
-import { CreateCategoryModal } from './components/CreateCategoryModal';
+import { CreateCategorySheet } from './components/CreateCategorySheet';
 import { DialogHost } from './components/DialogHost';
 
 export default function App() {
@@ -66,7 +66,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  // Modals & Drawers
+  // Sheets
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<BucketItem | null>(null);
   const [viewingItem, setViewingItem] = useState<BucketItem | null>(null);
@@ -74,6 +74,9 @@ export default function App() {
   const [isMilestoneOpen, setIsMilestoneOpen] = useState(false);
   const [isSerendipityOpen, setIsSerendipityOpen] = useState(false);
   const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
+
+  // Attachment blobs of deleted items are removed only once their Undo window has passed
+  const pendingBlobDeletes = useRef(new Map<string, ReturnType<typeof setTimeout>>());
 
   // Desktop Mobile Frame Toggle
   const [isMobileFrame, setIsMobileFrame] = useState(false);
@@ -237,18 +240,28 @@ export default function App() {
     }
   };
 
-  const handleToggleComplete = async (item: BucketItem) => {
+  // Applies a patch to an item and to the open detail sheet, if it shows that item
+  const patchItem = (id: string, patch: Partial<BucketItem>) => {
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
+    setViewingItem((prev) => (prev?.id === id ? { ...prev, ...patch } : prev));
+  };
+
+  // No confirm step: the change applies at once and the toast offers Undo
+  const handleToggleComplete = (item: BucketItem) => {
     const isNowCompleted = item.status !== 'completed';
-    const confirmed = await confirmAction(
-      isNowCompleted
-        ? { title: 'Mark as accomplished?', message: item.title, confirmLabel: 'Accomplish' }
-        : {
-            title: 'Re-activate this intention?',
-            message: `"${item.title}" will leave your Memories and return to your Journal.`,
-            confirmLabel: 'Re-activate',
-          }
-    );
-    if (!confirmed) return;
+    const previous: Partial<BucketItem> = {
+      status: item.status,
+      startedAt: item.startedAt,
+      completedAt: item.completedAt,
+      updatedAt: item.updatedAt,
+    };
+    notifyUndo(isNowCompleted ? `Accomplished "${item.title}".` : `"${item.title}" is back in your Journal.`, () => {
+      patchItem(item.id, previous);
+      // Dropping the celebrated item hides its reflection sheet (MilestoneSheet renders nothing without one)
+      if (isNowCompleted) {
+        setCelebratingItem((prev) => (prev?.id === item.id ? null : prev));
+      }
+    });
     const nowIso = new Date().toISOString();
 
     if (isNowCompleted) {
@@ -304,16 +317,10 @@ export default function App() {
     }
   };
 
-  const handleToggleStarted = async (item: BucketItem) => {
-    if (
-      item.startedAt &&
-      !(await confirmAction({
-        title: 'Stop this intention?',
-        message: `"${item.title}" will move back to your Journal.`,
-        confirmLabel: 'Stop',
-      }))
-    ) {
-      return;
+  const handleToggleStarted = (item: BucketItem) => {
+    if (item.startedAt) {
+      const previous = { startedAt: item.startedAt, updatedAt: item.updatedAt };
+      notifyUndo(`Stopped "${item.title}".`, () => patchItem(item.id, previous));
     }
     const nowIso = new Date().toISOString();
     const startedAt = item.startedAt ? undefined : nowIso;
@@ -390,27 +397,43 @@ export default function App() {
     );
   };
 
-  const handleDeleteItem = async (id: string) => {
-    const target = items.find((i) => i.id === id);
-    const confirmed = await confirmAction({
-      title: target ? `Delete "${target.title}"?` : 'Delete this intention?',
-      message: 'This also removes its photos and files.',
-      confirmLabel: 'Delete',
-      tone: 'danger',
-    });
-    if (confirmed) {
-      const attachmentIds = target?.attachments?.map((a) => a.id) || [];
-      deleteAttachmentBlobs(attachmentIds).catch((err) =>
-        console.error('Failed to delete attachments:', err)
+  const handleDeleteItem = (id: string) => {
+    const index = items.findIndex((i) => i.id === id);
+    if (index === -1) return;
+    const target = items[index];
+
+    const attachmentIds = target.attachments?.map((a) => a.id) || [];
+    if (attachmentIds.length > 0) {
+      pendingBlobDeletes.current.set(
+        id,
+        setTimeout(() => {
+          pendingBlobDeletes.current.delete(id);
+          deleteAttachmentBlobs(attachmentIds).catch((err) =>
+            console.error('Failed to delete attachments:', err)
+          );
+          // A second past the toast, so a last-moment Undo never finds its files gone
+        }, UNDO_MS + 1000)
       );
-      setItems((prev) => prev.filter((i) => i.id !== id));
-      if (activeToastItem?.id === id) {
-        setActiveToastItem(null);
-      }
-      if (viewingItem?.id === id) {
-        setViewingItem(null);
-      }
     }
+
+    setItems((prev) => prev.filter((i) => i.id !== id));
+    if (activeToastItem?.id === id) {
+      setActiveToastItem(null);
+    }
+    if (viewingItem?.id === id) {
+      setViewingItem(null);
+    }
+
+    notifyUndo(`Deleted "${target.title}".`, () => {
+      clearTimeout(pendingBlobDeletes.current.get(id));
+      pendingBlobDeletes.current.delete(id);
+      // Back into the slot it had, as far as the list still allows
+      setItems((prev) =>
+        prev.some((i) => i.id === id)
+          ? prev
+          : [...prev.slice(0, index), target, ...prev.slice(index)]
+      );
+    });
   };
 
   const handleSnooze = (item: BucketItem, days: number) => {
@@ -790,8 +813,8 @@ export default function App() {
         defaultCategoryId={selectedCategoryId}
       />
 
-      {/* Milestone Accomplishment Modal */}
-      <MilestoneModal
+      {/* Milestone Accomplishment Sheet */}
+      <MilestoneSheet
         key={celebratingItem?.id ?? 'none'}
         isOpen={isMilestoneOpen}
         item={celebratingItem}
@@ -802,8 +825,8 @@ export default function App() {
         onSaveReflection={handleSaveReflection}
       />
 
-      {/* Serendipity Inspiration Modal */}
-      <SerendipityModal
+      {/* Serendipity Inspiration Sheet */}
+      <SerendipitySheet
         isOpen={isSerendipityOpen}
         onClose={() => setIsSerendipityOpen(false)}
         items={items}
@@ -818,15 +841,15 @@ export default function App() {
         }}
       />
 
-      {/* Create Custom Category Modal */}
-      <CreateCategoryModal
+      {/* Create Custom Category Sheet */}
+      <CreateCategorySheet
         isOpen={isCreateCategoryOpen}
         onClose={() => setIsCreateCategoryOpen(false)}
         categories={categories}
         onCreateCategory={handleCreateCategory}
       />
 
-      {/* In-app confirm sheet + notices (replaces window.confirm / alert) */}
+      {/* In-app notices with Undo (replaces window.alert; there are no confirm dialogs) */}
       <DialogHost />
     </div>
   );

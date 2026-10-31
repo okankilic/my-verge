@@ -2,7 +2,7 @@ import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { BucketItem, CategoryDefinition } from '../types';
 import { INITIAL_ITEMS } from '../data/initialData';
-import { DEFAULT_CATEGORIES } from '../data/categories';
+import { CATEGORY_VERB_ICONS, DEFAULT_CATEGORIES } from '../data/categories';
 import { withStore } from './idb';
 import { isNative } from './platform';
 
@@ -82,12 +82,14 @@ export function saveBucketItems(items: BucketItem[]): void {
   queueWrite(ITEMS_STORAGE_KEY, JSON.stringify(items), 'bucket items');
 }
 
-// Older data stored the label in `name` (sometimes as "Want to X"); fold it into `verb`
+// Older data stored the label in `name` (sometimes as "Want to X"); fold it into `verb`.
+// Known verbs always get their fixed icon, replacing icons hand-picked by older builds.
 export function normalizeCategories(raw: unknown[]): CategoryDefinition[] {
   return raw.map((entry) => {
     const { name, ...cat } = entry as CategoryDefinition & { name?: string };
     const label = (cat.verb || name || '').replace(/^want to\s+/i, '').trim();
-    return { ...cat, verb: label.charAt(0).toUpperCase() + label.slice(1) };
+    const verb = label.charAt(0).toUpperCase() + label.slice(1);
+    return { ...cat, verb, icon: CATEGORY_VERB_ICONS[verb] ?? cat.icon };
   });
 }
 
