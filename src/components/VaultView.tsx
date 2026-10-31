@@ -1,7 +1,9 @@
 import React from 'react';
-import { BookOpen, Check, Star } from 'lucide-react';
+import { BookOpen, Calendar, Check, Star } from 'lucide-react';
 import { renderCategoryIcon } from '../utils/categoryIcons';
+import { PRESET_RANGES, TimeRange, rangeLabel } from '../utils/timeRange';
 import { BucketItem, CategoryDefinition } from '../types';
+import { Sheet } from './Sheet';
 
 interface VaultViewProps {
   items: BucketItem[];
@@ -9,6 +11,12 @@ interface VaultViewProps {
   onSelect: (item: BucketItem) => void;
   onToggleComplete: (item: BucketItem) => void;
   onEdit: (item: BucketItem) => void;
+  range: TimeRange;
+  yearRanges: TimeRange[];
+  onRangeChange: (range: TimeRange) => void;
+  isRangeOpen: boolean;
+  onOpenRange: () => void;
+  onCloseRange: () => void;
 }
 
 const formatMoney = (amount: number | undefined, currency = '$') =>
@@ -21,6 +29,10 @@ const isShelved = (i: BucketItem) =>
 // App.tsx uses this for the category ribbon counts, so they match what the Vault lists.
 export const isInVault = (i: BucketItem) =>
   (i.status === 'active' && isShelved(i)) || (i.status === 'completed' && Boolean(i.keptInVault));
+
+// The date the time filter goes by: when a kept wish was finished, else when it was added
+export const vaultDate = (i: BucketItem) =>
+  (i.status === 'completed' && i.completedAt) || i.createdAt;
 
 const EmptyShelf: React.FC<{ title: string; hint: string }> = ({ title, hint }) => (
   <div className="p-8 text-center bg-card border border-ink/10 rounded-xl">
@@ -35,6 +47,12 @@ export const VaultView: React.FC<VaultViewProps> = ({
   onSelect,
   onToggleComplete,
   onEdit,
+  range,
+  yearRanges,
+  onRangeChange,
+  isRangeOpen,
+  onOpenRange,
+  onCloseRange,
 }) => {
   // Archived wishes, and finished ones the user didn't keep, stay out of the Vault
   const visibleItems = items.filter(
@@ -64,12 +82,77 @@ export const VaultView: React.FC<VaultViewProps> = ({
 
   return (
     <div className="space-y-8">
-      {isEmpty && (
-        <EmptyShelf
-          title="Your Vault is empty"
-          hint="Read and Watch wishes, wishes with a budget, and finished wishes you keep will show up here."
-        />
-      )}
+      {/* Time filter */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-sm text-ink/70 truncate">{rangeLabel(range)}</span>
+          {range !== 'all' && (
+            <button
+              type="button"
+              onClick={() => onRangeChange('all')}
+              aria-label="Show wishes from all time"
+              className="min-h-[44px] px-2 text-xs text-ink/60 hover:text-ink"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={onOpenRange}
+          aria-label="Filter the Vault by time"
+          className="min-h-[44px] px-3 shrink-0 flex items-center gap-1.5 text-xs font-medium bg-card border border-ink/15 rounded-lg text-ink/80 hover:border-ink/30"
+        >
+          <Calendar className="w-3.5 h-3.5" />
+          <span>Time</span>
+        </button>
+      </div>
+
+      {isEmpty &&
+        (range === 'all' ? (
+          <EmptyShelf
+            title="Your Vault is empty"
+            hint="Read and Watch wishes, wishes with a budget, and finished wishes you keep will show up here."
+          />
+        ) : (
+          <EmptyShelf
+            title={`Nothing from ${rangeLabel(range).toLowerCase()} yet`}
+            hint="Try another time to see more of your Vault."
+          />
+        ))}
+
+      <Sheet isOpen={isRangeOpen} onClose={onCloseRange} width="md" labelledBy="vault-range-title">
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-4 py-3 border-b border-ink/10">
+            <span id="vault-range-title" className="font-serif-journal text-base text-ink">
+              Show wishes from
+            </span>
+          </div>
+          <div role="radiogroup" aria-labelledby="vault-range-title" className="p-2">
+            {[...PRESET_RANGES, ...yearRanges].map((option) => {
+              const isSelected = option === range;
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  role="radio"
+                  aria-checked={isSelected}
+                  onClick={() => {
+                    onRangeChange(option);
+                    onCloseRange();
+                  }}
+                  className={`w-full min-h-[44px] px-3 rounded-lg flex items-center justify-between text-sm text-left transition-colors ${
+                    isSelected ? 'bg-paper-deep text-ink font-medium' : 'text-ink/80 hover:bg-paper'
+                  }`}
+                >
+                  <span>{rangeLabel(option)}</span>
+                  {isSelected && <Check className="w-4 h-4" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </Sheet>
 
       {/* Reading Shelf */}
       {readingItems.length > 0 && (

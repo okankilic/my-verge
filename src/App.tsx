@@ -45,7 +45,8 @@ import { ItemDetailDrawer } from './components/ItemDetailDrawer';
 import { ItemFormDrawer } from './components/ItemFormDrawer';
 import { MilestoneSheet } from './components/MilestoneSheet';
 import { ReminderRadarView } from './components/ReminderRadarView';
-import { VaultView, isInVault } from './components/VaultView';
+import { VaultView, isInVault, vaultDate } from './components/VaultView';
+import { TimeRange, earlierYears, isInRange } from './utils/timeRange';
 import { MilestonesArchiveView } from './components/MilestonesArchiveView';
 import { InProgressView } from './components/InProgressView';
 import { SerendipitySheet } from './components/SerendipitySheet';
@@ -66,6 +67,8 @@ export default function App() {
     setCategoryByTab((prev) => ({ ...prev, [tab]: id }));
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  // The Vault's time filter, in memory only like the category picks
+  const [vaultRange, setVaultRange] = useState<TimeRange>('all');
 
   // Sheets
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -74,6 +77,7 @@ export default function App() {
   const [celebratingItem, setCelebratingItem] = useState<BucketItem | null>(null);
   const [isMilestoneOpen, setIsMilestoneOpen] = useState(false);
   const [isSerendipityOpen, setIsSerendipityOpen] = useState(false);
+  const [isVaultRangeOpen, setIsVaultRangeOpen] = useState(false);
 
   // Attachment blobs of deleted items are removed only once their Undo window has passed
   const pendingBlobDeletes = useRef(new Map<string, ReturnType<typeof setTimeout>>());
@@ -503,7 +507,7 @@ export default function App() {
       case 'reminders':
         return item.status === 'active' && Boolean(item.reminder?.date);
       case 'vault':
-        return isInVault(item);
+        return isInVault(item) && isInRange(vaultDate(item), vaultRange);
       case 'milestones':
         return item.status === 'completed' && !item.hiddenInMemories;
       default:
@@ -521,13 +525,23 @@ export default function App() {
       }
     });
     return counts;
-  }, [searchedItems, currentTab]);
+  }, [searchedItems, currentTab, vaultRange]);
 
   // Global category filter: every tab except Settings renders from these items
   const filteredItems = useMemo(() => {
     if (selectedCategoryId === 'all') return searchedItems;
     return searchedItems.filter((item) => item.categoryId === selectedCategoryId);
   }, [searchedItems, selectedCategoryId]);
+
+  // Vault items within the picked time; the year picks come from every Vault wish
+  const vaultItems = useMemo(
+    () => filteredItems.filter((item) => isInRange(vaultDate(item), vaultRange)),
+    [filteredItems, vaultRange]
+  );
+  const vaultYearRanges = useMemo(
+    () => earlierYears(searchedItems.filter(isInVault).map(vaultDate)),
+    [searchedItems]
+  );
 
   // Filtered Feed Items, in the user's priority order (the order of the items array)
   const filteredActiveItems = useMemo(() => {
@@ -734,7 +748,13 @@ export default function App() {
           {/* TAB 3: CURATED VAULT & SHELF */}
           {currentTab === 'vault' && (
             <VaultView
-              items={filteredItems}
+              items={vaultItems}
+              range={vaultRange}
+              yearRanges={vaultYearRanges}
+              onRangeChange={setVaultRange}
+              isRangeOpen={isVaultRangeOpen}
+              onOpenRange={() => setIsVaultRangeOpen(true)}
+              onCloseRange={() => setIsVaultRangeOpen(false)}
               categories={categories}
               onSelect={(it) => setViewingItem(it)}
               onToggleComplete={handleToggleComplete}
