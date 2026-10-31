@@ -21,10 +21,12 @@ import {
   Hourglass,
   Trophy,
   Star,
+  Share2,
 } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
 import { externalLinkProps } from '../services/platform';
+import { shareItem } from '../services/shareOut';
 import { isReminderDue as isDue, reminderNextAt } from '../services/notifications';
 import { Sheet } from './Sheet';
 import { KeepInVaultSwitch, HideInMemoriesSwitch } from './KeepInVaultSwitch';
@@ -366,6 +368,14 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               aria-label="Edit wish"
             >
               <Edit3 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => shareItem(item, categoryDef)}
+              className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg border border-ink/15 bg-card text-ink/80 hover:text-ink hover:bg-paper hover:border-ink/30 transition-colors"
+              title="Share wish"
+              aria-label="Share wish"
+            >
+              <Share2 className="w-4 h-4" />
             </button>
             <button
               onClick={() => onDelete(item.id)}
