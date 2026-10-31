@@ -69,6 +69,7 @@ export interface BucketItem {
   completionReflection?: string;
   completionRating?: number; // 1-5 stars or rating
   keptInVault?: boolean; // A finished wish stays in the Vault only while this is set
+  hiddenInMemories?: boolean; // A finished wish is left off the Memories timeline while this is set
   createdAt: string;
   updatedAt: string;
 }

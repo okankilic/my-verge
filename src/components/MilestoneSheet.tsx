@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Trophy, Star } from 'lucide-react';
 import { BucketItem } from '../types';
 import { Sheet } from './Sheet';
-import { KeepInVaultSwitch } from './KeepInVaultSwitch';
+import { KeepInVaultSwitch, HideInMemoriesSwitch } from './KeepInVaultSwitch';
 
 interface MilestoneSheetProps {
   item: BucketItem | null;
@@ -10,6 +10,7 @@ interface MilestoneSheetProps {
   onClose: () => void;
   onSaveReflection: (itemId: string, reflection: string, rating: number) => void;
   onToggleKeep: (item: BucketItem) => void;
+  onToggleHide: (item: BucketItem) => void;
 }
 
 export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
@@ -18,6 +19,7 @@ export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
   onClose,
   onSaveReflection,
   onToggleKeep,
+  onToggleHide,
 }) => {
   // App.tsx keys this sheet by item id, so state is seeded fresh for each item
   const [reflection, setReflection] = useState(item?.completionReflection || '');
@@ -98,7 +100,10 @@ export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
           </div>
 
           {/* Applies at once, not on close */}
-          <KeepInVaultSwitch checked={Boolean(item.keptInVault)} onToggle={() => onToggleKeep(item)} />
+          <div className="space-y-2">
+            <KeepInVaultSwitch checked={Boolean(item.keptInVault)} onToggle={() => onToggleKeep(item)} />
+            <HideInMemoriesSwitch checked={Boolean(item.hiddenInMemories)} onToggle={() => onToggleHide(item)} />
+          </div>
 
           <div className="pt-2 flex items-center justify-end gap-3">
             <button

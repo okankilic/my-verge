@@ -27,7 +27,7 @@ import { renderCategoryIcon } from '../utils/categoryIcons';
 import { externalLinkProps } from '../services/platform';
 import { isReminderDue as isDue, reminderNextAt } from '../services/notifications';
 import { Sheet } from './Sheet';
-import { KeepInVaultSwitch } from './KeepInVaultSwitch';
+import { KeepInVaultSwitch, HideInMemoriesSwitch } from './KeepInVaultSwitch';
 import { ItemMediaStrip } from './ItemMediaStrip';
 
 interface ItemDetailDrawerProps {
@@ -39,6 +39,7 @@ interface ItemDetailDrawerProps {
   onToggleComplete: (item: BucketItem) => void;
   onToggleStarted: (item: BucketItem) => void;
   onToggleKeptInVault: (item: BucketItem) => void;
+  onToggleHiddenInMemories: (item: BucketItem) => void;
   onSnooze: (item: BucketItem, days: number) => void;
   categoryDef?: CategoryDefinition;
 }
@@ -52,6 +53,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
   onToggleComplete,
   onToggleStarted,
   onToggleKeptInVault,
+  onToggleHiddenInMemories,
   onSnooze,
   categoryDef,
 }) => {
@@ -341,7 +343,13 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
           )}
 
           {isCompleted && (
-            <KeepInVaultSwitch checked={Boolean(item.keptInVault)} onToggle={() => onToggleKeptInVault(item)} />
+            <div className="space-y-2">
+              <KeepInVaultSwitch checked={Boolean(item.keptInVault)} onToggle={() => onToggleKeptInVault(item)} />
+              <HideInMemoriesSwitch
+                checked={Boolean(item.hiddenInMemories)}
+                onToggle={() => onToggleHiddenInMemories(item)}
+              />
+            </div>
           )}
         </div>
 

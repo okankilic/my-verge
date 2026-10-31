@@ -1,5 +1,5 @@
-import React from 'react';
-import { Star, RotateCcw, Quote, Compass, Check } from 'lucide-react';
+import React, { useState } from 'react';
+import { Star, RotateCcw, Quote, Compass, Check, EyeOff, ChevronRight } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
 
@@ -18,7 +18,10 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
   onToggleComplete,
   onEdit,
 }) => {
-  const accomplishedItems = items.filter((item) => item.status === 'completed');
+  const [showHidden, setShowHidden] = useState(false);
+  const finishedItems = items.filter((item) => item.status === 'completed');
+  const accomplishedItems = finishedItems.filter((item) => !item.hiddenInMemories);
+  const hiddenItems = finishedItems.filter((item) => item.hiddenInMemories);
 
   // Sort by completedAt descending
   accomplishedItems.sort((a, b) => {
@@ -46,11 +49,17 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
       {accomplishedItems.length === 0 ? (
         <div className="p-12 text-center bg-card border border-ink/10 rounded-2xl">
           <p className="font-serif-journal text-lg text-ink/70">
-            Your retrospective archive is waiting
+            {hiddenItems.length > 0 ? 'Your memories are tucked away' : 'Your retrospective archive is waiting'}
           </p>
           <p className="text-xs text-ink/50 mt-1 max-w-sm mx-auto">
-            Tap <Check aria-hidden className="inline w-3 h-3 -mt-0.5 mx-0.5 stroke-[2.5]" />
-            <span className="sr-only">Accomplish</span> on any wish as you experience it to write a memory reflection and preserve it here forever.
+            {hiddenItems.length > 0 ? (
+              'Every finished wish here is hidden. Open one below and switch off Hide in Memories to bring it back.'
+            ) : (
+              <>
+                Tap <Check aria-hidden className="inline w-3 h-3 -mt-0.5 mx-0.5 stroke-[2.5]" />
+                <span className="sr-only">Accomplish</span> on any wish as you experience it to write a memory reflection and preserve it here forever.
+              </>
+            )}
           </p>
         </div>
       ) : (
@@ -182,6 +191,50 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
             ))}
           </div>
         </div>
+      )}
+
+      {/* Hidden wishes stay reachable here, so they can be opened and brought back */}
+      {hiddenItems.length > 0 && (
+        <section className="bg-card border border-ink/10 rounded-2xl">
+          <div className="flex items-center justify-between gap-3 pl-4 pr-2">
+            <span className="flex items-center gap-2 text-xs text-ink/60">
+              <EyeOff className="w-3.5 h-3.5" />
+              <span>Hidden</span>
+              <span className="font-mono text-[11px] text-ink/50">{hiddenItems.length}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowHidden((v) => !v)}
+              aria-expanded={showHidden}
+              aria-label={showHidden ? 'Collapse hidden wishes' : 'Show hidden wishes'}
+              className="min-h-[44px] px-3 text-xs font-medium text-ink/70 hover:text-ink"
+            >
+              {showHidden ? 'Close' : 'Show'}
+            </button>
+          </div>
+          {showHidden && (
+            <ul className="border-t border-ink/8">
+              {hiddenItems.map((item) => {
+                const cat = categories.find((c) => c.id === item.categoryId);
+                return (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => onSelect(item)}
+                      className="w-full min-h-[44px] px-4 py-2 flex items-center gap-2.5 text-left"
+                    >
+                      <span className="shrink-0" style={{ color: cat?.accentColor || '#4A6B56' }}>
+                        {renderCategoryIcon(cat?.icon || item.categoryId, 'w-3.5 h-3.5')}
+                      </span>
+                      <span className="flex-1 min-w-0 truncate text-sm text-ink/80">{item.title}</span>
+                      <ChevronRight className="w-4 h-4 shrink-0 text-ink/40" />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
       )}
     </div>
   );

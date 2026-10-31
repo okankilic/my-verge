@@ -147,7 +147,7 @@ export default function App() {
       setActiveToastItem(firstDue);
       playChimeSound();
       sendBrowserNotification(
-        `Nowish: ${firstDue.title}`,
+        `Make It Real: ${firstDue.title}`,
         `Reminder for your bucket list wish: ${firstDue.title}`
       );
       const nowIso = new Date().toISOString();
@@ -232,6 +232,7 @@ export default function App() {
       startedAt: item.startedAt,
       completedAt: item.completedAt,
       keptInVault: item.keptInVault,
+      hiddenInMemories: item.hiddenInMemories,
       // A note written in the reflection sheet goes away with the completion it belongs to
       completionReflection: item.completionReflection,
       completionRating: item.completionRating,
@@ -271,6 +272,8 @@ export default function App() {
                 startedAt: undefined,
                 completedAt: nowIso,
                 keptInVault,
+                // Every finish starts on the Memories timeline; the sheet's switch can hide it
+                hiddenInMemories: false,
                 updatedAt: nowIso,
               }
             : i
@@ -283,6 +286,7 @@ export default function App() {
         startedAt: undefined,
         completedAt: nowIso,
         keptInVault,
+        hiddenInMemories: false,
       });
       setIsMilestoneOpen(true);
       if (viewingItem?.id === item.id) {
@@ -308,6 +312,12 @@ export default function App() {
     const keptInVault = !item.keptInVault;
     patchItem(item.id, { keptInVault });
     setCelebratingItem((prev) => (prev?.id === item.id ? { ...prev, keptInVault } : prev));
+  };
+
+  const handleToggleHiddenInMemories = (item: BucketItem) => {
+    const hiddenInMemories = !item.hiddenInMemories;
+    patchItem(item.id, { hiddenInMemories });
+    setCelebratingItem((prev) => (prev?.id === item.id ? { ...prev, hiddenInMemories } : prev));
   };
 
   const handleToggleStarted = (item: BucketItem) => {
@@ -495,7 +505,7 @@ export default function App() {
       case 'vault':
         return isInVault(item);
       case 'milestones':
-        return item.status === 'completed';
+        return item.status === 'completed' && !item.hiddenInMemories;
       default:
         return false;
     }
@@ -800,6 +810,7 @@ export default function App() {
         onToggleComplete={handleToggleComplete}
         onToggleStarted={handleToggleStarted}
         onToggleKeptInVault={handleToggleKeptInVault}
+        onToggleHiddenInMemories={handleToggleHiddenInMemories}
         onSnooze={handleSnooze}
         categoryDef={
           viewingItem
@@ -832,6 +843,7 @@ export default function App() {
         }}
         onSaveReflection={handleSaveReflection}
         onToggleKeep={handleToggleKeptInVault}
+        onToggleHide={handleToggleHiddenInMemories}
       />
 
       {/* Serendipity Inspiration Sheet */}
