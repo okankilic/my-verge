@@ -10,9 +10,6 @@ coverage/
 # IDE
 .idea/
 
-# Capacitor generated (no native projects set up yet)
-android/
-ios/
 .idea
 
 # Native signing keys

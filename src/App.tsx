@@ -34,6 +34,7 @@ import {
 import { saveAttachment, deleteAttachmentBlobs } from './services/attachments';
 import { syncNativeReminders, onReminderTapped } from './services/reminderScheduler';
 import { isNative, applyNativeTheme } from './services/platform';
+import { onSharedContent, toDraft } from './services/shareInbox';
 import { notify, notifyUndo, UNDO_MS } from './services/dialogs';
 import { photoKey } from './utils/photoKey';
 
@@ -135,6 +136,25 @@ export default function App() {
     if (item) setViewingItem(item);
     setTappedItemId(null);
   }, [tappedItemId, items, isHydrated]);
+
+  // Links, text and photos shared from other apps open the New wish form prefilled (native only).
+  // They queue while the form is open, so a share never wipes what's being typed.
+  const [shareDraft, setShareDraft] = useState<Partial<BucketItem> | null>(null);
+  const [queuedShares, setQueuedShares] = useState<Partial<BucketItem>[]>([]);
+  useEffect(
+    () =>
+      onSharedContent((payload) => {
+        toDraft(payload).then((draft) => setQueuedShares((prev) => [...prev, draft]));
+      }),
+    []
+  );
+  useEffect(() => {
+    if (!isHydrated || isFormOpen || queuedShares.length === 0) return;
+    setEditingItem(null);
+    setShareDraft(queuedShares[0]);
+    setQueuedShares((prev) => prev.slice(1));
+    setIsFormOpen(true);
+  }, [queuedShares, isFormOpen, isHydrated]);
 
   // Persist categories
   useEffect(() => {
@@ -845,10 +865,12 @@ export default function App() {
         onClose={() => {
           setIsFormOpen(false);
           setEditingItem(null);
+          setShareDraft(null);
         }}
         onSave={handleSaveItem}
         categories={categories}
         editingItem={editingItem}
+        draft={shareDraft}
         defaultCategoryId={selectedCategoryId}
       />
 

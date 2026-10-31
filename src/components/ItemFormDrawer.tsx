@@ -27,6 +27,8 @@ interface ItemFormDrawerProps {
   onSave: (item: Partial<BucketItem>) => void;
   categories: CategoryDefinition[];
   editingItem?: BucketItem | null;
+  // Prefills a new wish, e.g. from content shared by another app
+  draft?: Partial<BucketItem> | null;
   defaultCategoryId?: string;
 }
 
@@ -36,6 +38,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   onSave,
   categories,
   editingItem,
+  draft,
   defaultCategoryId,
 }) => {
   const [categoryId, setCategoryId] = useState<string>('go');
@@ -95,8 +98,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       // New item defaults
       const initialCat = defaultCategoryId && defaultCategoryId !== 'all' ? defaultCategoryId : 'go';
       setCategoryId(initialCat);
-      setTitle('');
-      setDescription('');
+      setTitle(draft?.title || '');
+      setDescription(draft?.description || '');
       setPriority('this_year');
       setTargetDate('');
       setEnableReminder(false);
@@ -108,11 +111,14 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       setLocationCity('');
       setEstimatedCost('');
       setSavedAmount('');
-      setLinkUrl('');
-      setSelectedPhoto('');
+      setLinkUrl(draft?.linkUrl || '');
+      setSelectedPhoto(draft?.photos?.[0] || '');
       setCustomPhotoUrl('');
     }
-  }, [editingItem, defaultCategoryId, isOpen]);
+  }, [editingItem, draft, defaultCategoryId, isOpen]);
+
+  // A photo shared from another app, offered as the first cover choice
+  const sharedCover = !editingItem ? draft?.photos?.[0] : undefined;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -453,6 +459,31 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
               Inspirational Photo
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {sharedCover && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedPhoto(selectedPhoto === sharedCover ? '' : sharedCover);
+                    setCustomPhotoUrl('');
+                  }}
+                  aria-label="Shared photo"
+                  className={`relative rounded-xl overflow-hidden border aspect-[4/3] ${
+                    selectedPhoto === sharedCover
+                      ? 'ring-2 ring-ink border-transparent'
+                      : 'border-ink/15 hover:border-ink/40'
+                  }`}
+                >
+                  <img src={sharedCover} alt="" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-1.5 flex items-end">
+                    <span className="text-[10px] text-white font-medium leading-tight">Shared</span>
+                  </div>
+                  {selectedPhoto === sharedCover && (
+                    <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-ink text-paper rounded-full flex items-center justify-center">
+                      <Check className="w-3 h-3 stroke-[3]" />
+                    </div>
+                  )}
+                </button>
+              )}
               {PRESET_PHOTOS.map((preset) => {
                 const isSelected = selectedPhoto === preset.url;
                 return (
