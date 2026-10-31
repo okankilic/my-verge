@@ -39,6 +39,8 @@ export const ItemRow: React.FC<ItemRowProps> = ({
           <span className="shrink-0 text-[11px] uppercase tracking-wider text-ink/60 font-semibold leading-tight">
             {categoryName}
           </span>
+          {/* Prep left before starting; once started, only the steps count */}
+          {item.status === 'active' && !item.startedAt && <StepCount steps={item.prepSteps} kind="prep" />}
           <StepCount steps={item.steps} />
         </div>
         <span

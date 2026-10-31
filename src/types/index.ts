@@ -55,6 +55,9 @@ export interface WishStep {
 
 export const STEP_TITLE_MAX_LENGTH = 100;
 
+// Which of a wish's checklists a step belongs to
+export type StepListKey = 'steps' | 'prepSteps';
+
 // Money spent on a wish along the way (BucketItem.expenses)
 export interface WishExpense {
   id: string;
@@ -81,6 +84,7 @@ export interface BucketItem {
   photoNotes?: Record<string, string>; // keyed by photoKey(photo), see src/utils/photoKey.ts
   attachments?: AttachmentMeta[];
   linkUrl?: string;
+  prepSteps?: WishStep[]; // Checklist to get ready before starting, in order; starting or finishing leaves it as it is
   steps?: WishStep[]; // Checklist of smaller steps toward the wish, in order; finishing the wish leaves them as they are
   expenses?: WishExpense[]; // Money spent on the wish, oldest first; finishing the wish leaves them as they are
   reminder?: ReminderConfig;

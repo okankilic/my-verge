@@ -78,6 +78,9 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   // Smaller steps toward the wish
   const [steps, setSteps] = useState<WishStep[]>([]);
   const [stepDraft, setStepDraft] = useState<string>('');
+  // What to get ready before starting
+  const [prepSteps, setPrepSteps] = useState<WishStep[]>([]);
+  const [prepDraft, setPrepDraft] = useState<string>('');
 
   // Populate form if editing
   useEffect(() => {
@@ -109,6 +112,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       setSelectedPhoto(editingItem.photos?.[0] || '');
       setSteps(editingItem.steps || []);
       setStepDraft('');
+      setPrepSteps(editingItem.prepSteps || []);
+      setPrepDraft('');
     } else {
       // New item defaults
       const initialCat = defaultCategoryId && defaultCategoryId !== 'all' ? defaultCategoryId : 'go';
@@ -132,6 +137,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       setCustomPhotoUrl('');
       setSteps([]);
       setStepDraft('');
+      setPrepSteps([]);
+      setPrepDraft('');
     }
   }, [editingItem, draft, defaultCategoryId, defaultCurrency, isOpen]);
 
@@ -151,6 +158,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
     // A step typed but not yet added still counts
     const pendingStep = stepDraft.trim();
     const allSteps = pendingStep ? [...steps, newStep(pendingStep)] : steps;
+    const pendingPrep = prepDraft.trim();
+    const allPrep = pendingPrep ? [...prepSteps, newStep(pendingPrep)] : prepSteps;
 
     const itemData: Partial<BucketItem> = {
       categoryId,
@@ -160,6 +169,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       targetDate: targetDate || undefined,
       photos,
       linkUrl: linkUrl.trim() || undefined,
+      prepSteps: allPrep.length > 0 ? allPrep : undefined,
       steps: allSteps.length > 0 ? allSteps : undefined,
       currency,
     };
@@ -331,6 +341,16 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
               />
             </div>
           </div>
+
+          <StepList
+            kind="prep"
+            steps={prepSteps}
+            onToggle={(stepId) => setPrepSteps((prev) => toggleStep(prev, stepId))}
+            onAdd={(stepTitle) => setPrepSteps((prev) => [...prev, newStep(stepTitle)])}
+            onRemove={(stepId) => setPrepSteps((prev) => prev.filter((s) => s.id !== stepId))}
+            draft={prepDraft}
+            onDraftChange={setPrepDraft}
+          />
 
           <StepList
             steps={steps}

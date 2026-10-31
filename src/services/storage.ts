@@ -1,6 +1,6 @@
 import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
-import { BucketItem, BudgetInfo, CategoryDefinition } from '../types';
+import { BucketItem, BudgetInfo, CategoryDefinition, WishStep } from '../types';
 import { DEFAULT_CURRENCY, LEGACY_CURRENCY_SYMBOLS, isCurrencyCode } from '../data/currencies';
 import { INITIAL_ITEMS } from '../data/initialData';
 import { LEGACY_PRESET_PATHS } from '../data/presetPhotos';
@@ -86,11 +86,19 @@ const MERGED_CATEGORY_IDS: Record<string, string> = Object.fromEntries(
   Object.entries(MERGED_VERBS).map(([from, to]) => [from.toLowerCase(), to.toLowerCase()])
 );
 
+// Keeps only well-formed steps; an empty list becomes undefined
+function cleanSteps(raw: unknown): WishStep[] | undefined {
+  const steps = Array.isArray(raw)
+    ? raw.filter((s) => s && typeof s.id === 'string' && typeof s.title === 'string' && s.title.trim())
+    : [];
+  return steps.length > 0 ? steps : undefined;
+}
+
 // Older builds had sub-categories; drop the field so it doesn't linger in saves and backups.
 // Wishes in a retired verb move to the verb it merged into.
 // Finished wishes from before "Keep in Vault" stay where the Vault used to show them.
 // Preset photos saved under their old dev-only paths move to their public/presets ones, captions included.
-// Malformed steps and expenses are dropped.
+// Malformed steps (in either checklist) and expenses are dropped.
 // The budget's old currency symbol moves to the wish as an ISO code; invalid codes are dropped.
 export function normalizeItems<T extends BucketItem>(raw: T[]): BucketItem[] {
   return raw.map((entry) => {
@@ -122,12 +130,8 @@ export function normalizeItems<T extends BucketItem>(raw: T[]): BucketItem[] {
     }
     if (item.currency !== undefined && !isCurrencyCode(item.currency)) item.currency = undefined;
     // Steps from a hand-edited or damaged backup: keep only well-formed ones
-    if (item.steps !== undefined) {
-      const steps = Array.isArray(item.steps)
-        ? item.steps.filter((s) => s && typeof s.id === 'string' && typeof s.title === 'string' && s.title.trim())
-        : [];
-      item.steps = steps.length > 0 ? steps : undefined;
-    }
+    if (item.steps !== undefined) item.steps = cleanSteps(item.steps);
+    if (item.prepSteps !== undefined) item.prepSteps = cleanSteps(item.prepSteps);
     // Same for expenses: keep only ones with an id, a positive amount and a date
     if (item.expenses !== undefined) {
       const expenses = Array.isArray(item.expenses)

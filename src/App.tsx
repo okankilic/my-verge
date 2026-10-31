@@ -17,6 +17,7 @@ import {
   ViewTab,
   WishExpense,
   WishStep,
+  StepListKey,
 } from './types';
 import {
   loadBucketItems,
@@ -42,7 +43,7 @@ import { isNative, applyNativeTheme } from './services/platform';
 import { onSharedContent, toDraft } from './services/shareInbox';
 import { notify, notifyUndo, UNDO_MS } from './services/dialogs';
 import { photoKey } from './utils/photoKey';
-import { newStep, toggleStep } from './utils/steps';
+import { newStep, stepProgress, toggleStep } from './utils/steps';
 import { formatMoney, newExpense, stampCurrency, wishCurrency } from './utils/expenses';
 
 import { TopNav } from './components/TopNav';
@@ -243,6 +244,7 @@ export default function App() {
         mediaMeta: itemData.mediaMeta,
         photos: itemData.photos || [],
         linkUrl: itemData.linkUrl,
+        prepSteps: itemData.prepSteps,
         steps: itemData.steps,
         reminder: itemData.reminder,
         status: 'active',
@@ -364,8 +366,12 @@ export default function App() {
 
   const handleToggleStarted = (item: BucketItem) => {
     const previous = { startedAt: item.startedAt, updatedAt: item.updatedAt };
+    // Prep never blocks starting; the toast just mentions what's still left
+    const prepLeft = stepProgress(item.prepSteps);
+    const leftCount = prepLeft.total - prepLeft.done;
+    const prepNote = leftCount > 0 ? ` ${leftCount} prep ${leftCount === 1 ? 'item' : 'items'} left.` : '';
     notifyUndo(
-      item.startedAt ? `Stopped "${item.title}".` : `Started "${item.title}". It's on Now.`,
+      item.startedAt ? `Stopped "${item.title}".` : `Started "${item.title}". It's on Now.${prepNote}`,
       () => patchItem(item.id, previous)
     );
     const nowIso = new Date().toISOString();
@@ -388,34 +394,37 @@ export default function App() {
     }
   };
 
-  // Applies a change to an item's steps, working from the latest copy so quick taps don't undo each other
-  const updateSteps = (id: string, change: (steps: WishStep[]) => WishStep[]) => {
+  // Applies a change to one of an item's checklists (steps or prep), working from the latest copy so quick taps don't undo each other
+  const updateSteps = (id: string, change: (steps: WishStep[]) => WishStep[], list: StepListKey = 'steps') => {
     const nowIso = new Date().toISOString();
     const apply = (i: BucketItem): BucketItem => {
-      const steps = change(i.steps || []);
-      return { ...i, steps: steps.length > 0 ? steps : undefined, updatedAt: nowIso };
+      const steps = change(i[list] || []);
+      return { ...i, [list]: steps.length > 0 ? steps : undefined, updatedAt: nowIso };
     };
     setItems((prev) => prev.map((i) => (i.id === id ? apply(i) : i)));
     setViewingItem((prev) => (prev?.id === id ? apply(prev) : prev));
   };
 
-  const handleToggleStep = (item: BucketItem, stepId: string) => {
-    updateSteps(item.id, (steps) => toggleStep(steps, stepId));
+  const handleToggleStep = (item: BucketItem, stepId: string, list: StepListKey = 'steps') => {
+    updateSteps(item.id, (steps) => toggleStep(steps, stepId), list);
   };
 
-  const handleAddStep = (item: BucketItem, title: string) => {
-    updateSteps(item.id, (steps) => [...steps, newStep(title)]);
+  const handleAddStep = (item: BucketItem, title: string, list: StepListKey = 'steps') => {
+    updateSteps(item.id, (steps) => [...steps, newStep(title)], list);
   };
 
-  const handleRemoveStep = (item: BucketItem, stepId: string) => {
-    const step = item.steps?.find((s) => s.id === stepId);
+  const handleRemoveStep = (item: BucketItem, stepId: string, list: StepListKey = 'steps') => {
+    const step = item[list]?.find((s) => s.id === stepId);
     if (!step) return;
-    const index = item.steps!.indexOf(step);
-    updateSteps(item.id, (steps) => steps.filter((s) => s.id !== stepId));
+    const index = item[list]!.indexOf(step);
+    updateSteps(item.id, (steps) => steps.filter((s) => s.id !== stepId), list);
     // Undo puts it back where it was
     notifyUndo(`Removed "${step.title}".`, () =>
-      updateSteps(item.id, (steps) =>
-        steps.some((s) => s.id === stepId) ? steps : [...steps.slice(0, index), step, ...steps.slice(index)]
+      updateSteps(
+        item.id,
+        (steps) =>
+          steps.some((s) => s.id === stepId) ? steps : [...steps.slice(0, index), step, ...steps.slice(index)],
+        list
       )
     );
   };
@@ -598,6 +607,7 @@ export default function App() {
         item.location?.name.toLowerCase().includes(q) ||
         item.mediaMeta?.authorOrCreator?.toLowerCase().includes(q) ||
         item.steps?.some((s) => s.title.toLowerCase().includes(q)) ||
+        item.prepSteps?.some((s) => s.title.toLowerCase().includes(q)) ||
         item.expenses?.some((e) => e.note?.toLowerCase().includes(q))
     );
   }, [items, searchQuery]);

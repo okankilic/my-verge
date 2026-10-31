@@ -23,7 +23,7 @@ import {
   Star,
   Share2,
 } from 'lucide-react';
-import { BucketItem, CategoryDefinition } from '../types';
+import { BucketItem, CategoryDefinition, StepListKey } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
 import { externalLinkProps } from '../services/platform';
 import { shareItem } from '../services/shareOut';
@@ -46,9 +46,9 @@ interface ItemDetailDrawerProps {
   onToggleKeptInVault: (item: BucketItem) => void;
   onToggleHiddenInMemories: (item: BucketItem) => void;
   onSnooze: (item: BucketItem, days: number) => void;
-  onToggleStep: (item: BucketItem, stepId: string) => void;
-  onAddStep: (item: BucketItem, title: string) => void;
-  onRemoveStep: (item: BucketItem, stepId: string) => void;
+  onToggleStep: (item: BucketItem, stepId: string, list?: StepListKey) => void;
+  onAddStep: (item: BucketItem, title: string, list?: StepListKey) => void;
+  onRemoveStep: (item: BucketItem, stepId: string, list?: StepListKey) => void;
   onAddExpense: (item: BucketItem, amount: number, note?: string) => void;
   onRemoveExpense: (item: BucketItem, expenseId: string) => void;
   categoryDef?: CategoryDefinition;
@@ -187,6 +187,17 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
                 attachments={item.attachments}
               />
             </div>
+          )}
+
+          {/* Prep before starting: editable until then, kept for reference afterwards */}
+          {((!isStarted && !isCompleted) || (item.prepSteps?.length ?? 0) > 0) && (
+            <StepList
+              kind="prep"
+              steps={item.prepSteps || []}
+              onToggle={(stepId) => onToggleStep(item, stepId, 'prepSteps')}
+              onAdd={(title) => onAddStep(item, title, 'prepSteps')}
+              onRemove={(stepId) => onRemoveStep(item, stepId, 'prepSteps')}
+            />
           )}
 
           {/* Smaller steps toward the wish; finishing it leaves them as they are */}
