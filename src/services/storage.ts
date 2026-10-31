@@ -2,7 +2,7 @@ import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { BucketItem, CategoryDefinition } from '../types';
 import { INITIAL_ITEMS } from '../data/initialData';
-import { CATEGORY_VERB_ICONS, DEFAULT_CATEGORIES } from '../data/categories';
+import { CATEGORY_VERB_ICONS, DEFAULT_CATEGORIES, KEEP_IN_VAULT_VERBS } from '../data/categories';
 import { withStore } from './idb';
 import { isNative } from './platform';
 
@@ -79,9 +79,14 @@ export async function loadBucketItems(): Promise<BucketItem[]> {
 }
 
 // Older builds had sub-categories; drop the field so it doesn't linger in saves and backups.
+// Finished wishes from before "Keep in Vault" stay where the Vault used to show them.
 export function normalizeItems<T extends BucketItem>(raw: T[]): BucketItem[] {
   return raw.map((entry) => {
     const { subCategory: _subCategory, ...item } = entry as T & { subCategory?: string };
+    if (item.status === 'completed' && item.keptInVault === undefined) {
+      item.keptInVault =
+        item.categoryId === 'read' || item.categoryId === 'watch' || (item.budget?.estimatedCost ?? 0) > 0;
+    }
     return item;
   });
 }
@@ -103,7 +108,12 @@ export function normalizeCategories(raw: unknown[]): CategoryDefinition[] {
     };
     const label = (cat.verb || name || '').replace(/^want to\s+/i, '').trim();
     const verb = label.charAt(0).toUpperCase() + label.slice(1);
-    return { ...cat, verb, icon: CATEGORY_VERB_ICONS[verb] ?? cat.icon };
+    return {
+      ...cat,
+      verb,
+      icon: CATEGORY_VERB_ICONS[verb] ?? cat.icon,
+      keepInVault: cat.keepInVault ?? KEEP_IN_VAULT_VERBS.has(verb),
+    };
   });
   const storedVerbs = new Set(stored.map((cat) => cat.verb));
   const merged = [...stored, ...DEFAULT_CATEGORIES.filter((cat) => !storedVerbs.has(cat.verb))];

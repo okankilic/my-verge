@@ -15,6 +15,7 @@ export interface CategoryDefinition {
   icon: string; // Lucide icon identifier
   tagline: string;
   accentColor: string;
+  keepInVault?: boolean; // Whether "Keep in Vault" starts on when one of its wishes is finished
 }
 
 export interface ReminderConfig {
@@ -74,6 +75,7 @@ export interface BucketItem {
   completedAt?: string;
   completionReflection?: string;
   completionRating?: number; // 1-5 stars or rating
+  keptInVault?: boolean; // A finished wish stays in the Vault only while this is set
   createdAt: string;
   updatedAt: string;
 }

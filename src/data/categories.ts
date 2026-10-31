@@ -8,12 +8,16 @@ export const CATEGORY_VERB_ICONS: Record<string, string> = {
   Collect: 'Gem', Give: 'Gift', Call: 'Phone', See: 'Eye', Explore: 'Mountain', Fix: 'Wrench',
 };
 
+// Verbs whose finished wishes are kept in the Vault unless the user changes it in Settings
+export const KEEP_IN_VAULT_VERBS = new Set(['Read', 'Watch', 'Buy']);
+
 const category = (verb: string, tagline: string, accentColor: string): CategoryDefinition => ({
   id: verb.toLowerCase(),
   verb,
   icon: CATEGORY_VERB_ICONS[verb],
   tagline,
   accentColor,
+  keepInVault: KEEP_IN_VAULT_VERBS.has(verb),
 });
 
 export const DEFAULT_CATEGORIES: CategoryDefinition[] = [

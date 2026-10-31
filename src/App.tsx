@@ -46,7 +46,7 @@ import { ItemDetailDrawer } from './components/ItemDetailDrawer';
 import { ItemFormDrawer } from './components/ItemFormDrawer';
 import { MilestoneSheet } from './components/MilestoneSheet';
 import { ReminderRadarView } from './components/ReminderRadarView';
-import { VaultView } from './components/VaultView';
+import { VaultView, isInVault } from './components/VaultView';
 import { MilestonesArchiveView } from './components/MilestonesArchiveView';
 import { InProgressView } from './components/InProgressView';
 import { SerendipitySheet } from './components/SerendipitySheet';
@@ -60,7 +60,11 @@ export default function App() {
   // Storage is async; nothing is saved, synced or rendered until the stored data is loaded
   const [isHydrated, setIsHydrated] = useState(false);
   const [currentTab, setCurrentTab] = useState<ViewTab>('inprogress');
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
+  // Each tab keeps its own category pick
+  const [categoryByTab, setCategoryByTab] = useState<Partial<Record<ViewTab, string>>>({});
+  const selectedCategoryId = categoryByTab[currentTab] ?? 'all';
+  const setSelectedCategoryId = (id: string, tab: ViewTab = currentTab) =>
+    setCategoryByTab((prev) => ({ ...prev, [tab]: id }));
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -222,6 +226,7 @@ export default function App() {
       status: item.status,
       startedAt: item.startedAt,
       completedAt: item.completedAt,
+      keptInVault: item.keptInVault,
       updatedAt: item.updatedAt,
     };
     notifyUndo(isNowCompleted ? `Accomplished "${item.title}".` : `"${item.title}" is back in your Journal.`, () => {
@@ -246,6 +251,9 @@ export default function App() {
       }
       playChimeSound();
 
+      // The finish sheet's "Keep in Vault" switch starts from the category's setting
+      const keptInVault = Boolean(categories.find((c) => c.id === item.categoryId)?.keepInVault);
+
       setItems((prev) =>
         prev.map((i) =>
           i.id === item.id
@@ -254,6 +262,7 @@ export default function App() {
                 status: 'completed',
                 startedAt: undefined,
                 completedAt: nowIso,
+                keptInVault,
                 updatedAt: nowIso,
               }
             : i
@@ -265,6 +274,7 @@ export default function App() {
         status: 'completed',
         startedAt: undefined,
         completedAt: nowIso,
+        keptInVault,
       });
       setIsMilestoneOpen(true);
       if (viewingItem?.id === item.id) {
@@ -284,6 +294,12 @@ export default function App() {
         )
       );
     }
+  };
+
+  const handleToggleKeptInVault = (item: BucketItem) => {
+    const keptInVault = !item.keptInVault;
+    patchItem(item.id, { keptInVault });
+    setCelebratingItem((prev) => (prev?.id === item.id ? { ...prev, keptInVault } : prev));
   };
 
   const handleToggleStarted = (item: BucketItem) => {
@@ -468,7 +484,7 @@ export default function App() {
       case 'reminders':
         return item.status === 'active' && Boolean(item.reminder?.date);
       case 'vault':
-        return item.status !== 'archived';
+        return isInVault(item);
       case 'milestones':
         return item.status === 'completed';
       default:
@@ -732,10 +748,11 @@ export default function App() {
               onReloadData={(newItems, newCats) => {
                 setItems(newItems);
                 setCategories(newCats);
-                // The selected category may no longer exist
-                setSelectedCategoryId('all');
+                // The selected categories may no longer exist
+                setCategoryByTab({});
                 setActiveToastItem(null);
               }}
+              onCategoriesChange={setCategories}
               theme={theme}
               onThemeChange={setTheme}
               onNotificationsEnabled={() => syncNativeReminders(items)}
@@ -773,6 +790,7 @@ export default function App() {
         onDelete={handleDeleteItem}
         onToggleComplete={handleToggleComplete}
         onToggleStarted={handleToggleStarted}
+        onToggleKeptInVault={handleToggleKeptInVault}
         onSnooze={handleSnooze}
         categoryDef={
           viewingItem
@@ -804,6 +822,7 @@ export default function App() {
           setCelebratingItem(null);
         }}
         onSaveReflection={handleSaveReflection}
+        onToggleKeep={handleToggleKeptInVault}
       />
 
       {/* Serendipity Inspiration Sheet */}
@@ -813,8 +832,9 @@ export default function App() {
         items={items}
         categories={categories}
         onSelectFocus={(item) => {
-          setSelectedCategoryId(item.categoryId);
-          setCurrentTab(item.startedAt ? 'inprogress' : 'feed');
+          const dest: ViewTab = item.startedAt ? 'inprogress' : 'feed';
+          setSelectedCategoryId(item.categoryId, dest);
+          setCurrentTab(dest);
           setViewingItem(item);
         }}
       />

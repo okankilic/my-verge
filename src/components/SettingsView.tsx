@@ -11,11 +11,13 @@ import {
 } from '../services/notifications';
 import { deleteAttachmentBlobs } from '../services/attachments';
 import { notify } from '../services/dialogs';
+import { renderCategoryIcon } from '../utils/categoryIcons';
 
 interface SettingsViewProps {
   items: BucketItem[];
   categories: CategoryDefinition[];
   onReloadData: (items: BucketItem[], categories: CategoryDefinition[]) => void;
+  onCategoriesChange: (categories: CategoryDefinition[]) => void;
   theme: ThemePreference;
   onThemeChange: (theme: ThemePreference) => void;
   onNotificationsEnabled: () => void;
@@ -59,6 +61,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   items,
   categories,
   onReloadData,
+  onCategoriesChange,
   theme,
   onThemeChange,
   onNotificationsEnabled,
@@ -180,6 +183,41 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   {opt.label}
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Vault: which categories' finished wishes start out kept */}
+          <div className="bg-card border border-ink/10 rounded-2xl p-4">
+            <h4 className="text-xs font-semibold text-ink">Keep finished wishes from</h4>
+            <p className="text-[11px] text-ink/60 mt-0.5">
+              Keep in Vault starts on for these categories. You can still change it each time you finish a wish.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {categories.map((cat) => {
+                const isOn = Boolean(cat.keepInVault);
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    aria-pressed={isOn}
+                    onClick={() =>
+                      onCategoriesChange(
+                        categories.map((c) => (c.id === cat.id ? { ...c, keepInVault: !isOn } : c))
+                      )
+                    }
+                    className={`min-h-[44px] px-3 rounded-lg text-xs font-medium flex items-center gap-1.5 border transition-colors ${
+                      isOn
+                        ? 'border-ink bg-ink text-paper font-semibold'
+                        : 'border-ink/15 bg-paper text-ink/75'
+                    }`}
+                  >
+                    <span style={isOn ? undefined : { color: cat.accentColor }}>
+                      {renderCategoryIcon(cat.icon, 'w-3.5 h-3.5')}
+                    </span>
+                    <span>{cat.verb}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

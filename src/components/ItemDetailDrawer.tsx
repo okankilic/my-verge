@@ -25,6 +25,7 @@ import { renderCategoryIcon } from '../utils/categoryIcons';
 import { externalLinkProps } from '../services/platform';
 import { isReminderDue as isDue, reminderNextAt } from '../services/notifications';
 import { Sheet } from './Sheet';
+import { KeepInVaultSwitch } from './KeepInVaultSwitch';
 
 interface ItemDetailDrawerProps {
   item: BucketItem | null;
@@ -34,6 +35,7 @@ interface ItemDetailDrawerProps {
   onDelete: (id: string) => void;
   onToggleComplete: (item: BucketItem) => void;
   onToggleStarted: (item: BucketItem) => void;
+  onToggleKeptInVault: (item: BucketItem) => void;
   onSnooze: (item: BucketItem, days: number) => void;
   categoryDef?: CategoryDefinition;
 }
@@ -46,6 +48,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
   onDelete,
   onToggleComplete,
   onToggleStarted,
+  onToggleKeptInVault,
   onSnooze,
   categoryDef,
 }) => {
@@ -285,6 +288,10 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
                 </div>
               )}
             </div>
+          )}
+
+          {isCompleted && (
+            <KeepInVaultSwitch checked={Boolean(item.keptInVault)} onToggle={() => onToggleKeptInVault(item)} />
           )}
         </div>
 

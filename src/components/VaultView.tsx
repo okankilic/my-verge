@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { BookOpen, Film, DollarSign, Check } from 'lucide-react';
+import React from 'react';
+import { BookOpen, Check, Star } from 'lucide-react';
+import { renderCategoryIcon } from '../utils/categoryIcons';
 import { BucketItem, CategoryDefinition } from '../types';
 
 interface VaultViewProps {
@@ -12,6 +13,14 @@ interface VaultViewProps {
 
 const formatMoney = (amount: number | undefined, currency = '$') =>
   `${currency || '$'}${(amount ?? 0).toLocaleString()}`;
+
+const isShelved = (i: BucketItem) =>
+  i.categoryId === 'read' || i.categoryId === 'watch' || (i.budget?.estimatedCost ?? 0) > 0;
+
+// Active wishes appear on their shelf; finished ones only while kept, and then on the Kept shelf too.
+// App.tsx uses this for the category ribbon counts, so they match what the Vault lists.
+export const isInVault = (i: BucketItem) =>
+  (i.status === 'active' && isShelved(i)) || (i.status === 'completed' && Boolean(i.keptInVault));
 
 const EmptyShelf: React.FC<{ title: string; hint: string }> = ({ title, hint }) => (
   <div className="p-8 text-center bg-card border border-ink/10 rounded-xl">
@@ -27,15 +36,21 @@ export const VaultView: React.FC<VaultViewProps> = ({
   onToggleComplete,
   onEdit,
 }) => {
-  const [activeTab, setActiveTab] = useState<'reading' | 'watching' | 'budget'>('reading');
-
-  // Archived items stay out of the Vault
-  const visibleItems = items.filter((i) => i.status !== 'archived');
+  // Archived wishes, and finished ones the user didn't keep, stay out of the Vault
+  const visibleItems = items.filter(
+    (i) => i.status === 'active' || (i.status === 'completed' && i.keptInVault)
+  );
+  const keptItems = visibleItems
+    .filter((i) => i.status === 'completed')
+    .sort((a, b) => (b.completedAt ?? '').localeCompare(a.completedAt ?? ''));
   const readingItems = visibleItems.filter((i) => i.categoryId === 'read');
   const watchingItems = visibleItems.filter((i) => i.categoryId === 'watch');
   const budgetItems = visibleItems.filter(
     (i) => i.budget && i.budget.estimatedCost > 0
   );
+
+  const isEmpty =
+    readingItems.length + watchingItems.length + budgetItems.length + keptItems.length === 0;
 
   // Financial summary
   const totalEstimated = budgetItems.reduce((acc, i) => acc + (i.budget?.estimatedCost || 0), 0);
@@ -48,48 +63,16 @@ export const VaultView: React.FC<VaultViewProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Vault Category Selector Tabs */}
-      <div className="flex items-center gap-1.5 p-1 bg-paper-deep rounded-2xl max-w-md mx-auto">
-        <button
-          onClick={() => setActiveTab('reading')}
-          className={`flex-1 min-h-[44px] py-2 px-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
-            activeTab === 'reading'
-              ? 'bg-card text-ink shadow-xs'
-              : 'text-ink/60 hover:text-ink'
-          }`}
-        >
-          <BookOpen className="w-3.5 h-3.5 shrink-0 text-[#C05621]" />
-          <span>Reading ({readingItems.length})</span>
-        </button>
+    <div className="space-y-8">
+      {isEmpty && (
+        <EmptyShelf
+          title="Your Vault is empty"
+          hint="Read and Watch wishes, wishes with a budget, and finished wishes you keep will show up here."
+        />
+      )}
 
-        <button
-          onClick={() => setActiveTab('watching')}
-          className={`flex-1 min-h-[44px] py-2 px-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
-            activeTab === 'watching'
-              ? 'bg-card text-ink shadow-xs'
-              : 'text-ink/60 hover:text-ink'
-          }`}
-        >
-          <Film className="w-3.5 h-3.5 shrink-0 text-[#BE185D]" />
-          <span>Watching ({watchingItems.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('budget')}
-          className={`flex-1 min-h-[44px] py-2 px-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
-            activeTab === 'budget'
-              ? 'bg-card text-ink shadow-xs'
-              : 'text-ink/60 hover:text-ink'
-          }`}
-        >
-          <DollarSign className="w-3.5 h-3.5 shrink-0 text-[#059669]" />
-          <span>Ledger</span>
-        </button>
-      </div>
-
-      {/* Tab 1: Reading Shelf */}
-      {activeTab === 'reading' && (
+      {/* Reading Shelf */}
+      {readingItems.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-center justify-between gap-3">
             <h3 className="font-serif-journal text-lg font-medium text-ink">
@@ -100,12 +83,6 @@ export const VaultView: React.FC<VaultViewProps> = ({
             </span>
           </div>
 
-          {readingItems.length === 0 && (
-            <EmptyShelf
-              title="Your reading shelf is empty"
-              hint="Add a wish in the Read category and it will appear here."
-            />
-          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {readingItems.map((book) => {
@@ -186,8 +163,8 @@ export const VaultView: React.FC<VaultViewProps> = ({
         </section>
       )}
 
-      {/* Tab 2: Watchlist Theater */}
-      {activeTab === 'watching' && (
+      {/* Watchlist Theater */}
+      {watchingItems.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-center justify-between gap-3">
             <h3 className="font-serif-journal text-lg font-medium text-ink">
@@ -198,12 +175,6 @@ export const VaultView: React.FC<VaultViewProps> = ({
             </span>
           </div>
 
-          {watchingItems.length === 0 && (
-            <EmptyShelf
-              title="Your watchlist is empty"
-              hint="Add a wish in the Watch category and it will appear here."
-            />
-          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {watchingItems.map((film) => {
@@ -270,9 +241,14 @@ export const VaultView: React.FC<VaultViewProps> = ({
         </section>
       )}
 
-      {/* Tab 3: Financial & Savings Ledger */}
-      {activeTab === 'budget' && (
+      {/* Financial & Savings Ledger */}
+      {budgetItems.length > 0 && (
         <section className="space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="font-serif-journal text-lg font-medium text-ink">Ledger</h3>
+            <span className="shrink-0 text-xs text-ink/60 font-mono">{budgetItems.length} budgeted</span>
+          </div>
+
           {/* Summary Box */}
           <div className="bg-card border border-ink/10 rounded-2xl p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -311,12 +287,6 @@ export const VaultView: React.FC<VaultViewProps> = ({
             </div>
           </div>
 
-          {budgetItems.length === 0 && (
-            <EmptyShelf
-              title="No budgets yet"
-              hint="Give any wish an estimated cost to track savings here."
-            />
-          )}
 
           <div className="space-y-2.5">
             {budgetItems.map((item) => (
@@ -348,6 +318,73 @@ export const VaultView: React.FC<VaultViewProps> = ({
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* Kept finished wishes, from any category */}
+      {keptItems.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="font-serif-journal text-lg font-medium text-ink">Kept</h3>
+            <span className="shrink-0 text-xs text-ink/60 font-mono">{keptItems.length} kept</span>
+          </div>
+
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {keptItems.map((item) => {
+              const cat = categories.find((c) => c.id === item.categoryId);
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => onSelect(item)}
+                  className="bg-card border border-ink/12 rounded-2xl p-3 shadow-xs hover:border-ink/30 transition-all flex gap-3 cursor-pointer"
+                >
+                  <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-paper-deep border border-ink/10 flex items-center justify-center">
+                    {item.photos && item.photos.length > 0 ? (
+                      <img
+                        src={item.photos[0]}
+                        alt={item.title}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span style={{ color: cat?.accentColor }}>
+                        {renderCategoryIcon(cat?.icon ?? 'Sparkles', 'w-6 h-6')}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[11px] text-ink/60">{cat?.verb || item.categoryId}</div>
+                    <h4 className="font-serif-journal text-base font-medium text-ink line-clamp-2">
+                      {item.title}
+                    </h4>
+                    <div className="mt-1 flex items-center gap-2 text-[11px] text-ink/55">
+                      {item.completionRating ? (
+                        <span
+                          className="flex items-center gap-0.5"
+                          aria-label={`Rated ${item.completionRating} of 5`}
+                        >
+                          {Array.from({ length: item.completionRating }, (_, n) => (
+                            <Star key={n} className="w-3 h-3 text-[#B45309] fill-[#B45309]" />
+                          ))}
+                        </span>
+                      ) : null}
+                      {item.completedAt && (
+                        <span className="font-mono">
+                          {new Date(item.completedAt).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
