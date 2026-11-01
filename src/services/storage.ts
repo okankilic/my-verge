@@ -28,9 +28,12 @@ async function readKey(key: string): Promise<string | null> {
         encoding: Encoding.UTF8,
       });
       return typeof data === 'string' ? data : await data.text();
-    } catch {
-      // Missing file: nothing saved yet
-      return null;
+    } catch (err) {
+      // Only a file that isn't there means "nothing saved yet". Any other read error is passed on,
+      // so the caller never mistakes saved data it couldn't read for an empty journal.
+      const { files } = await Filesystem.readdir({ path: '', directory: Directory.Data });
+      if (!files.some((f) => f.name === `${key}.json`)) return null;
+      throw err;
     }
   }
   const value = await withStore<string | undefined>(DB_NAME, STORE, 'readonly', (store) =>
@@ -63,23 +66,48 @@ function queueWrite(key: string, value: string, label: string): void {
   writeQueues.set(key, next);
 }
 
-export async function loadBucketItems(): Promise<BucketItem[]> {
-  try {
-    const raw = await readKey(ITEMS_STORAGE_KEY);
-    if (!raw) {
-      saveBucketItems(INITIAL_ITEMS);
-      return INITIAL_ITEMS;
-    }
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      saveBucketItems(INITIAL_ITEMS);
-      return INITIAL_ITEMS;
-    }
-    return normalizeItems(parsed);
-  } catch (err) {
-    console.error('Failed to load bucket items from storage:', err);
-    return INITIAL_ITEMS;
+export interface LoadedList<T> {
+  value: T[];
+  // Set when the stored value couldn't be understood: it was copied to this key before the samples took over
+  keptCopyAs?: string;
+}
+
+// Loads a list key. Nothing saved (or an empty list) seeds the samples. A read error throws, so App
+// can offer a retry instead of saving samples over data it just couldn't reach. A value that reads
+// fine but can't be parsed is copied to `<key>_unreadable_<ms>` first, then replaced by the samples.
+async function loadList<T>(
+  key: string,
+  label: string,
+  seed: T[],
+  save: (value: T[]) => void,
+  normalize: (raw: unknown[]) => T[]
+): Promise<LoadedList<T>> {
+  const raw = await readKey(key);
+  if (!raw) {
+    save(seed);
+    return { value: seed };
   }
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length === 0) {
+      save(seed);
+      return { value: seed };
+    }
+    if (!Array.isArray(parsed)) throw new Error(`Stored ${label} isn't a list`);
+    return { value: normalize(parsed) };
+  } catch (err) {
+    console.error(`Couldn't understand the stored ${label}:`, err);
+    const copyKey = `${key}_unreadable_${Date.now()}`;
+    // Awaited, not queued: if keeping the copy fails, this throws and nothing gets overwritten
+    await writeKey(copyKey, raw);
+    return { value: seed, keptCopyAs: copyKey };
+  }
+}
+
+export function loadBucketItems(): Promise<LoadedList<BucketItem>> {
+  return loadList(ITEMS_STORAGE_KEY, 'bucket items', INITIAL_ITEMS, saveBucketItems, (raw) =>
+    normalizeItems(raw as BucketItem[])
+  );
 }
 
 const MERGED_CATEGORY_IDS: Record<string, string> = Object.fromEntries(
@@ -100,10 +128,12 @@ function cleanSteps(raw: unknown): WishStep[] | undefined {
 // Preset photos saved under their old dev-only paths move to their public/presets ones, captions included.
 // Malformed steps (in either checklist) and expenses are dropped.
 // The budget's old currency symbol moves to the wish as an ISO code; invalid codes are dropped.
+// Entries that aren't objects are dropped, and photos that aren't a list of strings are cleaned, so one damaged entry can't break loading.
 export function normalizeItems<T extends BucketItem>(raw: T[]): BucketItem[] {
-  return raw.map((entry) => {
+  return raw.filter(isRecord).map((entry) => {
     const { subCategory: _subCategory, ...item } = entry as T & { subCategory?: string };
-    if (item.photos?.some((p) => p in LEGACY_PRESET_PATHS)) {
+    item.photos = Array.isArray(item.photos) ? item.photos.filter((p) => typeof p === 'string') : [];
+    if (item.photos.some((p) => p in LEGACY_PRESET_PATHS)) {
       const notes: Record<string, string> = { ...item.photoNotes };
       item.photos = item.photos.map((p) => {
         const next = LEGACY_PRESET_PATHS[p];
@@ -155,6 +185,10 @@ export function normalizeItems<T extends BucketItem>(raw: T[]): BucketItem[] {
   });
 }
 
+function isRecord(value: unknown): boolean {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 export function saveBucketItems(items: BucketItem[]): void {
   queueWrite(ITEMS_STORAGE_KEY, JSON.stringify(items), 'bucket items');
 }
@@ -166,7 +200,7 @@ export function saveBucketItems(items: BucketItem[]): void {
 // Retired verbs are dropped (normalizeItems moves their wishes).
 // Categories created by older builds are kept as they are, so their items keep pointing at them.
 export function normalizeCategories(raw: unknown[]): CategoryDefinition[] {
-  const stored = raw.map((entry) => {
+  const stored = raw.filter(isRecord).map((entry) => {
     const { name, defaultSubCategories: _subCategories, ...cat } = entry as CategoryDefinition & {
       name?: string;
       defaultSubCategories?: string[];
@@ -187,23 +221,8 @@ export function normalizeCategories(raw: unknown[]): CategoryDefinition[] {
   return merged.sort((a, b) => rank(a) - rank(b));
 }
 
-export async function loadCategories(): Promise<CategoryDefinition[]> {
-  try {
-    const raw = await readKey(CATEGORIES_STORAGE_KEY);
-    if (!raw) {
-      saveCategories(DEFAULT_CATEGORIES);
-      return DEFAULT_CATEGORIES;
-    }
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      saveCategories(DEFAULT_CATEGORIES);
-      return DEFAULT_CATEGORIES;
-    }
-    return normalizeCategories(parsed);
-  } catch (err) {
-    console.error('Failed to load categories from storage:', err);
-    return DEFAULT_CATEGORIES;
-  }
+export function loadCategories(): Promise<LoadedList<CategoryDefinition>> {
+  return loadList(CATEGORIES_STORAGE_KEY, 'categories', DEFAULT_CATEGORIES, saveCategories, normalizeCategories);
 }
 
 export function saveCategories(categories: CategoryDefinition[]): void {

@@ -134,7 +134,8 @@ function latestIndex(base: Date, recurrence: RecurrenceType, now: number): numbe
 // Most recent occurrence at or before `now`, or null while the first one is still ahead
 function latestOccurrence(reminder: ReminderConfig, now: number): number | null {
   const base = reminderTime(reminder.date);
-  if (base.getTime() > now) return null;
+  // An unreadable date (damaged or hand-edited data) never comes due
+  if (Number.isNaN(base.getTime()) || base.getTime() > now) return null;
   return occurrence(base, reminder.recurrence, latestIndex(base, reminder.recurrence, now)).getTime();
 }
 
@@ -152,10 +153,21 @@ export function reminderNextAt(reminder: ReminderConfig, now = Date.now()): numb
   const snooze = reminder.snoozedUntil ? new Date(reminder.snoozedUntil).getTime() : null;
   if (snooze !== null && snooze > now) return snooze;
   const base = reminderTime(reminder.date);
+  if (Number.isNaN(base.getTime())) return null;
   if (base.getTime() > now) return base.getTime();
   if (reminder.recurrence === 'none') return null;
   const k = latestIndex(base, reminder.recurrence, now) + 1;
   return occurrence(base, reminder.recurrence, k).getTime();
+}
+
+// The next `count` times after `after` that the schedule falls on (snoozes aside), oldest first.
+// Uses the same month-end clamping as the in-app checks, so native alerts land on the same days.
+export function upcomingOccurrences(reminder: ReminderConfig, after: number, count: number): Date[] {
+  const base = reminderTime(reminder.date);
+  if (Number.isNaN(base.getTime()) || count <= 0) return [];
+  if (reminder.recurrence === 'none') return base.getTime() > after ? [base] : [];
+  const first = base.getTime() > after ? 0 : latestIndex(base, reminder.recurrence, after) + 1;
+  return Array.from({ length: count }, (_, i) => occurrence(base, reminder.recurrence, first + i));
 }
 
 // One-off reminders stay due until snoozed or completed; a recurring one is due only on the day it came due

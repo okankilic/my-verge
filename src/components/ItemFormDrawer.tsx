@@ -174,26 +174,24 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       currency,
     };
 
-    if (authorOrCreator.trim() || formatOrEdition.trim()) {
-      itemData.mediaMeta = {
-        authorOrCreator: authorOrCreator.trim() || undefined,
-        formatOrEdition: formatOrEdition.trim() || undefined,
-      };
-    }
+    // Blank fields are set to undefined (not left out) so an edit clears them; App merges itemData over the item
+    const progress = editingItem?.mediaMeta?.progress; // not edited here, so kept
+    itemData.mediaMeta =
+      authorOrCreator.trim() || formatOrEdition.trim() || progress
+        ? {
+            authorOrCreator: authorOrCreator.trim() || undefined,
+            formatOrEdition: formatOrEdition.trim() || undefined,
+            progress,
+          }
+        : undefined;
 
-    if (locationName.trim()) {
-      itemData.location = {
-        name: locationName.trim(),
-        cityOrCountry: locationCity.trim() || undefined,
-      };
-    }
+    itemData.location = locationName.trim()
+      ? { name: locationName.trim(), cityOrCountry: locationCity.trim() || undefined }
+      : undefined;
 
-    if (estimatedCost) {
-      itemData.budget = {
-        estimatedCost: parseFloat(estimatedCost) || 0,
-        savedAmount: parseFloat(savedAmount) || 0,
-      };
-    }
+    itemData.budget = estimatedCost
+      ? { estimatedCost: parseFloat(estimatedCost) || 0, savedAmount: parseFloat(savedAmount) || 0 }
+      : undefined;
 
     if (enableReminder && reminderDate) {
       // Keep snooze/alert state unless the schedule itself changed, so unrelated edits don't re-chime

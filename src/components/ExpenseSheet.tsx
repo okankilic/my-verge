@@ -31,6 +31,8 @@ export const ExpenseSheet: React.FC<ExpenseSheetProps> = ({ isOpen, title, curre
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          // Sheet isn't a portal: keep this submit from reaching a form the sheet was opened from
+          e.stopPropagation();
           if (amount === null) return;
           onSave(amount, note.trim() || undefined);
           close();

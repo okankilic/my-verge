@@ -68,6 +68,11 @@ export default function App() {
   const [categories, setCategories] = useState<CategoryDefinition[]>([]);
   // Storage is async; nothing is saved, synced or rendered until the stored data is loaded
   const [isHydrated, setIsHydrated] = useState(false);
+  // Storage couldn't be read: show a retry screen, and never save over what's stored
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  // The stored wishes couldn't be understood and were set aside; tell the user once the app is up
+  const keptItemsCopyRef = useRef(false);
   const [currentTab, setCurrentTab] = useState<ViewTab>('inprogress');
   // Each tab keeps its own category pick
   const [categoryByTab, setCategoryByTab] = useState<Partial<Record<ViewTab, string>>>({});
@@ -102,20 +107,37 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([loadBucketItems(), loadCategories(), loadTheme(), loadDefaultCurrency()]).then(
-      ([loadedItems, loadedCategories, loadedTheme, loadedCurrency]) => {
+    Promise.all([loadBucketItems(), loadCategories(), loadTheme(), loadDefaultCurrency()])
+      .then(([loadedItems, loadedCategories, loadedTheme, loadedCurrency]) => {
         if (cancelled) return;
-        setItems(stampCurrency(loadedItems, loadedCurrency));
-        setCategories(loadedCategories);
+        keptItemsCopyRef.current = Boolean(loadedItems.keptCopyAs);
+        setItems(stampCurrency(loadedItems.value, loadedCurrency));
+        setCategories(loadedCategories.value);
         setTheme(loadedTheme);
         setDefaultCurrency(loadedCurrency);
+        setLoadFailed(false);
         setIsHydrated(true);
-      }
-    );
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.error('Failed to load stored data:', err);
+        setLoadFailed(true);
+      });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loadAttempt]);
+
+  // DialogHost (a child) registers in its own effect, which runs before this one
+  useEffect(() => {
+    if (!isHydrated || !keptItemsCopyRef.current) return;
+    keptItemsCopyRef.current = false;
+    notify(
+      "Your saved wishes couldn't be opened, so the samples are here for now. A copy is kept safe on this device.",
+      'info',
+      { durationMs: 10000 }
+    );
+  }, [isHydrated]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -687,7 +709,27 @@ export default function App() {
       .sort((a, b) => new Date(b.startedAt!).getTime() - new Date(a.startedAt!).getTime());
   }, [filteredItems]);
 
-  if (!isHydrated) return <div className="min-h-screen bg-page" />;
+  if (!isHydrated) {
+    if (!loadFailed) return <div className="min-h-screen bg-page" />;
+    return (
+      <div className="min-h-screen bg-page flex items-center justify-center px-4">
+        <div className="max-w-xs text-center space-y-3">
+          <h1 className="font-serif-journal text-lg text-ink">Your journal didn't open this time</h1>
+          <p className="text-sm text-ink/60">Your wishes are still saved on this device. Try again?</p>
+          <button
+            type="button"
+            onClick={() => {
+              setLoadFailed(false);
+              setLoadAttempt((n) => n + 1);
+            }}
+            className="min-h-[44px] px-5 bg-ink text-paper text-sm font-semibold rounded-lg hover:bg-ink/85 transition-all"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen paper-texture flex flex-col selection:bg-[#B45309]/20 selection:text-ink">

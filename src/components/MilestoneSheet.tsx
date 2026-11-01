@@ -43,11 +43,6 @@ export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
     onClose();
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleClose();
-  };
-
   return (
     <Sheet isOpen onClose={handleClose} width="md" labelledBy="milestone-title">
       <div className="overflow-y-auto p-6 sm:p-7">
@@ -66,7 +61,8 @@ export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Not a form: ExpenseList opens ExpenseSheet (a form) inside it, and Sheet is not a portal */}
+        <div className="space-y-4">
           {/* Milestone Star Rating */}
           <div className="text-center">
             <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-2">
@@ -122,13 +118,14 @@ export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
 
           <div className="pt-2 flex items-center justify-end gap-3">
             <button
-              type="submit"
+              type="button"
+              onClick={handleClose}
               className="min-h-[44px] px-6 py-2.5 text-xs font-semibold text-white bg-[#4A6B56] hover:bg-[#3d5a47] rounded-xl shadow-md transition-all"
             >
               Close
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </Sheet>
   );
