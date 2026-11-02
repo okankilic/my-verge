@@ -1,15 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   X,
-  Calendar,
   Bell,
   MapPin,
   DollarSign,
   Link as LinkIcon,
-  BookOpen,
-  Film,
-  Camera,
-  Check,
 } from 'lucide-react';
 import {
   BucketItem,
@@ -22,9 +17,28 @@ import { renderCategoryIcon } from '../utils/categoryIcons';
 import { Sheet } from './Sheet';
 import { StepList } from './StepList';
 import { newStep, toggleStep } from '../utils/steps';
-import { PRESET_PHOTOS } from '../data/presetPhotos';
 import { CURRENCIES } from '../data/currencies';
 import { currencySymbol } from '../utils/expenses';
+
+// Title placeholder per category id
+const TITLE_PLACEHOLDERS: Record<string, string> = {
+  go: 'e.g., Hike the coastal trails of Cabo de Gata',
+  workout: 'e.g., Run a 10K without stopping',
+  buy: 'e.g., Wood-fired stoneware teapot',
+  pay: 'e.g., Renew the car insurance',
+  remember: 'e.g., Attention is the rarest and purest generosity',
+  read: 'e.g., Invisible Cities by Italo Calvino',
+  watch: 'e.g., Cinema Paradiso in 35mm restoration',
+  listen: 'e.g., Kind of Blue on vinyl, start to finish',
+  cook: "e.g., Grandma's sourdough loaf",
+  taste: 'e.g., Khao soi at a Chiang Mai night market',
+  learn: 'e.g., Hold a simple conversation in Italian',
+  make: 'e.g., Hand-bind a leather hardcover journal',
+  play: 'e.g., Finish a game of Go with a friend',
+  call: 'e.g., Catch up with an old school friend',
+  give: 'e.g., Plant a tree for a friend',
+  fix: 'e.g., Repair the squeaky bedroom door',
+};
 
 interface ItemFormDrawerProps {
   isOpen: boolean;
@@ -71,9 +85,6 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   const [currency, setCurrency] = useState<string>(defaultCurrency);
   const [linkUrl, setLinkUrl] = useState<string>('');
 
-  // Photo
-  const [selectedPhoto, setSelectedPhoto] = useState<string>('');
-  const [customPhotoUrl, setCustomPhotoUrl] = useState<string>('');
 
   // Smaller steps toward the wish
   const [steps, setSteps] = useState<WishStep[]>([]);
@@ -109,7 +120,6 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       setSavedAmount(editingItem.budget?.savedAmount?.toString() || '');
       setCurrency(editingItem.currency || defaultCurrency);
       setLinkUrl(editingItem.linkUrl || '');
-      setSelectedPhoto(editingItem.photos?.[0] || '');
       setSteps(editingItem.steps || []);
       setStepDraft('');
       setPrepSteps(editingItem.prepSteps || []);
@@ -133,8 +143,6 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       setSavedAmount('');
       setCurrency(defaultCurrency);
       setLinkUrl(draft?.linkUrl || '');
-      setSelectedPhoto(draft?.photos?.[0] || '');
-      setCustomPhotoUrl('');
       setSteps([]);
       setStepDraft('');
       setPrepSteps([]);
@@ -142,19 +150,10 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
     }
   }, [editingItem, draft, defaultCategoryId, defaultCurrency, isOpen]);
 
-  // A photo shared from another app, offered as the first cover choice
-  const sharedCover = !editingItem ? draft?.photos?.[0] : undefined;
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
 
-    const cover = selectedPhoto || customPhotoUrl.trim();
-    // The form only edits the cover; keep photos captured on the Now tab (stored as data URLs)
-    const capturedPhotos = (editingItem?.photos || []).filter(
-      (p) => p !== cover && p.startsWith('data:')
-    );
-    const photos = cover ? [cover, ...capturedPhotos] : capturedPhotos;
     // A step typed but not yet added still counts
     const pendingStep = stepDraft.trim();
     const allSteps = pendingStep ? [...steps, newStep(pendingStep)] : steps;
@@ -167,7 +166,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       description: description.trim(),
       priority,
       targetDate: targetDate || undefined,
-      photos,
+      // Photos are added on the Now card, so an edit leaves them alone; a shared image becomes the cover
+      ...(editingItem ? {} : { photos: draft?.photos ?? [] }),
       linkUrl: linkUrl.trim() || undefined,
       prepSteps: allPrep.length > 0 ? allPrep : undefined,
       steps: allSteps.length > 0 ? allSteps : undefined,
@@ -189,9 +189,9 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       ? { name: locationName.trim(), cityOrCountry: locationCity.trim() || undefined }
       : undefined;
 
-    itemData.budget = estimatedCost
-      ? { estimatedCost: parseFloat(estimatedCost) || 0, savedAmount: parseFloat(savedAmount) || 0 }
-      : undefined;
+    const target = parseFloat(estimatedCost);
+    itemData.budget =
+      target > 0 ? { estimatedCost: target, savedAmount: parseFloat(savedAmount) || 0 } : undefined;
 
     if (enableReminder && reminderDate) {
       // Keep snooze/alert state unless the schedule itself changed, so unrelated edits don't re-chime
@@ -219,14 +219,16 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
         <div className="px-5 py-4 border-b border-ink/10 flex items-center justify-between">
           <div>
             <h2 id="item-form-title" className="font-serif-journal text-xl font-medium text-ink">
-              {editingItem ? 'Edit Wish' : 'Capture Wish'}
+              {editingItem ? 'Edit wish' : 'Make a wish'}
             </h2>
             <p className="text-xs text-ink/60 mt-0.5">
-              Give your upcoming dream shape, timeline, and reminders
+              What do you want to make real?
             </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
+            aria-label="Close"
             className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-ink/60 hover:text-ink hover:bg-ink/5"
           >
             <X className="w-5 h-5" />
@@ -234,7 +236,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
         </div>
 
         {/* Scrollable Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-6">
+        <form id="item-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-6">
           {/* Step 1: Category Selection */}
           <div>
             <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-2">
@@ -269,29 +271,16 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
           {/* Step 2: Title & Description */}
           <div className="space-y-4">
             <div>
-              <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
-                Wish Title *
+              <label htmlFor="item-title" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
+                Title *
               </label>
               <input
+                id="item-title"
                 type="text"
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder={
-                  categoryId === 'read'
-                    ? 'e.g., Invisible Cities by Italo Calvino'
-                    : categoryId === 'watch'
-                    ? 'e.g., Cinema Paradiso in 35mm Restoration'
-                    : categoryId === 'go'
-                    ? 'e.g., Hike the Coastal Trails of Cabo de Gata'
-                    : categoryId === 'buy'
-                    ? 'e.g., Wood-Fired Stoneware Teapot'
-                    : categoryId === 'pay'
-                    ? 'e.g., Renew the car insurance'
-                    : categoryId === 'remember'
-                    ? 'e.g., Attention is the rarest and purest generosity'
-                    : 'e.g., Hand-bind a leather hardcover journal'
-                }
+                placeholder={TITLE_PLACEHOLDERS[categoryId] || 'e.g., Something you want to make real'}
                 className="w-full min-h-[44px] px-3.5 py-2.5 text-sm bg-card border border-ink/20 rounded-xl text-ink placeholder-ink/40 focus:outline-none focus:border-ink"
               />
             </div>
@@ -300,42 +289,57 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             {(categoryId === 'read' || categoryId === 'watch') && (
               <div className="grid grid-cols-2 gap-3 p-3 bg-card rounded-xl border border-ink/10">
                 <div>
-                  <label className="block text-[11px] uppercase tracking-wider text-ink/60 font-semibold mb-1">
+                  <label htmlFor="item-author" className="block text-[11px] uppercase tracking-wider text-ink/60 font-semibold mb-1">
                     {categoryId === 'read' ? 'Author / Writer' : 'Director / Creator'}
                   </label>
                   <input
+                    id="item-author"
                     type="text"
                     value={authorOrCreator}
                     onChange={(e) => setAuthorOrCreator(e.target.value)}
                     placeholder={categoryId === 'read' ? 'e.g. Italo Calvino' : 'e.g. Denis Villeneuve'}
-                    className="w-full min-h-[38px] px-2.5 py-1.5 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
+                    className="w-full min-h-[44px] px-2.5 py-1.5 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] uppercase tracking-wider text-ink/60 font-semibold mb-1">
+                  <label htmlFor="item-format" className="block text-[11px] uppercase tracking-wider text-ink/60 font-semibold mb-1">
                     Format / Edition
                   </label>
                   <input
+                    id="item-format"
                     type="text"
                     value={formatOrEdition}
                     onChange={(e) => setFormatOrEdition(e.target.value)}
                     placeholder={categoryId === 'read' ? 'Hardcover, Audiobook' : '35mm, Criterion, Theater'}
-                    className="w-full min-h-[38px] px-2.5 py-1.5 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
+                    className="w-full min-h-[44px] px-2.5 py-1.5 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
                   />
                 </div>
               </div>
             )}
 
             <div>
-              <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
-                Notes & Reflections
+              <label htmlFor="item-notes" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
+                Notes
               </label>
               <textarea
+                id="item-notes"
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Why does this matter? What specific feeling or memory does it hold?"
+                placeholder="Why does this matter to you?"
                 className="w-full px-3.5 py-2.5 text-sm bg-card border border-ink/20 rounded-xl text-ink placeholder-ink/40 focus:outline-none focus:border-ink"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <LinkIcon className="w-4 h-4 text-ink/50 shrink-0" />
+              <input
+                type="url"
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                placeholder="Link, e.g. a shop or reference page"
+                aria-label="Link"
+                className="flex-1 min-h-[44px] px-3 py-1.5 text-xs bg-card border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
               />
             </div>
           </div>
@@ -362,26 +366,28 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
           {/* Step 3: Priority & Target Date */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
-                Timeframe / Priority
+              <label htmlFor="item-priority" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
+                When
               </label>
               <select
+                id="item-priority"
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as PriorityLevel)}
                 className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
               >
-                <option value="this_month">This Month (High Focus)</option>
-                <option value="this_year">This Year (Current Chapter)</option>
-                <option value="someday">Someday (Long Horizon)</option>
-                <option value="urgent">Urgent Wish</option>
+                <option value="urgent">Urgent</option>
+                <option value="this_month">This month</option>
+                <option value="this_year">This year</option>
+                <option value="someday">Someday</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
-                Target Date
+              <label htmlFor="item-target-date" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
+                Target date
               </label>
               <input
+                id="item-target-date"
                 type="date"
                 value={targetDate}
                 onChange={(e) => setTargetDate(e.target.value)}
@@ -392,50 +398,53 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
 
           {/* Step 4: Scheduled Reminders Engine */}
           <div className="p-4 rounded-2xl bg-card border border-ink/10 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            {/* The whole row toggles, so the tap target is the full width */}
+            <label htmlFor="enableReminder" className="min-h-[44px] flex items-center justify-between cursor-pointer">
+              <span className="flex items-center gap-2">
                 <Bell className="w-4 h-4 text-[#B45309]" />
                 <span className="text-xs font-semibold uppercase tracking-wider text-ink">
-                  Scheduled Reminder Alert
+                  Reminder
                 </span>
-              </div>
+              </span>
               <input
                 type="checkbox"
                 id="enableReminder"
                 checked={enableReminder}
                 onChange={(e) => setEnableReminder(e.target.checked)}
-                className="w-4 h-4 rounded text-ink border-ink/20 focus:ring-0 cursor-pointer"
+                className="w-5 h-5 rounded text-ink border-ink/20 focus:ring-0 cursor-pointer"
               />
-            </div>
+            </label>
 
             {enableReminder && (
               <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-ink/8">
                 <div>
-                  <label className="block text-[11px] text-ink/60 font-medium mb-1">
-                    Alert Date & Time
+                  <label htmlFor="item-reminder-date" className="block text-[11px] text-ink/60 font-medium mb-1">
+                    Date & time
                   </label>
                   <input
+                    id="item-reminder-date"
                     type="datetime-local"
                     value={reminderDate}
                     onChange={(e) => setReminderDate(e.target.value)}
                     required={enableReminder}
-                    className="w-full min-h-[40px] px-3 py-1.5 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
+                    className="w-full min-h-[44px] px-3 py-1.5 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] text-ink/60 font-medium mb-1">
-                    Recurrence
+                  <label htmlFor="item-reminder-repeat" className="block text-[11px] text-ink/60 font-medium mb-1">
+                    Repeat
                   </label>
                   <select
+                    id="item-reminder-repeat"
                     value={reminderRecurrence}
                     onChange={(e) => setReminderRecurrence(e.target.value as RecurrenceType)}
-                    className="w-full min-h-[40px] px-3 py-1.5 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
+                    className="w-full min-h-[44px] px-3 py-1.5 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
                   >
-                    <option value="none">One-time Alert</option>
-                    <option value="daily">Daily Nudge</option>
-                    <option value="weekly">Weekly Gentle Reminder</option>
-                    <option value="monthly">Monthly Check-in</option>
-                    <option value="yearly">Yearly Milestone</option>
+                    <option value="none">Once</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
                   </select>
                 </div>
               </div>
@@ -448,21 +457,23 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             <div className="p-3.5 bg-card rounded-2xl border border-ink/10 space-y-2">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-ink">
                 <MapPin className="w-3.5 h-3.5 text-[#B45309]" />
-                <span>Geographic Place</span>
+                <span>Place</span>
               </div>
               <input
                 type="text"
                 value={locationName}
                 onChange={(e) => setLocationName(e.target.value)}
                 placeholder="Place or venue name"
-                className="w-full min-h-[38px] px-2.5 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
+                aria-label="Place name"
+                className="w-full min-h-[44px] px-2.5 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
               />
               <input
                 type="text"
                 value={locationCity}
                 onChange={(e) => setLocationCity(e.target.value)}
                 placeholder="City, Country"
-                className="w-full min-h-[38px] px-2.5 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
+                aria-label="City or country"
+                className="w-full min-h-[44px] px-2.5 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
               />
             </div>
 
@@ -471,7 +482,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-ink">
                   <DollarSign className="w-3.5 h-3.5 text-[#059669]" />
-                  <span>Budget & Savings</span>
+                  <span>Budget</span>
                 </div>
                 {/* One currency per wish, for its budget and expenses */}
                 <select
@@ -497,7 +508,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                   onChange={(e) => setEstimatedCost(e.target.value)}
                   placeholder="Target"
                   aria-label="Target amount"
-                  className="min-h-[38px] px-2.5 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
+                  className="min-h-[44px] px-2.5 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
                 />
                 <input
                   type="number"
@@ -507,99 +518,10 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                   onChange={(e) => setSavedAmount(e.target.value)}
                   placeholder="Saved"
                   aria-label="Saved amount"
-                  className="min-h-[38px] px-2.5 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
+                  className="min-h-[44px] px-2.5 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
                 />
               </div>
-              <input
-                type="url"
-                value={linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-                placeholder="Reference URL or shop link"
-                className="w-full min-h-[38px] px-2.5 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
-              />
-            </div>
-          </div>
-
-          {/* Step 6: Visual Photograph Attachment */}
-          <div className="space-y-2">
-            <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold">
-              Inspirational Photo
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {sharedCover && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedPhoto(selectedPhoto === sharedCover ? '' : sharedCover);
-                    setCustomPhotoUrl('');
-                  }}
-                  aria-label="Shared photo"
-                  className={`relative rounded-xl overflow-hidden border aspect-[4/3] ${
-                    selectedPhoto === sharedCover
-                      ? 'ring-2 ring-ink border-transparent'
-                      : 'border-ink/15 hover:border-ink/40'
-                  }`}
-                >
-                  <img src={sharedCover} alt="" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-1.5 flex items-end">
-                    <span className="text-[10px] text-white font-medium leading-tight">Shared</span>
-                  </div>
-                  {selectedPhoto === sharedCover && (
-                    <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-ink text-paper rounded-full flex items-center justify-center">
-                      <Check className="w-3 h-3 stroke-[3]" />
-                    </div>
-                  )}
-                </button>
-              )}
-              {PRESET_PHOTOS.map((preset) => {
-                const isSelected = selectedPhoto === preset.url;
-                return (
-                  <button
-                    type="button"
-                    key={preset.url}
-                    onClick={() => {
-                      setSelectedPhoto(isSelected ? '' : preset.url);
-                      setCustomPhotoUrl('');
-                    }}
-                    className={`relative rounded-xl overflow-hidden border aspect-[4/3] group text-left ${
-                      isSelected
-                        ? 'ring-2 ring-ink border-transparent'
-                        : 'border-ink/15 hover:border-ink/40'
-                    }`}
-                  >
-                    <img
-                      src={preset.url}
-                      alt={preset.label}
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-1.5 flex items-end">
-                      <span className="text-[10px] text-white font-medium leading-tight">
-                        {preset.label}
-                      </span>
-                    </div>
-                    {isSelected && (
-                      <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-ink text-paper rounded-full flex items-center justify-center">
-                        <Check className="w-3 h-3 stroke-[3]" />
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="mt-2 flex items-center gap-2">
-              <Camera className="w-4 h-4 text-ink/50 shrink-0" />
-              <input
-                type="url"
-                value={customPhotoUrl}
-                onChange={(e) => {
-                  setCustomPhotoUrl(e.target.value);
-                  setSelectedPhoto('');
-                }}
-                placeholder="Or paste any custom image web link..."
-                className="flex-1 min-h-[38px] px-3 py-1.5 text-xs bg-card border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
-              />
+              <p className="text-[11px] text-ink/50">Set a target to track your savings.</p>
             </div>
           </div>
         </form>
@@ -613,9 +535,10 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
           >
             Cancel
           </button>
+          {/* Submits the form, so the browser checks required fields first */}
           <button
-            type="button"
-            onClick={handleSubmit}
+            type="submit"
+            form="item-form"
             className="min-h-[44px] px-6 py-2.5 text-xs font-semibold text-paper bg-ink hover:bg-ink/85 active:scale-98 rounded-xl shadow-md transition-all"
           >
             Save

@@ -4,7 +4,7 @@ export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 export interface CategoryDefinition {
   id: string; // The lowercase verb for built-in categories; categories saved by older builds may have other ids
-  verb: string; // Action verb used as the category label, e.g. "Go", "Do", "Buy" (see DEFAULT_CATEGORIES)
+  verb: string; // Action verb used as the category label, e.g. "Go", "Read", "Buy" (see DEFAULT_CATEGORIES)
   icon: string; // Lucide icon identifier
   tagline: string;
   accentColor: string;

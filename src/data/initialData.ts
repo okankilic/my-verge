@@ -102,7 +102,7 @@ export const INITIAL_ITEMS: BucketItem[] = [
   },
   {
     id: 'verge-item-5',
-    categoryId: 'do',
+    categoryId: 'make',
     title: 'Hand-bind a bespoke linen hardcover journal',
     description: 'Learn Coptic stitch bookbinding, trim 120gsm cold-press rag cotton paper signatures, and case-bind with bookcloth spine.',
     priority: 'this_year',

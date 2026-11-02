@@ -178,7 +178,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             </button>
           )}
 
-          {/* New Wish / Capture Button */}
+          {/* New Wish Button */}
           <button
             onClick={onOpenCreate}
             title="New Wish"
