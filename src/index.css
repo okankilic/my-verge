@@ -3,54 +3,57 @@
 /* Theme tokens: light values here, dark overrides below. Plain @theme (not inline)
    so utilities reference the variables and flip with the theme. */
 @theme {
-  --color-ink: #1E1915;        /* text, borders, primary buttons */
+  --color-ink: #16161A;        /* text, borders, primary buttons */
   --color-page: #FFFFFF;       /* page background and nav bars */
-  --color-paper: #FAF7F2;      /* secondary surfaces, text on ink */
+  --color-paper: #F6F6F8;      /* secondary surfaces, text on ink */
   --color-card: #FFFFFF;       /* cards, modals, drawers */
-  --color-paper-deep: #EFEAE1; /* hover and inset tints */
-  --color-warm: #FFF8EE;       /* due / alert tints */
+  --color-paper-deep: #ECECF0; /* hover and inset tints */
+  --color-warm: #FFF4EC;       /* due / alert tints */
   --color-sage-tint: #F0F5F2;
   --color-sage-deep: #2A4333;
-  --color-link: #2C3E50;
+  --color-link: #4B3BC4;
+  --color-accent: #5B3FD9;     /* the Willa violet: brand mark, stars, highlight icons */
 }
 
 @layer base {
   :root {
-    --font-serif: 'Marcellus', Georgia, serif;
-    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-serif: 'Space Grotesk', system-ui, -apple-system, sans-serif; /* display face */
+    --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
     /* Shadow under list items (feed rows, radar cards) */
-    --item-shadow: 0 1px 3px rgb(30 25 21 / 0.12), 0 6px 16px rgb(30 25 21 / 0.12);
+    --item-shadow: 0 1px 2px rgb(22 22 26 / 0.08), 0 4px 14px rgb(22 22 26 / 0.08);
     color-scheme: light;
   }
 
   /* Dark: follows the system unless the user picked Light in Settings */
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --color-ink: #EDE6DB;
-      --color-page: #14110E;
-      --color-paper: #14110E;
-      --color-card: #1F1A16;
-      --color-paper-deep: #2A241F;
-      --color-warm: #2A1F17;
+      --color-ink: #EDEDF2;
+      --color-page: #0E0E11;
+      --color-paper: #0E0E11;
+      --color-card: #18181C;
+      --color-paper-deep: #25252B;
+      --color-warm: #2A1E17;
       --color-sage-tint: #1C2620;
       --color-sage-deep: #B9D3C1;
-      --color-link: #9DB4CC;
+      --color-link: #B3A8FF;
+      --color-accent: #A594F9;
       --item-shadow: 0 1px 3px rgb(0 0 0 / 0.65), 0 6px 18px rgb(0 0 0 / 0.5);
       color-scheme: dark;
     }
   }
 
   :root[data-theme="dark"] {
-    --color-ink: #EDE6DB;
-    --color-page: #14110E;
-    --color-paper: #14110E;
-    --color-card: #1F1A16;
-    --color-paper-deep: #2A241F;
-    --color-warm: #2A1F17;
+    --color-ink: #EDEDF2;
+    --color-page: #0E0E11;
+    --color-paper: #0E0E11;
+    --color-card: #18181C;
+    --color-paper-deep: #25252B;
+    --color-warm: #2A1E17;
     --color-sage-tint: #1C2620;
     --color-sage-deep: #B9D3C1;
-    --color-link: #9DB4CC;
+    --color-link: #B3A8FF;
+    --color-accent: #A594F9;
     --item-shadow: 0 1px 3px rgb(0 0 0 / 0.65), 0 6px 18px rgb(0 0 0 / 0.5);
     color-scheme: dark;
   }
@@ -86,11 +89,9 @@
   font-family: var(--font-mono);
 }
 
-/* Subtle parchment texture feeling */
+/* App background: a plain page (the old dot-grid texture was dropped for Willa's minimal look) */
 .paper-texture {
   background-color: var(--color-page);
-  background-image: radial-gradient(color-mix(in oklab, var(--color-ink) 3%, transparent) 1px, transparent 0);
-  background-size: 24px 24px;
 }
 
 /* Hide scrollbar utility */

@@ -159,6 +159,8 @@ export function normalizeItems<T extends BucketItem>(raw: T[]): BucketItem[] {
       }
     }
     if (item.currency !== undefined && !isCurrencyCode(item.currency)) item.currency = undefined;
+    // A target date now belongs to the Until timeframe, so a wish that has one shows it there
+    if (typeof item.targetDate === 'string' && item.targetDate.trim()) item.priority = 'until';
     // Steps from a hand-edited or damaged backup: keep only well-formed ones
     if (item.steps !== undefined) item.steps = cleanSteps(item.steps);
     if (item.prepSteps !== undefined) item.prepSteps = cleanSteps(item.prepSteps);
@@ -261,13 +263,13 @@ export function saveDefaultCurrency(code: string): void {
 // Web: download the JSON. Native: write it to the cache and open the share sheet (Save to Files, AirDrop, Drive...)
 export async function exportBackup(items: BucketItem[], categories: CategoryDefinition[]): Promise<void> {
   const data = {
-    appName: 'Make It Real',
+    appName: 'Willa',
     exportDate: new Date().toISOString(),
     items,
     categories,
   };
   const json = JSON.stringify(data, null, 2);
-  const fileName = `make-it-real-backup-${new Date().toISOString().split('T')[0]}.json`;
+  const fileName = `willa-backup-${new Date().toISOString().split('T')[0]}.json`;
 
   if (isNative) {
     const { uri } = await Filesystem.writeFile({
@@ -276,7 +278,7 @@ export async function exportBackup(items: BucketItem[], categories: CategoryDefi
       directory: Directory.Cache,
       encoding: Encoding.UTF8,
     });
-    await Share.share({ title: 'Make It Real backup', files: [uri] });
+    await Share.share({ title: 'Willa backup', files: [uri] });
     return;
   }
 

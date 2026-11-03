@@ -2,7 +2,7 @@ import UIKit
 import ImageIO
 import UniformTypeIdentifiers
 
-// Saves a shared link, text or photo for Make It Real (ShareInboxPlugin picks it up when the app comes forward)
+// Saves a shared link, text or photo for Willa (ShareInboxPlugin picks it up when the app comes forward)
 class ShareViewController: UIViewController {
     private let appGroup = "group.com.okankilic.myverge"
     private let maxImagePixels = 1600
@@ -17,7 +17,7 @@ class ShareViewController: UIViewController {
         super.viewDidAppear(animated)
         Task { @MainActor in
             let saved = await saveShare()
-            showConfirmation(saved ? "Saved! Open Make It Real to finish your wish." : "Sorry, that couldn't be saved.")
+            showConfirmation(saved ? "Saved! Open Willa to finish your wish." : "Sorry, that couldn't be saved.")
         }
     }
 

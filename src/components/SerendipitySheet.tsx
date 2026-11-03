@@ -61,7 +61,7 @@ export const SerendipitySheet: React.FC<SerendipitySheetProps> = ({
         </button>
 
         <div className="text-center mb-5">
-          <div className="w-12 h-12 bg-[#B45309]/15 text-[#B45309] rounded-2xl mx-auto flex items-center justify-center mb-3">
+          <div className="w-12 h-12 bg-accent/15 text-accent rounded-2xl mx-auto flex items-center justify-center mb-3">
             <Dices
               className={`w-6 h-6 stroke-[2] transition-transform ${
                 isRolling ? 'animate-spin' : ''

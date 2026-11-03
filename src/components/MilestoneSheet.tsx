@@ -51,7 +51,7 @@ export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
             <Trophy className="w-6 h-6 stroke-[2]" />
           </div>
           <h2 id="milestone-title" className="font-serif-journal text-2xl font-semibold text-ink">
-            You made it real
+            Wish done!
           </h2>
           <p className="text-xs text-ink/70 mt-1 max-w-xs mx-auto">
             Look what you did:
@@ -75,11 +75,11 @@ export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
                   key={star}
                   onClick={() => setRating(star)}
                   aria-label={`${star} star${star === 1 ? '' : 's'}`}
-                  className="min-w-[44px] min-h-[44px] flex items-center justify-center text-ink/20 hover:text-[#B45309] transition-colors"
+                  className="min-w-[44px] min-h-[44px] flex items-center justify-center text-ink/20 hover:text-accent transition-colors"
                 >
                   <Star
                     className={`w-6 h-6 ${
-                      star <= rating ? 'text-[#B45309] fill-[#B45309]' : 'text-ink/20'
+                      star <= rating ? 'text-accent fill-accent' : 'text-ink/20'
                     }`}
                   />
                 </button>

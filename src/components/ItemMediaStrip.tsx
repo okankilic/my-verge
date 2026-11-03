@@ -50,9 +50,9 @@ export const ItemMediaStrip: React.FC<ItemMediaStripProps> = ({ photos, photoNot
             className="max-w-[14rem] min-h-[44px] px-2.5 py-1.5 flex items-center gap-1.5 text-left text-[11px] text-ink/75 bg-paper border border-ink/10 rounded-md hover:border-ink/25 hover:text-ink transition-colors"
           >
             {att.mimeType === 'application/pdf' ? (
-              <FileText className="w-3 h-3 mt-px shrink-0 text-[#B45309]" />
+              <FileText className="w-3 h-3 mt-px shrink-0 text-accent" />
             ) : (
-              <Video className="w-3 h-3 mt-px shrink-0 text-[#B45309]" />
+              <Video className="w-3 h-3 mt-px shrink-0 text-accent" />
             )}
             <span className="min-w-0">
               <span className="block truncate">{att.name}</span>

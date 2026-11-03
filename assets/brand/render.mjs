@@ -1,20 +1,19 @@
-// Renders the Make It Real brand SVGs (assets/brand/*.svg) and the PNG masters that
+// Renders the Willa brand SVGs (assets/brand/*.svg) and the PNG masters that
 // @capacitor/assets turns into native icons and splash screens.
 // Run from the repo root: node assets/brand/render.mjs && npx capacitor-assets generate --android --ios
 import { writeFileSync } from 'node:fs';
 import sharp from 'sharp';
 
-const INK = '#1E1915';
-const NIGHT = '#14110E';
-const PAPER = '#FAF7F2';
-const AMBER = '#D97706';
+const INK = '#16161A';
+const NIGHT = '#0E0E11';
+const PAPER = '#F6F6F8';
+const ACCENT = '#5B3FD9';
 
-// The mark on a 100×100 grid: a ring (the wish) whose inside is filling with
-// amber from the bottom (the wish becoming real)
+// The mark on a 100×100 grid: a monoline W (the path) with a violet dot over
+// its middle peak (the wish riding on it). TopNav.tsx inlines the same shapes.
 const mark = (fg) =>
-  `<defs><clipPath id="mir-fill"><circle cx="50" cy="50" r="28"/></clipPath></defs>` +
-  `<rect x="0" y="42" width="100" height="58" fill="${AMBER}" clip-path="url(#mir-fill)"/>` +
-  `<circle cx="50" cy="50" r="28" stroke="${fg}" stroke-width="8" fill="none"/>`;
+  `<polyline points="22,40 36,72 50,46 64,72 78,40" stroke="${fg}" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none"/>` +
+  `<circle cx="50" cy="27" r="6.5" fill="${ACCENT}"/>`;
 
 // Places the 100-unit mark at `scale` px per unit, centred on a `size` canvas
 const svg = (size, scale, fg, bg, radius = 0) => {

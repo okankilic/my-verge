@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   X,
   Bell,
-  MapPin,
   DollarSign,
   Link as LinkIcon,
 } from 'lucide-react';
@@ -164,8 +163,9 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       categoryId,
       title: title.trim(),
       description: description.trim(),
-      priority,
-      targetDate: targetDate || undefined,
+      // Until needs its date; without one the wish falls back to This year
+      priority: priority === 'until' && !targetDate ? 'this_year' : priority,
+      targetDate: priority === 'until' ? targetDate || undefined : undefined,
       // Photos are added on the Now card, so an edit leaves them alone; a shared image becomes the cover
       ...(editingItem ? {} : { photos: draft?.photos ?? [] }),
       linkUrl: linkUrl.trim() || undefined,
@@ -344,6 +344,67 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             </div>
           </div>
 
+          {/* Step 3: When, plus its date for Until */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="item-priority" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
+                When
+              </label>
+              <select
+                id="item-priority"
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as PriorityLevel)}
+                className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
+              >
+                <option value="urgent">Urgent</option>
+                <option value="this_month">This month</option>
+                <option value="this_year">This year</option>
+                <option value="someday">Someday</option>
+                <option value="until">Until</option>
+              </select>
+            </div>
+
+            {priority === 'until' && (
+            <div>
+              <label htmlFor="item-target-date" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
+                Target date
+              </label>
+              <input
+                id="item-target-date"
+                type="date"
+                value={targetDate}
+                onChange={(e) => setTargetDate(e.target.value)}
+                className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
+              />
+            </div>
+            )}
+          </div>
+
+          {/* Step 4: Where */}
+          <div>
+            <label htmlFor="item-place" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
+              Where
+            </label>
+            <div className="space-y-2">
+              <input
+                id="item-place"
+                type="text"
+                value={locationName}
+                onChange={(e) => setLocationName(e.target.value)}
+                placeholder="Place or venue name"
+                className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
+              />
+              <input
+                type="text"
+                value={locationCity}
+                onChange={(e) => setLocationCity(e.target.value)}
+                placeholder="City, Country"
+                aria-label="City or country"
+                className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
+              />
+            </div>
+          </div>
+
           <StepList
             kind="prep"
             steps={prepSteps}
@@ -363,45 +424,12 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             onDraftChange={setStepDraft}
           />
 
-          {/* Step 3: Priority & Target Date */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="item-priority" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
-                When
-              </label>
-              <select
-                id="item-priority"
-                value={priority}
-                onChange={(e) => setPriority(e.target.value as PriorityLevel)}
-                className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
-              >
-                <option value="urgent">Urgent</option>
-                <option value="this_month">This month</option>
-                <option value="this_year">This year</option>
-                <option value="someday">Someday</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="item-target-date" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
-                Target date
-              </label>
-              <input
-                id="item-target-date"
-                type="date"
-                value={targetDate}
-                onChange={(e) => setTargetDate(e.target.value)}
-                className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
-              />
-            </div>
-          </div>
-
-          {/* Step 4: Scheduled Reminders Engine */}
+          {/* Step 5: Scheduled Reminders Engine */}
           <div className="p-4 rounded-2xl bg-card border border-ink/10 space-y-3">
             {/* The whole row toggles, so the tap target is the full width */}
             <label htmlFor="enableReminder" className="min-h-[44px] flex items-center justify-between cursor-pointer">
               <span className="flex items-center gap-2">
-                <Bell className="w-4 h-4 text-[#B45309]" />
+                <Bell className="w-4 h-4 text-accent" />
                 <span className="text-xs font-semibold uppercase tracking-wider text-ink">
                   Reminder
                 </span>
@@ -451,33 +479,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             )}
           </div>
 
-          {/* Step 5: Location & Budget Fields */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Location */}
-            <div className="p-3.5 bg-card rounded-2xl border border-ink/10 space-y-2">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-ink">
-                <MapPin className="w-3.5 h-3.5 text-[#B45309]" />
-                <span>Place</span>
-              </div>
-              <input
-                type="text"
-                value={locationName}
-                onChange={(e) => setLocationName(e.target.value)}
-                placeholder="Place or venue name"
-                aria-label="Place name"
-                className="w-full min-h-[44px] px-2.5 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
-              />
-              <input
-                type="text"
-                value={locationCity}
-                onChange={(e) => setLocationCity(e.target.value)}
-                placeholder="City, Country"
-                aria-label="City or country"
-                className="w-full min-h-[44px] px-2.5 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
-              />
-            </div>
-
-            {/* Budget */}
+          {/* Step 6: Budget */}
+          <div>
             <div className="p-3.5 bg-card rounded-2xl border border-ink/10 space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-ink">

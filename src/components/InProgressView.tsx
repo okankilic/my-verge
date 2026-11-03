@@ -100,7 +100,7 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
                 )}
                 {item.location?.name && (
                   <span className="flex items-center gap-1 min-w-0">
-                    <MapPin className="w-3 h-3 text-[#B45309] shrink-0" />
+                    <MapPin className="w-3 h-3 text-accent shrink-0" />
                     <span className="truncate">
                       {item.location.name}
                       {item.location.cityOrCountry ? `, ${item.location.cityOrCountry}` : ''}

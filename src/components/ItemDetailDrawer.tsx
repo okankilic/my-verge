@@ -23,7 +23,7 @@ import {
   Star,
   Share2,
 } from 'lucide-react';
-import { BucketItem, CategoryDefinition, StepListKey } from '../types';
+import { BucketItem, CategoryDefinition, PriorityLevel, StepListKey } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
 import { externalLinkProps } from '../services/platform';
 import { shareItem } from '../services/shareOut';
@@ -34,6 +34,14 @@ import { ItemMediaStrip } from './ItemMediaStrip';
 import { StepList } from './StepList';
 import { ExpenseList } from './ExpenseList';
 import { expenseTotal, formatMoney, wishCurrency } from '../utils/expenses';
+
+const WHEN_LABELS: Record<PriorityLevel, string> = {
+  urgent: 'Urgent',
+  this_month: 'This month',
+  this_year: 'This year',
+  someday: 'Someday',
+  until: 'Until',
+};
 
 interface ItemDetailDrawerProps {
   item: BucketItem | null;
@@ -98,8 +106,12 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
         })
       : null;
 
-  const formattedTargetDate = item.targetDate
-    ? new Date(item.targetDate).toLocaleDateString(undefined, {
+  // A date-only value is read as local midnight, so it shows the picked day in every time zone
+  const targetDay = item.targetDate
+    ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(item.targetDate) ? `${item.targetDate}T00:00` : item.targetDate)
+    : null;
+  const formattedTargetDate = targetDay
+    ? targetDay.toLocaleDateString(undefined, {
         weekday: 'long',
         month: 'long',
         day: 'numeric',
@@ -126,7 +138,11 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               <span>{categoryDef?.verb || item.categoryId}</span>
             </span>
             <span aria-hidden="true">·</span>
-            <span className="capitalize">{item.priority.replace('_', ' ')}</span>
+            <span>
+              {item.priority === 'until' && targetDay
+                ? `Until ${targetDay.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
+                : WHEN_LABELS[item.priority] ?? item.priority}
+            </span>
           </div>
 
           <button
@@ -230,7 +246,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
           {/* Target Date */}
           {formattedTargetDate && (
             <div className="flex items-center gap-2 text-xs text-ink/70">
-              <Calendar className="w-4 h-4 text-[#B45309]" />
+              <Calendar className="w-4 h-4 text-accent" />
               <span>Target timeline: {formattedTargetDate}</span>
             </div>
           )}
@@ -239,7 +255,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
           {item.location && item.location.name && (
             <div className="p-3.5 bg-card rounded-xl border border-ink/10 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
-                <MapPin className="w-4 h-4 text-[#B45309] shrink-0" />
+                <MapPin className="w-4 h-4 text-accent shrink-0" />
                 <div className="truncate">
                   <span className="text-xs font-semibold text-ink block truncate">
                     {item.location.name}
@@ -327,7 +343,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-xs font-semibold">
-                  <Bell className="w-4 h-4 text-[#B45309]" />
+                  <Bell className="w-4 h-4 text-accent" />
                   <span>
                     {isReminderDue
                       ? 'Alert Due Right Now!'
@@ -382,7 +398,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
                     aria-label={`Rated ${item.completionRating} of 5`}
                   >
                     {Array.from({ length: item.completionRating! }, (_, n) => (
-                      <Star key={n} className="w-3 h-3 text-[#B45309] fill-[#B45309]" />
+                      <Star key={n} className="w-3 h-3 text-accent fill-accent" />
                     ))}
                   </span>
                 )}

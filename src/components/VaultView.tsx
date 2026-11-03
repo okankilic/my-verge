@@ -454,7 +454,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
                           aria-label={`Rated ${item.completionRating} of 5`}
                         >
                           {Array.from({ length: item.completionRating }, (_, n) => (
-                            <Star key={n} className="w-3 h-3 text-[#B45309] fill-[#B45309]" />
+                            <Star key={n} className="w-3 h-3 text-accent fill-accent" />
                           ))}
                         </span>
                       ) : null}

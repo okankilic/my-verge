@@ -121,7 +121,7 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
                             </div>
 
                             {(item.completionRating ?? 0) > 0 && (
-                              <div className="flex items-center gap-0.5 text-[#B45309]">
+                              <div className="flex items-center gap-0.5 text-accent">
                                 {Array.from({ length: item.completionRating! }).map((_, i) => (
                                   <Star key={i} className="w-3 h-3 fill-current" />
                                 ))}

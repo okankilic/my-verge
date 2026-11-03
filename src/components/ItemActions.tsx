@@ -162,7 +162,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
             }}
             title="Take a photo or video"
             aria-label="Take a photo or video"
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/60 hover:text-[#B45309] hover:bg-paper transition-colors"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/60 hover:text-accent hover:bg-paper transition-colors"
           >
             <Camera className="w-3.5 h-3.5" />
           </button>
@@ -190,7 +190,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
             }}
             title="Add image, video or PDF"
             aria-label="Add image, video or PDF"
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/60 hover:text-[#B45309] hover:bg-paper transition-colors"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/60 hover:text-accent hover:bg-paper transition-colors"
           >
             <Paperclip className="w-3.5 h-3.5" />
           </button>

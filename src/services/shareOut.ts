@@ -10,7 +10,7 @@ function shareText(item: BucketItem, category?: CategoryDefinition): { title: st
   const lines: string[] = [];
   if (item.status === 'completed') {
     const stars = (item.completionRating ?? 0) > 0 ? ` ${'★'.repeat(item.completionRating!)}` : '';
-    lines.push(`I made it real: ${title}${stars}`);
+    lines.push(`Done with Willa: ${title}${stars}`);
     if (item.completionReflection) lines.push(`“${item.completionReflection}”`);
   } else {
     lines.push(title);
@@ -45,7 +45,7 @@ async function coverBlob(item: BucketItem): Promise<Blob | null> {
 
 function coverFileName(blob: Blob): string {
   const ext = blob.type === 'image/png' ? 'png' : blob.type === 'image/webp' ? 'webp' : 'jpg';
-  return `make-it-real-wish.${ext}`;
+  return `willa-wish.${ext}`;
 }
 
 const isCancel = (err: unknown) =>

@@ -231,7 +231,7 @@ export const ReminderRadarView: React.FC<ReminderRadarViewProps> = ({
                     item,
                     'due',
                     <>
-                      <span className="font-mono font-medium text-[#B45309]">{formatReminderDate(item)}</span>
+                      <span className="font-mono font-medium text-accent">{formatReminderDate(item)}</span>
                       <span className="font-semibold text-[#C05621]"> · Due now</span>
                     </>,
                     <div className="flex items-center gap-1.5">
@@ -261,7 +261,7 @@ export const ReminderRadarView: React.FC<ReminderRadarViewProps> = ({
                     item,
                     'scheduled',
                     <>
-                      <span className="font-mono font-medium text-[#B45309]">
+                      <span className="font-mono font-medium text-accent">
                         {reminderDate(item).toLocaleTimeString(undefined, {
                           hour: 'numeric',
                           minute: '2-digit',

@@ -47,30 +47,25 @@ export const TopNav: React.FC<TopNavProps> = ({
             onClick={() => onTabChange('inprogress')}
             className="text-left group focus-visible:outline-none flex items-center gap-2.5"
           >
-            {/* Make It Real mark: a ring (the wish) filling with amber (becoming real); source in assets/brand/render.mjs */}
+            {/* Willa mark: a monoline W (the path) with a violet dot over its middle peak (the wish); source in assets/brand/render.mjs */}
             <svg viewBox="0 0 100 100" className="w-8 h-8 sm:w-9 sm:h-9 shrink-0" aria-hidden="true">
-              <defs>
-                <clipPath id="mir-fill">
-                  <circle cx="50" cy="50" r="28" />
-                </clipPath>
-              </defs>
-              <rect x="0" y="42" width="100" height="58" fill="#D97706" clipPath="url(#mir-fill)" />
-              <circle
-                cx="50"
-                cy="50"
-                r="28"
+              <polyline
+                points="22,40 36,72 50,46 64,72 78,40"
                 stroke="currentColor"
-                strokeWidth="8"
+                strokeWidth="9"
+                strokeLinecap="round"
+                strokeLinejoin="round"
                 fill="none"
                 className="text-ink"
               />
+              <circle cx="50" cy="27" r="6.5" className="fill-accent" />
             </svg>
             <span className="flex flex-col justify-center">
-              <span className="font-serif-journal text-xl sm:text-2xl font-semibold tracking-tight text-ink group-hover:text-[#B45309] transition-colors leading-tight">
-                Make It Real
+              <span className="font-serif-journal text-xl sm:text-2xl font-bold tracking-tight text-ink group-hover:text-accent transition-colors leading-tight">
+                Willa
               </span>
               <span className="text-[10px] sm:text-[11px] font-sans tracking-tight text-ink/55 leading-tight mt-0.5">
-                Start with a wish
+                From wish to done
               </span>
             </span>
           </button>
@@ -174,7 +169,7 @@ export const TopNav: React.FC<TopNavProps> = ({
               aria-label="Roll for today's bucket inspiration"
               className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-lg bg-card border border-ink/15 text-ink/80 hover:bg-paper hover:border-ink/30 transition-all"
             >
-              <Dices className="w-4 h-4 text-[#B45309]" />
+              <Dices className="w-4 h-4 text-accent" />
             </button>
           )}
 

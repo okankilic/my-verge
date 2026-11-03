@@ -7,7 +7,7 @@ export const INITIAL_ITEMS: BucketItem[] = [
     categoryId: 'go',
     title: 'Wander Arashiyama Bamboo Grove & Saiho-ji Moss Temple',
     description: 'Walk the moss-covered stone paths in the quiet morning mist of Kyoto. Attend the early sutra transcription chant before exploring the stone gardens.',
-    priority: 'this_year',
+    priority: 'until',
     targetDate: '2026-11-15',
     location: {
       name: 'Saiho-ji & Arashiyama',
@@ -35,7 +35,7 @@ export const INITIAL_ITEMS: BucketItem[] = [
     categoryId: 'read',
     title: 'Invisible Cities by Italo Calvino',
     description: 'Reflective dialogues between Marco Polo and Kublai Khan about cities of memory, desire, and signs. Read with a fountain pen in a sunlit corner.',
-    priority: 'this_month',
+    priority: 'until',
     targetDate: '2026-11-05',
     mediaMeta: {
       authorOrCreator: 'Italo Calvino',
@@ -59,7 +59,7 @@ export const INITIAL_ITEMS: BucketItem[] = [
     categoryId: 'buy',
     title: 'Wood-Fired Stoneware Teapot & Ceramic Cups',
     description: 'An artisanal wood-fired kyusu teapot with natural wood-ash glaze from an independent potter. An everyday ritual instrument for loose-leaf gyokuro.',
-    priority: 'this_month',
+    priority: 'until',
     targetDate: '2026-12-10',
     budget: {
       estimatedCost: 260,
@@ -83,7 +83,7 @@ export const INITIAL_ITEMS: BucketItem[] = [
     categoryId: 'watch',
     title: 'Cinema Paradiso & Stalker in 35mm Restoration',
     description: 'Screen Giuseppe Tornatore’s love letter to moving images at an independent cinema with original auditorium projection acoustics.',
-    priority: 'this_month',
+    priority: 'until',
     targetDate: '2026-11-20',
     mediaMeta: {
       authorOrCreator: 'Giuseppe Tornatore / Andrei Tarkovsky',
@@ -105,7 +105,7 @@ export const INITIAL_ITEMS: BucketItem[] = [
     categoryId: 'make',
     title: 'Hand-bind a bespoke linen hardcover journal',
     description: 'Learn Coptic stitch bookbinding, trim 120gsm cold-press rag cotton paper signatures, and case-bind with bookcloth spine.',
-    priority: 'this_year',
+    priority: 'until',
     targetDate: '2026-12-28',
     budget: {
       estimatedCost: 75,

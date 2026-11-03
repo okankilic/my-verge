@@ -121,7 +121,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     try {
       parsed = JSON.parse(await file.text());
     } catch {
-      notify("That file couldn't be read. Is it a Make It Real backup?", 'error');
+      notify("That file couldn't be read. Is it a Willa backup?", 'error');
       return;
     }
 
@@ -137,7 +137,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         )
       : [];
     if (importedItems.length === 0) {
-      notify("That doesn't look like a Make It Real backup.", 'error');
+      notify("That doesn't look like a Willa backup.", 'error');
       return;
     }
     const importedCategories =
@@ -339,7 +339,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               onClick={() => playChimeSound()}
               className="min-h-[44px] px-3.5 py-1.5 text-xs font-medium border border-ink/20 rounded-xl hover:bg-paper flex items-center gap-1.5 shrink-0"
             >
-              <Volume2 className="w-3.5 h-3.5 text-[#B45309]" />
+              <Volume2 className="w-3.5 h-3.5 text-accent" />
               <span>Test</span>
             </button>
           </div>

@@ -7,7 +7,7 @@ import { stepProgress } from '../utils/steps';
 type StepKind = 'step' | 'prep';
 
 const KIND_TEXT: Record<StepKind, { heading: string; placeholder: string; noun: string }> = {
-  step: { heading: 'Steps', placeholder: 'Add a step', noun: 'step' },
+  step: { heading: 'Along the way', placeholder: 'Add something to do', noun: 'step' },
   prep: { heading: 'Before you start', placeholder: 'Add something to prep', noun: 'prep item' },
 };
 
@@ -19,7 +19,7 @@ interface StepListProps {
   onRemove?: (stepId: string) => void;
   // Rows only, for cards that open on tap: no header, adding or removing
   compact?: boolean;
-  // Lets the parent own the "Add a step" text, e.g. so the form's Save can add it
+  // Lets the parent own the add-field text, e.g. so the form's Save can add it
   draft?: string;
   onDraftChange?: (draft: string) => void;
 }

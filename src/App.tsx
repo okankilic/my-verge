@@ -209,7 +209,7 @@ export default function App() {
       setActiveToastItem(firstDue);
       playChimeSound();
       sendBrowserNotification(
-        `Make It Real: ${firstDue.title}`,
+        `Willa: ${firstDue.title}`,
         `Reminder for your bucket list wish: ${firstDue.title}`
       );
       const nowIso = new Date().toISOString();
@@ -319,7 +319,7 @@ export default function App() {
           particleCount: 50,
           spread: 60,
           origin: { y: 0.7 },
-          colors: ['#4A6B56', '#B45309', '#1E1915', '#F5E6D3'],
+          colors: ['#5B3FD9', '#A594F9', '#16161A', '#ECECF0'],
         });
       } catch (err) {
         // graceful
@@ -732,7 +732,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen paper-texture flex flex-col selection:bg-[#B45309]/20 selection:text-ink">
+    <div className="min-h-screen paper-texture flex flex-col selection:bg-accent/20 selection:text-ink">
       {/* Top Application Navigation */}
       <TopNav
         currentTab={currentTab}
