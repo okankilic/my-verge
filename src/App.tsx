@@ -48,12 +48,13 @@ import { formatMoney, newExpense, stampCurrency, wishCurrency } from './utils/ex
 
 import { TopNav } from './components/TopNav';
 import { BottomTabBar } from './components/BottomTabBar';
+import { FloatingActions } from './components/FloatingActions';
 import { CategoryRibbon } from './components/CategoryRibbon';
 import { JournalList } from './components/JournalList';
 import { ItemDetailDrawer } from './components/ItemDetailDrawer';
 import { ItemFormDrawer } from './components/ItemFormDrawer';
 import { MilestoneSheet } from './components/MilestoneSheet';
-import { ReminderRadarView } from './components/ReminderRadarView';
+import { ReminderHorizonView } from './components/ReminderHorizonView';
 import { VaultView, isInVault, vaultDate } from './components/VaultView';
 import { TimeRange, earlierYears, isInRange } from './utils/timeRange';
 import { MilestonesArchiveView } from './components/MilestonesArchiveView';
@@ -73,7 +74,7 @@ export default function App() {
   const [loadAttempt, setLoadAttempt] = useState(0);
   // The stored wishes couldn't be understood and were set aside; tell the user once the app is up
   const keptItemsCopyRef = useRef(false);
-  const [currentTab, setCurrentTab] = useState<ViewTab>('inprogress');
+  const [currentTab, setCurrentTab] = useState<ViewTab>('feed');
   // Each tab keeps its own category pick
   const [categoryByTab, setCategoryByTab] = useState<Partial<Record<ViewTab, string>>>({});
   const selectedCategoryId = categoryByTab[currentTab] ?? 'all';
@@ -83,6 +84,8 @@ export default function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   // The Vault's time filter, in memory only like the category picks
   const [vaultRange, setVaultRange] = useState<TimeRange>('all');
+  // The wish just started, scrolled to and highlighted on Now
+  const [focusedNowId, setFocusedNowId] = useState<string | null>(null);
 
   // Sheets
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -229,7 +232,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, [items, isHydrated]);
 
-  // Overdue and due count for radar badge
+  // Overdue and due count for horizon badge
   const dueRemindersCount = useMemo(() => {
     return getDueReminderItems(items).length;
   }, [items]);
@@ -392,12 +395,30 @@ export default function App() {
     const prepLeft = stepProgress(item.prepSteps);
     const leftCount = prepLeft.total - prepLeft.done;
     const prepNote = leftCount > 0 ? ` ${leftCount} prep ${leftCount === 1 ? 'item' : 'items'} to go.` : '';
+    const isStarting = !item.startedAt;
+    const fromTab = currentTab;
     notifyUndo(
       item.startedAt ? `Paused "${item.title}". It's back in your Journal.` : `"${item.title}" is on Now. Enjoy!${prepNote}`,
-      () => patchItem(item.id, previous)
+      () => {
+        patchItem(item.id, previous);
+        if (isStarting && fromTab !== 'inprogress') {
+          setCurrentTab((tab) => (tab === 'inprogress' ? fromTab : tab));
+        }
+      }
     );
     const nowIso = new Date().toISOString();
     const startedAt = item.startedAt ? undefined : nowIso;
+
+    if (isStarting) {
+      // Take the user to the wish they just started
+      setCurrentTab('inprogress');
+      setCategoryByTab((prev) => {
+        const pick = prev.inprogress;
+        return pick && pick !== 'all' && pick !== item.categoryId ? { ...prev, inprogress: undefined } : prev;
+      });
+      setViewingItem((prev) => (prev?.id === item.id ? null : prev));
+      setFocusedNowId(item.id);
+    }
 
     setItems((prev) =>
       prev.map((i) =>
@@ -741,13 +762,9 @@ export default function App() {
         isMobileFrame={isMobileFrame}
         showMobileFrameToggle={!isNative}
         onToggleMobileFrame={() => setIsMobileFrame(!isMobileFrame)}
-        onOpenCreate={() => {
-          setEditingItem(null);
-          setIsFormOpen(true);
-        }}
         onOpenSerendipity={() => setIsSerendipityOpen(true)}
         isSearchOpen={isSearchOpen}
-        onToggleSearch={handleToggleSearch}
+        onCloseSearch={handleToggleSearch}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />
@@ -874,9 +891,9 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 2: REMINDER RADAR */}
+          {/* TAB 2: REMINDER HORIZON */}
           {currentTab === 'reminders' && (
-            <ReminderRadarView
+            <ReminderHorizonView
               items={filteredItems}
               categories={categories}
               onSnooze={handleSnooze}
@@ -901,6 +918,8 @@ export default function App() {
               onAddAttachment={handleAddAttachment}
               onToggleStep={handleToggleStep}
               onAddExpense={handleAddExpense}
+              focusId={focusedNowId}
+              onFocusDone={() => setFocusedNowId(null)}
             />
           )}
 
@@ -959,22 +978,26 @@ export default function App() {
             />
           )}
 
-          {/* Bottom spacer: keeps content clear of the mobile tab bar */}
-          <div aria-hidden className="pb-16 md:pb-4" />
+          {/* Bottom spacer: keeps content clear of the mobile tab bar and the floating Search/New buttons */}
+          <div aria-hidden className="pb-36 md:pb-24" />
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation Bar */}
-      <BottomTabBar
-        currentTab={currentTab}
-        onTabChange={setCurrentTab}
-        activeRemindersCount={dueRemindersCount}
+      {/* Floating Search and New, on every width */}
+      <FloatingActions
         onOpenCreate={() => {
           setEditingItem(null);
           setIsFormOpen(true);
         }}
         isSearchOpen={isSearchOpen}
         onToggleSearch={handleToggleSearch}
+      />
+
+      {/* Mobile Bottom Navigation Bar */}
+      <BottomTabBar
+        currentTab={currentTab}
+        onTabChange={setCurrentTab}
+        activeRemindersCount={dueRemindersCount}
       />
 
       {/* Item Detail Sheet (Tap-to-Inspect) */}

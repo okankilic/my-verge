@@ -1,5 +1,5 @@
 import React from 'react';
-import { Smartphone, Monitor, Dices, Plus, Film, Settings, Hourglass, Search, X } from 'lucide-react';
+import { Smartphone, Monitor, Dices, Film, Settings, Hourglass } from 'lucide-react';
 import { ViewTab } from '../types';
 import { SearchBar } from './SearchBar';
 
@@ -13,10 +13,9 @@ interface TopNavProps {
   isMobileFrame: boolean;
   showMobileFrameToggle: boolean;
   onToggleMobileFrame: () => void;
-  onOpenCreate: () => void;
   onOpenSerendipity: () => void;
   isSearchOpen: boolean;
-  onToggleSearch: () => void;
+  onCloseSearch: () => void;
   searchQuery: string;
   onSearchChange: (q: string) => void;
 }
@@ -28,10 +27,9 @@ export const TopNav: React.FC<TopNavProps> = ({
   isMobileFrame,
   showMobileFrameToggle,
   onToggleMobileFrame,
-  onOpenCreate,
   onOpenSerendipity,
   isSearchOpen,
-  onToggleSearch,
+  onCloseSearch,
   searchQuery,
   onSearchChange,
 }) => {
@@ -44,7 +42,7 @@ export const TopNav: React.FC<TopNavProps> = ({
         {/* Zone 1: Brand Wordmark with Marcellus editorial typography & slogan */}
         <div className="flex items-center gap-3 shrink-0">
           <button
-            onClick={() => onTabChange('inprogress')}
+            onClick={() => onTabChange('feed')}
             className="text-left group focus-visible:outline-none flex items-center gap-2.5"
           >
             {/* Willa mark: a monoline W (the path) with a violet dot over its middle peak (the wish); source in assets/brand/render.mjs */}
@@ -102,7 +100,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                 : 'border-transparent hover:text-ink'
             }`}
           >
-            <span>Radar</span>
+            <span>Horizon</span>
             {activeRemindersCount > 0 && (
               <span className="font-mono text-xs px-1.5 py-0.2 bg-[#C05621] text-white rounded-full font-bold">
                 {activeRemindersCount}
@@ -144,23 +142,8 @@ export const TopNav: React.FC<TopNavProps> = ({
           </button>
         </nav>
 
-        {/* Zone 3: Action Buttons at Top (Search, Add). On phones Search and Add live in the bottom dock */}
+        {/* Zone 3: extra actions. Search and New float at the bottom-right (FloatingActions) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Global Search Toggle */}
-          <button
-            onClick={onToggleSearch}
-            title={isSearchOpen ? 'Close search' : 'Search'}
-            aria-label={isSearchOpen ? 'Close search' : 'Search'}
-            aria-pressed={isSearchOpen}
-            className={`hidden md:flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border transition-all ${
-              isSearchOpen
-                ? 'bg-paper border-ink/40 text-ink'
-                : 'bg-card border-ink/15 text-ink/80 hover:bg-paper hover:border-ink/30'
-            }`}
-          >
-            {isSearchOpen ? <X className="w-4 h-4" /> : <Search className="w-4 h-4" />}
-          </button>
-
           {/* Serendipity Inspire Roll Button (hidden for now) */}
           {SHOW_SERENDIPITY && (
             <button
@@ -172,16 +155,6 @@ export const TopNav: React.FC<TopNavProps> = ({
               <Dices className="w-4 h-4 text-accent" />
             </button>
           )}
-
-          {/* New Wish Button */}
-          <button
-            onClick={onOpenCreate}
-            title="New Wish"
-            aria-label="New Wish"
-            className="hidden md:flex min-h-[44px] min-w-[44px] items-center justify-center bg-ink text-paper rounded-lg shadow-sm hover:bg-ink/85 active:scale-95 transition-all focus-visible:outline-none"
-          >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-          </button>
 
           {/* Desktop Mobile Frame Preview Toggle (web only; pointless inside the native app) */}
           {showMobileFrameToggle && (
@@ -197,7 +170,7 @@ export const TopNav: React.FC<TopNavProps> = ({
       </div>
 
       {isSearchOpen && (
-        <SearchBar value={searchQuery} onChange={onSearchChange} onClose={onToggleSearch} />
+        <SearchBar value={searchQuery} onChange={onSearchChange} onClose={onCloseSearch} />
       )}
     </header>
   );

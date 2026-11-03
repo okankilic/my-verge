@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Hourglass, MapPin, Play } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
@@ -18,7 +18,12 @@ interface InProgressViewProps {
   onAddAttachment: (item: BucketItem, file: File, note?: string) => void;
   onToggleStep: (item: BucketItem, stepId: string) => void;
   onAddExpense: (item: BucketItem, amount: number, note?: string) => void;
+  // A wish that was just started: scrolled into view, focused and briefly highlighted
+  focusId?: string | null;
+  onFocusDone?: () => void;
 }
+
+const FOCUS_HIGHLIGHT_MS = 1600;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -33,7 +38,24 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
   onAddAttachment,
   onToggleStep,
   onAddExpense,
+  focusId,
+  onFocusDone,
 }) => {
+  const cardRefs = useRef(new Map<string, HTMLElement>());
+  const hasFocusTarget = !!focusId && items.some((i) => i.id === focusId);
+
+  useEffect(() => {
+    if (!focusId) return;
+    const el = cardRefs.current.get(focusId);
+    if (el) {
+      el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      el.focus({ preventScroll: true });
+    }
+    const timer = window.setTimeout(() => onFocusDone?.(), FOCUS_HIGHLIGHT_MS);
+    return () => window.clearTimeout(timer);
+    // Runs once the card is on screen; onFocusDone changes every render
+  }, [focusId, hasFocusTarget]);
+
   if (items.length === 0) {
     return (
       <div className="p-12 text-center bg-card border border-ink/10 rounded-2xl">
@@ -63,8 +85,16 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
         return (
           <article
             key={item.id}
+            ref={(el) => {
+              if (el) cardRefs.current.set(item.id, el);
+              else cardRefs.current.delete(item.id);
+            }}
+            tabIndex={-1}
+            data-item-id={item.id}
             onClick={() => onSelect(item)}
-            className="bg-card border border-ink/12 rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3 space-y-1 cursor-pointer shadow-[var(--item-shadow)] hover:border-ink/25 transition-all duration-150"
+            className={`bg-card border rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3 space-y-1 cursor-pointer shadow-[var(--item-shadow)] hover:border-ink/25 transition-all duration-300 focus:outline-none ${
+              item.id === focusId ? 'border-accent/50 ring-2 ring-accent/60' : 'border-ink/12'
+            }`}
           >
             {/* Category | Icon (same as ItemRow) */}
             <div className="flex items-center gap-1.5">

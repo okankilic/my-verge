@@ -11,7 +11,7 @@ import {
 } from '../services/notifications';
 import { ItemActions } from './ItemActions';
 
-interface ReminderRadarViewProps {
+interface ReminderHorizonViewProps {
   items: BucketItem[];
   categories: CategoryDefinition[];
   onSnooze: (item: BucketItem, days: number) => void;
@@ -22,7 +22,7 @@ interface ReminderRadarViewProps {
   onNotificationsEnabled: () => void;
 }
 
-export const ReminderRadarView: React.FC<ReminderRadarViewProps> = ({
+export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
   items,
   categories,
   onSnooze,

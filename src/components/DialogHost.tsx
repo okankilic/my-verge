@@ -43,14 +43,14 @@ export const DialogHost: React.FC = () => {
   if (notices.length === 0) return null;
 
   return (
-    // Mobile: above the bottom tab bar; desktop: bottom right. While a sheet is open they move clear of its
-    // footer buttons: to the top on phones, to the left of the side drawer from sm:
+    // Mobile: above the bottom tab bar; from sm: bottom left, clear of the floating Search/New buttons. While a
+    // sheet is open they move clear of its footer buttons: to the top on phones, to the left of the side drawer from sm:
     <div
       aria-live="polite"
       className={`fixed inset-x-3 sm:inset-x-auto sm:w-96 z-[70] flex flex-col gap-2 ${
         isSheetOpen
           ? 'top-[calc(env(safe-area-inset-top)+0.75rem)] sm:top-auto sm:bottom-6 sm:left-6'
-          : 'bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-6 sm:right-6'
+          : 'bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-6 sm:left-6'
       }`}
     >
       {notices.map((n) => (
