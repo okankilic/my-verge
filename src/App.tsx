@@ -55,6 +55,7 @@ import { ItemDetailDrawer } from './components/ItemDetailDrawer';
 import { ItemFormDrawer } from './components/ItemFormDrawer';
 import { MilestoneSheet } from './components/MilestoneSheet';
 import { ReminderHorizonView } from './components/ReminderHorizonView';
+import { targetDateTime } from './utils/targetDate';
 import { VaultView, isInVault, vaultDate } from './components/VaultView';
 import { TimeRange, earlierYears, isInRange } from './utils/timeRange';
 import { MilestonesArchiveView } from './components/MilestonesArchiveView';
@@ -663,7 +664,7 @@ export default function App() {
       case 'inprogress':
         return item.status === 'active' && Boolean(item.startedAt);
       case 'reminders':
-        return item.status === 'active' && Boolean(item.reminder?.date);
+        return item.status === 'active' && (Boolean(item.reminder?.date) || targetDateTime(item) !== null);
       case 'vault':
         return isInVault(item) && isInRange(vaultDate(item), vaultRange);
       case 'milestones':

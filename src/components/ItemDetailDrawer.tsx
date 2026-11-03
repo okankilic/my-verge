@@ -34,6 +34,7 @@ import { ItemMediaStrip } from './ItemMediaStrip';
 import { StepList } from './StepList';
 import { ExpenseList } from './ExpenseList';
 import { expenseTotal, formatMoney, wishCurrency } from '../utils/expenses';
+import { targetDateTime } from '../utils/targetDate';
 
 const WHEN_LABELS: Record<PriorityLevel, string> = {
   urgent: 'Urgent',
@@ -106,12 +107,9 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
         })
       : null;
 
-  // A date-only value is read as local midnight, so it shows the picked day in every time zone
-  const targetDay = item.targetDate
-    ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(item.targetDate) ? `${item.targetDate}T00:00` : item.targetDate)
-    : null;
-  const formattedTargetDate = targetDay
-    ? targetDay.toLocaleDateString(undefined, {
+  const targetTime = targetDateTime(item);
+  const formattedTargetDate = targetTime !== null
+    ? new Date(targetTime).toLocaleDateString(undefined, {
         weekday: 'long',
         month: 'long',
         day: 'numeric',
@@ -139,8 +137,8 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
             </span>
             <span aria-hidden="true">·</span>
             <span>
-              {item.priority === 'until' && targetDay
-                ? `Until ${targetDay.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
+              {item.priority === 'until' && targetTime !== null
+                ? `Until ${new Date(targetTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
                 : WHEN_LABELS[item.priority] ?? item.priority}
             </span>
           </div>

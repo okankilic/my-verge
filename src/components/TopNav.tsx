@@ -72,17 +72,6 @@ export const TopNav: React.FC<TopNavProps> = ({
         {/* Zone 2: Navigation text links (Desktop / Tablet) */}
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-ink/70">
           <button
-            onClick={() => onTabChange('inprogress')}
-            className={`whitespace-nowrap pb-0.5 border-b-2 transition-all flex items-center gap-1.5 ${
-              currentTab === 'inprogress'
-                ? 'border-ink text-ink font-semibold'
-                : 'border-transparent hover:text-ink'
-            }`}
-          >
-            <Hourglass className="w-3.5 h-3.5" />
-            <span>Now</span>
-          </button>
-          <button
             onClick={() => onTabChange('feed')}
             className={`whitespace-nowrap pb-0.5 border-b-2 transition-all ${
               currentTab === 'feed'
@@ -108,14 +97,15 @@ export const TopNav: React.FC<TopNavProps> = ({
             )}
           </button>
           <button
-            onClick={() => onTabChange('vault')}
-            className={`whitespace-nowrap pb-0.5 border-b-2 transition-all ${
-              currentTab === 'vault'
+            onClick={() => onTabChange('inprogress')}
+            className={`whitespace-nowrap pb-0.5 border-b-2 transition-all flex items-center gap-1.5 ${
+              currentTab === 'inprogress'
                 ? 'border-ink text-ink font-semibold'
                 : 'border-transparent hover:text-ink'
             }`}
           >
-            Vault
+            <Hourglass className="w-3.5 h-3.5" />
+            <span>Now</span>
           </button>
           <button
             onClick={() => onTabChange('milestones')}
@@ -127,6 +117,16 @@ export const TopNav: React.FC<TopNavProps> = ({
           >
             <Film className="w-3.5 h-3.5" />
             <span>Memories</span>
+          </button>
+          <button
+            onClick={() => onTabChange('vault')}
+            className={`whitespace-nowrap pb-0.5 border-b-2 transition-all ${
+              currentTab === 'vault'
+                ? 'border-ink text-ink font-semibold'
+                : 'border-transparent hover:text-ink'
+            }`}
+          >
+            Vault
           </button>
           <button
             onClick={() => onTabChange('settings')}

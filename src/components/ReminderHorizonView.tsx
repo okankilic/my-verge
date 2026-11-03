@@ -10,6 +10,7 @@ import {
   reminderNextAt,
 } from '../services/notifications';
 import { ItemActions } from './ItemActions';
+import { targetDateTime } from '../utils/targetDate';
 
 interface ReminderHorizonViewProps {
   items: BucketItem[];
@@ -44,30 +45,45 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
     if (res === 'granted') onNotificationsEnabled();
   };
 
-  const activeItemsWithReminders = items.filter(
-    (item) => item.status === 'active' && item.reminder?.date
-  );
-
   const now = Date.now();
 
-  // Sort and classify: due (with the time it came due) vs upcoming (with its next alert time)
+  // Sort and classify: due (with the time it came due) vs upcoming (with its next alert time).
+  // A wish with only an Until date (or a reminder that can't be read) is placed on its target day.
   const dueItems: BucketItem[] = [];
   const upcomingItems: BucketItem[] = [];
   const alertTimes = new Map<string, number>();
+  const targetOnly = new Set<string>();
 
-  activeItemsWithReminders.forEach((item) => {
-    const reminder = item.reminder!;
-    if (isReminderDue(reminder, now)) {
-      dueItems.push(item);
-      alertTimes.set(item.id, reminderDueAt(reminder, now)!);
-      return;
+  items.forEach((item) => {
+    if (item.status !== 'active') return;
+    const reminder = item.reminder?.date ? item.reminder : undefined;
+    if (reminder) {
+      if (isReminderDue(reminder, now)) {
+        dueItems.push(item);
+        alertTimes.set(item.id, reminderDueAt(reminder, now)!);
+        return;
+      }
+      const next = reminderNextAt(reminder, now);
+      if (next !== null) {
+        upcomingItems.push(item);
+        alertTimes.set(item.id, next);
+        return;
+      }
     }
-    const next = reminderNextAt(reminder, now);
-    if (next !== null) {
+    const target = targetDateTime(item);
+    if (target !== null) {
       upcomingItems.push(item);
-      alertTimes.set(item.id, next);
+      alertTimes.set(item.id, target);
+      targetOnly.add(item.id);
     }
   });
+
+  const formatTargetDay = (item: BucketItem) => {
+    const target = targetDateTime(item);
+    return target === null
+      ? null
+      : new Date(target).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  };
 
   // Sort upcoming chronologically
   upcomingItems.sort((a, b) => alertTimes.get(a.id)! - alertTimes.get(b.id)!);
@@ -233,6 +249,9 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
                     <>
                       <span className="font-mono font-medium text-accent">{formatReminderDate(item)}</span>
                       <span className="font-semibold text-[#C05621]"> · Due now</span>
+                      {formatTargetDay(item) && (
+                        <span className="text-ink/40"> · until {formatTargetDay(item)}</span>
+                      )}
                     </>,
                     <div className="flex items-center gap-1.5">
                       {snoozeChip(item, 1, '1d')}
@@ -260,17 +279,24 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
                   renderEntry(
                     item,
                     'scheduled',
-                    <>
-                      <span className="font-mono font-medium text-accent">
-                        {reminderDate(item).toLocaleTimeString(undefined, {
-                          hour: 'numeric',
-                          minute: '2-digit',
-                        })}
-                      </span>
-                      {item.reminder?.recurrence && item.reminder.recurrence !== 'none' && (
-                        <span className="text-ink/40"> · {item.reminder.recurrence}</span>
-                      )}
-                    </>
+                    targetOnly.has(item.id) ? (
+                      <span className="font-mono font-medium text-accent">Until</span>
+                    ) : (
+                      <>
+                        <span className="font-mono font-medium text-accent">
+                          {reminderDate(item).toLocaleTimeString(undefined, {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                        {item.reminder?.recurrence && item.reminder.recurrence !== 'none' && (
+                          <span className="text-ink/40"> · {item.reminder.recurrence}</span>
+                        )}
+                        {formatTargetDay(item) && (
+                          <span className="text-ink/40"> · until {formatTargetDay(item)}</span>
+                        )}
+                      </>
+                    )
                   )
                 )}
               </section>
@@ -286,7 +312,7 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
             All clear for now
           </p>
           <p className="text-xs text-ink/50 mt-1 max-w-sm mx-auto">
-            Add a reminder date to any wish and you'll get a gentle nudge.
+            Add a reminder or an Until date to any wish and it shows up here.
           </p>
         </div>
       )}
