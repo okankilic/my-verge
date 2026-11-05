@@ -139,19 +139,13 @@ function latestOccurrence(reminder: ReminderConfig, now: number): number | null 
   return occurrence(base, reminder.recurrence, latestIndex(base, reminder.recurrence, now)).getTime();
 }
 
-// When the reminder most recently came due (a passed snooze counts as coming due again), or null
+// When the reminder most recently came due, or null
 export function reminderDueAt(reminder: ReminderConfig, now = Date.now()): number | null {
-  const snooze = reminder.snoozedUntil ? new Date(reminder.snoozedUntil).getTime() : null;
-  if (snooze !== null && snooze > now) return null;
-  const latest = latestOccurrence(reminder, now);
-  if (snooze === null) return latest;
-  return latest === null ? snooze : Math.max(latest, snooze);
+  return latestOccurrence(reminder, now);
 }
 
 // Next time the reminder will fire after `now`, or null for a one-off that has already passed
 export function reminderNextAt(reminder: ReminderConfig, now = Date.now()): number | null {
-  const snooze = reminder.snoozedUntil ? new Date(reminder.snoozedUntil).getTime() : null;
-  if (snooze !== null && snooze > now) return snooze;
   const base = reminderTime(reminder.date);
   if (Number.isNaN(base.getTime())) return null;
   if (base.getTime() > now) return base.getTime();
@@ -160,7 +154,7 @@ export function reminderNextAt(reminder: ReminderConfig, now = Date.now()): numb
   return occurrence(base, reminder.recurrence, k).getTime();
 }
 
-// The next `count` times after `after` that the schedule falls on (snoozes aside), oldest first.
+// The next `count` times after `after` that the schedule falls on, oldest first.
 // Uses the same month-end clamping as the in-app checks, so native alerts land on the same days.
 export function upcomingOccurrences(reminder: ReminderConfig, after: number, count: number): Date[] {
   const base = reminderTime(reminder.date);
@@ -170,7 +164,7 @@ export function upcomingOccurrences(reminder: ReminderConfig, after: number, cou
   return Array.from({ length: count }, (_, i) => occurrence(base, reminder.recurrence, first + i));
 }
 
-// One-off reminders stay due until snoozed or completed; a recurring one is due only on the day it came due
+// One-off reminders stay due until completed; a recurring one is due only on the day it came due
 export function isReminderDue(reminder: ReminderConfig, now = Date.now()): boolean {
   const dueAt = reminderDueAt(reminder, now);
   if (dueAt === null) return false;
@@ -197,25 +191,3 @@ export function getUnnotifiedDueItems(items: BucketItem[]): BucketItem[] {
   });
 }
 
-/**
- * Snooze helper functions
- */
-export function calculateSnoozeDate(type: '1hour' | '1day' | '3days' | 'weekend' | '1week'): string {
-  const date = new Date();
-  if (type === '1hour') {
-    date.setHours(date.getHours() + 1);
-  } else if (type === '1day') {
-    date.setDate(date.getDate() + 1);
-  } else if (type === '3days') {
-    date.setDate(date.getDate() + 3);
-  } else if (type === '1week') {
-    date.setDate(date.getDate() + 7);
-  } else if (type === 'weekend') {
-    // Jump to upcoming Saturday 10:00 AM
-    const day = date.getDay();
-    const diff = (6 - day + 7) % 7 || 7;
-    date.setDate(date.getDate() + diff);
-    date.setHours(10, 0, 0, 0);
-  }
-  return date.toISOString();
-}

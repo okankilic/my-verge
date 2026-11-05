@@ -1,6 +1,6 @@
 import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
-import { BucketItem, BudgetInfo, CategoryDefinition, WishStep } from '../types';
+import { BucketItem, BudgetInfo, CategoryDefinition, ReminderConfig, WishStep } from '../types';
 import { DEFAULT_CURRENCY, LEGACY_CURRENCY_SYMBOLS, isCurrencyCode } from '../data/currencies';
 import { INITIAL_ITEMS } from '../data/initialData';
 import { LEGACY_PRESET_PATHS } from '../data/presetPhotos';
@@ -148,6 +148,13 @@ export function normalizeItems<T extends BucketItem>(raw: T[]): BucketItem[] {
       if (item.photoNotes) item.photoNotes = notes;
     }
     item.categoryId = MERGED_CATEGORY_IDS[item.categoryId] ?? item.categoryId;
+    // Snoozing was removed, so a stored snooze is dropped
+    if (item.reminder && 'snoozedUntil' in item.reminder) {
+      const { snoozedUntil: _snoozedUntil, ...reminder } = item.reminder as ReminderConfig & {
+        snoozedUntil?: string | null;
+      };
+      item.reminder = reminder;
+    }
     // The currency used to be a symbol on the budget; it's now an ISO code on the wish
     if (item.budget && 'currency' in item.budget) {
       const { currency: symbol, ...budget } = item.budget as BudgetInfo & { currency?: string };

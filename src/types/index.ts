@@ -14,7 +14,6 @@ export interface CategoryDefinition {
 export interface ReminderConfig {
   date: string; // ISO format: YYYY-MM-DD or YYYY-MM-DDTHH:mm
   recurrence: RecurrenceType;
-  snoozedUntil?: string | null;
   lastNotifiedAt?: string | null;
 }
 

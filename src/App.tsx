@@ -600,40 +600,6 @@ export default function App() {
     });
   };
 
-  const handleSnooze = (item: BucketItem, days: number) => {
-    const snoozeDate = new Date();
-    snoozeDate.setDate(snoozeDate.getDate() + days);
-    const snoozeIso = snoozeDate.toISOString();
-
-    setItems((prev) =>
-      prev.map((i) =>
-        i.id === item.id
-          ? {
-              ...i,
-              reminder: i.reminder
-                ? {
-                    ...i.reminder,
-                    snoozedUntil: snoozeIso,
-                  }
-                : undefined,
-              updatedAt: new Date().toISOString(),
-            }
-          : i
-      )
-    );
-
-    if (activeToastItem?.id === item.id) {
-      setActiveToastItem(null);
-    }
-    if (viewingItem?.id === item.id) {
-      setViewingItem((prev) =>
-        prev && prev.reminder
-          ? { ...prev, reminder: { ...prev.reminder, snoozedUntil: snoozeIso } }
-          : prev
-      );
-    }
-  };
-
   // Closing the global search also clears it, so no hidden filter stays applied
   const handleToggleSearch = () => {
     if (isSearchOpen) setSearchQuery('');
@@ -808,13 +774,6 @@ export default function App() {
 
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
-                  onClick={() => handleSnooze(activeToastItem, 1)}
-                  title="Snooze 1 day"
-                  className="min-h-[44px] px-2.5 py-1 text-xs font-medium bg-card border border-ink/15 rounded-lg hover:bg-paper text-ink"
-                >
-                  Snooze
-                </button>
-                <button
                   onClick={() => setActiveToastItem(null)}
                   aria-label="Dismiss reminder"
                   className="min-h-[44px] min-w-[44px] flex items-center justify-center text-ink/50 hover:text-ink"
@@ -897,7 +856,6 @@ export default function App() {
             <ReminderHorizonView
               items={filteredItems}
               categories={categories}
-              onSnooze={handleSnooze}
               onNotificationsEnabled={() => syncNativeReminders(items)}
               onToggleComplete={handleToggleComplete}
               onToggleStarted={handleToggleStarted}
@@ -1016,7 +974,6 @@ export default function App() {
         onToggleStarted={handleToggleStarted}
         onToggleKeptInVault={handleToggleKeptInVault}
         onToggleHiddenInMemories={handleToggleHiddenInMemories}
-        onSnooze={handleSnooze}
         onToggleStep={handleToggleStep}
         onAddStep={handleAddStep}
         onRemoveStep={handleRemoveStep}

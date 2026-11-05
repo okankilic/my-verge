@@ -15,7 +15,6 @@ import { targetDateTime } from '../utils/targetDate';
 interface ReminderHorizonViewProps {
   items: BucketItem[];
   categories: CategoryDefinition[];
-  onSnooze: (item: BucketItem, days: number) => void;
   onToggleComplete: (item: BucketItem) => void;
   onToggleStarted: (item: BucketItem) => void;
   onDelete: (id: string) => void;
@@ -26,7 +25,6 @@ interface ReminderHorizonViewProps {
 export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
   items,
   categories,
-  onSnooze,
   onToggleComplete,
   onToggleStarted,
   onDelete,
@@ -157,19 +155,19 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
               : 'bg-card border-ink/12 hover:border-ink/25'
           }`}
         >
-          {/* Category | Icon (same as ItemRow) */}
+          {/* Icon | Category (same as ItemRow) */}
           <div className="flex items-center gap-1.5">
+            <span
+              className="shrink-0"
+              style={{ color: cat?.accentColor || 'var(--color-ink)' }}
+            >
+              {renderCategoryIcon(cat?.icon || item.categoryId, 'w-3.5 h-3.5')}
+            </span>
             <div className="flex-1 flex items-baseline gap-1.5 min-w-0">
               <span className="shrink-0 text-[11px] uppercase tracking-wider text-ink/60 font-semibold leading-tight">
                 {cat?.verb || item.categoryId}
               </span>
             </div>
-            <span
-              className="shrink-0 ml-2"
-              style={{ color: cat?.accentColor || 'var(--color-ink)' }}
-            >
-              {renderCategoryIcon(cat?.icon || item.categoryId, 'w-3.5 h-3.5')}
-            </span>
           </div>
           <h4 className="font-serif-journal text-[15px] sm:text-base font-medium tracking-tight text-ink leading-snug line-clamp-2">
             {item.title}
@@ -185,20 +183,6 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
       </div>
     );
   };
-
-  const snoozeChip = (item: BucketItem, days: number, label: string) => (
-    <button
-      type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        onSnooze(item, days);
-      }}
-      title={`Snooze ${label}`}
-      className="min-h-[44px] px-3 text-xs font-medium bg-card border border-ink/15 rounded-md text-ink/80 hover:bg-paper transition-colors"
-    >
-      +{label}
-    </button>
-  );
 
   return (
     <div className="space-y-5">
@@ -252,11 +236,7 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
                       {formatTargetDay(item) && (
                         <span className="text-ink/40"> · until {formatTargetDay(item)}</span>
                       )}
-                    </>,
-                    <div className="flex items-center gap-1.5">
-                      {snoozeChip(item, 1, '1d')}
-                      {snoozeChip(item, 7, '1w')}
-                    </div>
+                    </>
                   )
                 )}
               </section>

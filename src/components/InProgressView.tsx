@@ -96,19 +96,19 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
               item.id === focusId ? 'border-accent/50 ring-2 ring-accent/60' : 'border-ink/12'
             }`}
           >
-            {/* Category | Icon (same as ItemRow) */}
+            {/* Icon | Category (same as ItemRow) */}
             <div className="flex items-center gap-1.5">
+              <span
+                className="shrink-0"
+                style={{ color: cat?.accentColor || 'var(--color-ink)' }}
+              >
+                {renderCategoryIcon(cat?.icon || item.categoryId, 'w-3.5 h-3.5')}
+              </span>
               <div className="flex-1 flex items-baseline gap-1.5 min-w-0">
                 <span className="shrink-0 text-[11px] uppercase tracking-wider text-ink/60 font-semibold leading-tight">
                   {cat?.verb || item.categoryId}
                 </span>
               </div>
-              <span
-                className="shrink-0 ml-2"
-                style={{ color: cat?.accentColor || 'var(--color-ink)' }}
-              >
-                {renderCategoryIcon(cat?.icon || item.categoryId, 'w-3.5 h-3.5')}
-              </span>
             </div>
 
             <h3 className="font-serif-journal text-[15px] sm:text-base font-medium tracking-tight text-ink leading-snug">

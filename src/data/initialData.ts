@@ -23,7 +23,6 @@ export const INITIAL_ITEMS: BucketItem[] = [
     reminder: {
       date: '2026-11-01T09:00',
       recurrence: 'weekly',
-      snoozedUntil: null,
       lastNotifiedAt: null,
     },
     status: 'active',
@@ -47,7 +46,6 @@ export const INITIAL_ITEMS: BucketItem[] = [
     reminder: {
       date: '2026-10-30T20:00',
       recurrence: 'daily',
-      snoozedUntil: null,
       lastNotifiedAt: null,
     },
     status: 'active',
@@ -71,7 +69,6 @@ export const INITIAL_ITEMS: BucketItem[] = [
     reminder: {
       date: '2026-11-10T11:00',
       recurrence: 'none',
-      snoozedUntil: null,
       lastNotifiedAt: null,
     },
     status: 'active',
@@ -93,7 +90,6 @@ export const INITIAL_ITEMS: BucketItem[] = [
     reminder: {
       date: '2026-11-08T18:30',
       recurrence: 'weekly',
-      snoozedUntil: null,
       lastNotifiedAt: null,
     },
     status: 'active',
@@ -116,7 +112,6 @@ export const INITIAL_ITEMS: BucketItem[] = [
     reminder: {
       date: '2026-11-25T14:00',
       recurrence: 'monthly',
-      snoozedUntil: null,
       lastNotifiedAt: null,
     },
     status: 'active',
@@ -133,7 +128,6 @@ export const INITIAL_ITEMS: BucketItem[] = [
     reminder: {
       date: '2026-10-29T09:00',
       recurrence: 'daily',
-      snoozedUntil: null,
       lastNotifiedAt: null,
     },
     status: 'active',

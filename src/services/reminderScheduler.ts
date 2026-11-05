@@ -61,13 +61,6 @@ function planFor(item: BucketItem, now: number): Planned[] {
   const oneOffs = (times: Date[], startIndex: number) =>
     times.map((at, i) => make(startIndex + i, { at, allowWhileIdle: true }, at.getTime()));
 
-  // A future snooze fires once, and a repeat picks up again with its occurrences after it
-  const snooze = reminder.snoozedUntil ? new Date(reminder.snoozedUntil).getTime() : NaN;
-  if (snooze > now) {
-    const after = reminder.recurrence === 'none' ? [] : upcomingOccurrences(reminder, snooze, ONE_OFF_AHEAD - 1);
-    return oneOffs([new Date(snooze), ...after], 0);
-  }
-
   const repeating = repeatingSchedule(base, reminder.recurrence, now);
   if (repeating) {
     const next = upcomingOccurrences(reminder, now, 1)[0];

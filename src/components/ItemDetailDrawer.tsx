@@ -54,7 +54,6 @@ interface ItemDetailDrawerProps {
   onToggleStarted: (item: BucketItem) => void;
   onToggleKeptInVault: (item: BucketItem) => void;
   onToggleHiddenInMemories: (item: BucketItem) => void;
-  onSnooze: (item: BucketItem, days: number) => void;
   onToggleStep: (item: BucketItem, stepId: string, list?: StepListKey) => void;
   onAddStep: (item: BucketItem, title: string, list?: StepListKey) => void;
   onRemoveStep: (item: BucketItem, stepId: string, list?: StepListKey) => void;
@@ -73,7 +72,6 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
   onToggleStarted,
   onToggleKeptInVault,
   onToggleHiddenInMemories,
-  onSnooze,
   onToggleStep,
   onAddStep,
   onRemoveStep,
@@ -330,7 +328,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
             </div>
           )}
 
-          {/* Scheduled Reminder Alert with Snooze Controls */}
+          {/* Scheduled reminder status */}
           {item.reminder && item.reminder.date && (
             <div
               className={`p-4 rounded-xl border space-y-2.5 ${
@@ -360,25 +358,6 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
                 )}
               </div>
 
-              {!isCompleted && (
-                <div className="pt-2 border-t border-ink/8 flex items-center gap-2">
-                  <span className="text-[11px] text-ink/60 font-medium">Snooze:</span>
-                  <button
-                    onClick={() => onSnooze(item, 1)}
-                    title="Snooze 1 day"
-                    className="min-h-[36px] px-2.5 py-1 text-xs font-medium bg-paper border border-ink/15 rounded-lg hover:bg-paper-deep transition-colors"
-                  >
-                    +1d
-                  </button>
-                  <button
-                    onClick={() => onSnooze(item, 7)}
-                    title="Snooze 1 week"
-                    className="min-h-[36px] px-2.5 py-1 text-xs font-medium bg-paper border border-ink/15 rounded-lg hover:bg-paper-deep transition-colors"
-                  >
-                    +1w
-                  </button>
-                </div>
-              )}
             </div>
           )}
 

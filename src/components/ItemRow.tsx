@@ -33,8 +33,14 @@ export const ItemRow: React.FC<ItemRowProps> = ({
           : 'border-ink/12'
       }`}
     >
-      {/* Category | Icon */}
+      {/* Icon | Category */}
       <div className="flex items-center gap-1.5">
+        <span
+          className="shrink-0 transition-colors"
+          style={{ color: categoryDef?.accentColor || 'var(--color-ink)' }}
+        >
+          {renderCategoryIcon(categoryDef?.icon || item.categoryId, 'w-3.5 h-3.5')}
+        </span>
         <div className="flex-1 flex items-baseline gap-1.5 min-w-0">
           <span className="shrink-0 text-[11px] uppercase tracking-wider text-ink/60 font-semibold leading-tight">
             {categoryName}
@@ -43,12 +49,6 @@ export const ItemRow: React.FC<ItemRowProps> = ({
           {item.status === 'active' && !item.startedAt && <StepCount steps={item.prepSteps} kind="prep" />}
           <StepCount steps={item.steps} />
         </div>
-        <span
-          className="shrink-0 ml-2 transition-colors"
-          style={{ color: categoryDef?.accentColor || 'var(--color-ink)' }}
-        >
-          {renderCategoryIcon(categoryDef?.icon || item.categoryId, 'w-3.5 h-3.5')}
-        </span>
       </div>
 
       {/* Primary Wish Title */}
