@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Camera, Check, DollarSign, Paperclip, Play, Square, Trash2 } from 'lucide-react';
+import { Camera, Check, DollarSign, Paperclip, Pencil, Play, Trash2 } from 'lucide-react';
 import { BucketItem } from '../types';
 import { fileToResizedDataUrl } from '../utils/imageResize';
 import { MAX_ATTACHMENT_BYTES } from '../services/attachments';
@@ -8,6 +8,7 @@ import { WebcamCaptureSheet } from './WebcamCaptureSheet';
 import { MediaNoteSheet, MediaNotePreview } from './MediaNoteSheet';
 import { ExpenseSheet } from './ExpenseSheet';
 import { wishCurrency } from '../utils/expenses';
+import { PlanConfirm, PlanConfirmKind } from './InlineConfirm';
 
 // Phones/tablets get the native camera via <input capture>; desktops use the webcam dialog
 const canUseWebcamDialog = () =>
@@ -23,7 +24,8 @@ type PendingMedia =
 
 interface ItemActionsProps {
   item: BucketItem;
-  onToggleStarted: (item: BucketItem) => void;
+  // When provided, unstarted plans show Start (there is no Stop)
+  onStart?: (item: BucketItem) => void;
   onToggleComplete: (item: BucketItem) => void;
   onDelete: (id: string) => void;
   // When provided, show Camera + Attach buttons (images -> photos, videos/PDFs -> attachments)
@@ -31,17 +33,26 @@ interface ItemActionsProps {
   onAddAttachment?: (item: BucketItem, file: File, note?: string) => void;
   // When provided, show an Expense button that logs money spent on the wish
   onAddExpense?: (item: BucketItem, amount: number, note?: string) => void;
+  // When provided, show an Edit button before Delete
+  onEdit?: (item: BucketItem) => void;
+  // Label for the ✓ button ("Mark accomplished" by default)
+  doneLabel?: string;
+  // Replaces the default edge offsets, for cards with other padding
+  className?: string;
 }
 
-// Icon-only card action row: Start/Stop | Accomplish (| Camera Attach) on the left, Delete on the far right
+// Icon-only card action row: Start (unstarted only) | Accomplish (| Camera Attach) on the left, Delete on the far right
 export const ItemActions: React.FC<ItemActionsProps> = ({
   item,
-  onToggleStarted,
+  onStart,
   onToggleComplete,
   onDelete,
   onAddPhoto,
   onAddAttachment,
   onAddExpense,
+  onEdit,
+  doneLabel = 'Mark accomplished',
+  className = '-mx-3 -mb-1.5',
 }) => {
   const isCompleted = item.status === 'completed';
   const isStarted = !isCompleted && Boolean(item.startedAt);
@@ -51,6 +62,10 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
   const [pending, setPending] = useState<PendingMedia[]>([]);
   const [batchTotal, setBatchTotal] = useState(0);
   const [isAddingExpense, setIsAddingExpense] = useState(false);
+  // Start, Done and Delete each confirm inline under the row first
+  const [confirming, setConfirming] = useState<PlanConfirmKind | null>(null);
+  const canStart = Boolean(onStart) && !isCompleted && !isStarted;
+  const toggleConfirm = (kind: PlanConfirmKind) => setConfirming((prev) => (prev === kind ? null : kind));
 
   const enqueue = (media: PendingMedia[]) => {
     if (media.length === 0) return;
@@ -114,42 +129,49 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
   const canAddMedia = Boolean(onAddPhoto && onAddAttachment);
 
   return (
-    <div className="pt-1 -mx-3 -mb-1.5 flex items-center gap-0.5">
+    <>
+    <div className={`pt-1 ${className} flex items-center gap-0.5`}>
+      {canStart && (
+        <>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleConfirm('start');
+            }}
+            aria-expanded={confirming === 'start'}
+            title="Start — mark as in progress"
+            aria-label="Start"
+            className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${
+              confirming === 'start' ? 'text-ink bg-paper' : 'text-ink/60 hover:text-ink hover:bg-paper'
+            }`}
+          >
+            <Play className="w-3.5 h-3.5" />
+          </button>
+          <span aria-hidden className="w-px h-4 bg-ink/15" />
+        </>
+      )}
       {!isCompleted && (
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            onToggleStarted(item);
+            toggleConfirm('done');
           }}
-          title={isStarted ? 'Stop — move back to Journal' : 'Start — mark as in progress'}
-          aria-label={isStarted ? 'Stop' : 'Start'}
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/60 hover:text-ink hover:bg-paper transition-colors"
+          aria-expanded={confirming === 'done'}
+          title={doneLabel}
+          aria-label={doneLabel}
+          className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${
+            confirming === 'done' ? 'text-[#4A6B56] bg-paper' : 'text-ink/60 hover:text-[#4A6B56] hover:bg-paper'
+          }`}
         >
-          {isStarted ? <Square className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+          <Check className="w-3.5 h-3.5 stroke-[2.5]" />
         </button>
       )}
-      {!isCompleted && <span aria-hidden className="w-px h-4 bg-ink/15" />}
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggleComplete(item);
-        }}
-        aria-pressed={isCompleted}
-        title={isCompleted ? 'Mark unaccomplished' : 'Mark accomplished'}
-        aria-label={isCompleted ? 'Mark unaccomplished' : 'Mark accomplished'}
-        className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${
-          isCompleted
-            ? 'text-[#4A6B56] hover:bg-paper'
-            : 'text-ink/60 hover:text-[#4A6B56] hover:bg-paper'
-        }`}
-      >
-        <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-      </button>
       {canAddMedia && (
         <>
-          <span aria-hidden className="w-px h-4 bg-ink/15" />
+          {/* Separates ✓ from the media buttons; finished plans have no ✓ */}
+          {!isCompleted && <span aria-hidden className="w-px h-4 bg-ink/15" />}
           <button
             type="button"
             onClick={(e) => {
@@ -237,18 +259,47 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
           />
         </>
       )}
+      {onEdit && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(item);
+          }}
+          title="Edit plan"
+          aria-label="Edit"
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/60 hover:text-ink hover:bg-paper transition-colors"
+        >
+          <Pencil className="w-3.5 h-3.5" />
+        </button>
+      )}
       <button
         type="button"
         onClick={(e) => {
           e.stopPropagation();
-          onDelete(item.id);
+          toggleConfirm('delete');
         }}
+        aria-expanded={confirming === 'delete'}
         title="Delete plan"
         aria-label="Delete plan"
-        className="ml-auto min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/40 hover:text-red-600 hover:bg-red-500/10 transition-colors"
+        className={`ml-auto min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${
+          confirming === 'delete' ? 'text-red-600 bg-red-500/10' : 'text-ink/40 hover:text-red-600 hover:bg-red-500/10'
+        }`}
       >
         <Trash2 className="w-3.5 h-3.5" />
       </button>
     </div>
+    <PlanConfirm
+      kind={confirming}
+      item={item}
+      onCancel={() => setConfirming(null)}
+      onConfirm={(kind) => {
+        setConfirming(null);
+        if (kind === 'done') onToggleComplete(item);
+        else if (kind === 'delete') onDelete(item.id);
+        else onStart?.(item);
+      }}
+    />
+    </>
   );
 };

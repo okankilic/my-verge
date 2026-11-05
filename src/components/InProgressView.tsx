@@ -12,7 +12,6 @@ interface InProgressViewProps {
   categories: CategoryDefinition[];
   onSelect: (item: BucketItem) => void;
   onToggleComplete: (item: BucketItem) => void;
-  onStop: (item: BucketItem) => void;
   onDelete: (id: string) => void;
   onAddPhoto: (item: BucketItem, photoDataUrl: string, note?: string) => void;
   onAddAttachment: (item: BucketItem, file: File, note?: string) => void;
@@ -32,7 +31,6 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
   categories,
   onSelect,
   onToggleComplete,
-  onStop,
   onDelete,
   onAddPhoto,
   onAddAttachment,
@@ -153,7 +151,6 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
 
             <ItemActions
               item={item}
-              onToggleStarted={onStop}
               onToggleComplete={onToggleComplete}
               onDelete={onDelete}
               onAddPhoto={onAddPhoto}

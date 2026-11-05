@@ -7,7 +7,7 @@ interface JournalListProps {
   items: BucketItem[];
   categories: CategoryDefinition[];
   onToggleComplete: (item: BucketItem) => void;
-  onToggleStarted: (item: BucketItem) => void;
+  onStart: (item: BucketItem) => void;
   onDelete: (id: string) => void;
   onSelect: (item: BucketItem) => void;
   onReorder: (orderedIds: string[]) => void;
@@ -19,7 +19,7 @@ export const JournalList: React.FC<JournalListProps> = ({
   items,
   categories,
   onToggleComplete,
-  onToggleStarted,
+  onStart,
   onDelete,
   onSelect,
   onReorder,
@@ -65,7 +65,7 @@ export const JournalList: React.FC<JournalListProps> = ({
             item={item}
             categoryDef={categories.find((c) => c.id === item.categoryId)}
             onToggleComplete={onToggleComplete}
-            onToggleStarted={onToggleStarted}
+            onStart={onStart}
             onDelete={onDelete}
             onSelect={onSelect}
             onDragEnd={commit}
@@ -80,7 +80,7 @@ interface JournalListItemProps {
   item: BucketItem;
   categoryDef?: CategoryDefinition;
   onToggleComplete: (item: BucketItem) => void;
-  onToggleStarted: (item: BucketItem) => void;
+  onStart: (item: BucketItem) => void;
   onDelete: (id: string) => void;
   onSelect: (item: BucketItem) => void;
   onDragEnd: () => void;

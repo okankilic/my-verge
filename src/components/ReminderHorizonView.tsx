@@ -16,7 +16,7 @@ interface ReminderHorizonViewProps {
   items: BucketItem[];
   categories: CategoryDefinition[];
   onToggleComplete: (item: BucketItem) => void;
-  onToggleStarted: (item: BucketItem) => void;
+  onStart: (item: BucketItem) => void;
   onDelete: (id: string) => void;
   onSelect: (item: BucketItem) => void;
   onNotificationsEnabled: () => void;
@@ -26,7 +26,7 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
   items,
   categories,
   onToggleComplete,
-  onToggleStarted,
+  onStart,
   onDelete,
   onSelect,
   onNotificationsEnabled,
@@ -175,7 +175,7 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
           {extras && <div className="pt-1">{extras}</div>}
           <ItemActions
             item={item}
-            onToggleStarted={onToggleStarted}
+            onStart={onStart}
             onToggleComplete={onToggleComplete}
             onDelete={onDelete}
           />

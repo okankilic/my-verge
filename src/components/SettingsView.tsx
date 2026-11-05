@@ -14,6 +14,7 @@ import { notify } from '../services/dialogs';
 import { renderCategoryIcon } from '../utils/categoryIcons';
 import { CURRENCIES } from '../data/currencies';
 import { currencySymbol } from '../utils/expenses';
+import { InlineConfirm } from './InlineConfirm';
 
 interface SettingsViewProps {
   items: BucketItem[];
@@ -26,34 +27,6 @@ interface SettingsViewProps {
   onDefaultCurrencyChange: (code: string) => void;
   onNotificationsEnabled: () => void;
 }
-
-// Inline two-step confirm for the irreversible actions here (no confirm dialogs in this app)
-const InlineConfirm: React.FC<{
-  message: string;
-  confirmLabel: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-}> = ({ message, confirmLabel, onConfirm, onCancel }) => (
-  <div role="group" className="mt-3 pt-3 border-t border-ink/10 animate-in fade-in duration-150">
-    <p className="text-xs text-ink/75 leading-relaxed break-words">{message}</p>
-    <div className="mt-3 flex gap-2">
-      <button
-        type="button"
-        onClick={onCancel}
-        className="flex-1 min-h-[44px] px-4 text-xs font-medium text-ink bg-paper border border-ink/15 rounded-xl active:bg-paper-deep transition-colors"
-      >
-        Cancel
-      </button>
-      <button
-        type="button"
-        onClick={onConfirm}
-        className="flex-1 min-h-[44px] px-4 text-xs font-semibold text-white bg-red-600 rounded-xl active:bg-red-700 transition-colors"
-      >
-        {confirmLabel}
-      </button>
-    </div>
-  </div>
-);
 
 const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
   { value: 'light', label: 'Light' },

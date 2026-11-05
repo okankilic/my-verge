@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   X,
   Edit3,
@@ -17,7 +17,6 @@ import {
   Compass,
   Clock,
   Play,
-  Square,
   Hourglass,
   Trophy,
   Star,
@@ -35,6 +34,7 @@ import { StepList } from './StepList';
 import { ExpenseList } from './ExpenseList';
 import { expenseTotal, formatMoney, wishCurrency } from '../utils/expenses';
 import { targetDateTime } from '../utils/targetDate';
+import { PlanConfirm, PlanConfirmKind } from './InlineConfirm';
 
 const WHEN_LABELS: Record<PriorityLevel, string> = {
   urgent: 'Urgent',
@@ -51,7 +51,7 @@ interface ItemDetailDrawerProps {
   onEdit: (item: BucketItem) => void;
   onDelete: (id: string) => void;
   onToggleComplete: (item: BucketItem) => void;
-  onToggleStarted: (item: BucketItem) => void;
+  onStart: (item: BucketItem) => void;
   onToggleKeptInVault: (item: BucketItem) => void;
   onToggleHiddenInMemories: (item: BucketItem) => void;
   onToggleStep: (item: BucketItem, stepId: string, list?: StepListKey) => void;
@@ -69,7 +69,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
   onEdit,
   onDelete,
   onToggleComplete,
-  onToggleStarted,
+  onStart,
   onToggleKeptInVault,
   onToggleHiddenInMemories,
   onToggleStep,
@@ -79,6 +79,10 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
   onRemoveExpense,
   categoryDef,
 }) => {
+  const [confirming, setConfirming] = useState<PlanConfirmKind | null>(null);
+  const toggleConfirm = (kind: PlanConfirmKind) => setConfirming((prev) => (prev === kind ? null : kind));
+  // A confirm left open belongs to the plan it was opened for
+  useEffect(() => setConfirming(null), [item?.id, isOpen]);
   if (!isOpen || !item) return null;
 
   const isCompleted = item.status === 'completed';
@@ -400,7 +404,21 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
         </div>
 
         {/* Fixed Sticky Action Footer */}
-        <div className="p-4 bg-paper border-t border-ink/10 flex items-center justify-between gap-3">
+        <div className="p-4 bg-paper border-t border-ink/10">
+          {/* Start, Done and Delete confirm here first */}
+          <PlanConfirm
+            kind={confirming}
+            item={item}
+            className="mb-3"
+            onCancel={() => setConfirming(null)}
+            onConfirm={(kind) => {
+              setConfirming(null);
+              if (kind === 'done') onToggleComplete(item);
+              else if (kind === 'delete') onDelete(item.id);
+              else onStart(item);
+            }}
+          />
+          <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => {
@@ -422,8 +440,11 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               <Share2 className="w-4 h-4" />
             </button>
             <button
-              onClick={() => onDelete(item.id)}
-              className="min-h-[40px] min-w-[40px] flex items-center justify-center text-ink/40 hover:text-red-600 rounded-lg hover:bg-red-500/10 transition-colors"
+              onClick={() => toggleConfirm('delete')}
+              aria-expanded={confirming === 'delete'}
+              className={`min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg transition-colors ${
+                confirming === 'delete' ? 'text-red-600 bg-red-500/10' : 'text-ink/40 hover:text-red-600 hover:bg-red-500/10'
+              }`}
               title="Delete plan"
               aria-label="Delete plan"
             >
@@ -432,33 +453,32 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5">
-            {!isCompleted && (
+            {/* There's no Stop: once started, a plan is finished or deleted */}
+            {!isCompleted && !isStarted && (
               <button
-                onClick={() => onToggleStarted(item)}
-                title={isStarted ? 'Stop — move back to Journal' : 'Start — mark as in progress'}
-                aria-label={isStarted ? 'Stop' : 'Start'}
+                onClick={() => toggleConfirm('start')}
+                aria-expanded={confirming === 'start'}
+                title="Start — mark as in progress"
+                aria-label="Start"
                 className="min-h-[40px] px-3 flex items-center justify-center gap-1.5 rounded-lg border border-ink/15 bg-card text-xs font-semibold text-ink/80 hover:text-ink hover:bg-paper hover:border-ink/30 transition-colors"
               >
-                {isStarted ? <Square className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                <span>{isStarted ? 'Stop' : 'Start'}</span>
+                <Play className="w-3.5 h-3.5" />
+                <span>Start</span>
               </button>
             )}
-            <button
-              onClick={() => {
-                // App closes the sheet when completing; un-completing closes it here
-                if (isCompleted) onClose();
-                onToggleComplete(item);
-              }}
-              title={isCompleted ? 'Mark unaccomplished' : 'Mark accomplished'}
-              aria-label={isCompleted ? 'Mark unaccomplished' : 'Mark accomplished'}
-              className={`min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg shadow-2xs transition-all ${
-                isCompleted
-                  ? 'bg-card border border-ink/20 text-ink hover:bg-paper'
-                  : 'bg-[#4A6B56] hover:bg-[#3d5947] text-white'
-              }`}
-            >
-              <CheckCircle2 className="w-4 h-4" />
-            </button>
+            {!isCompleted && (
+              // Opens the inline confirm above; App closes the sheet once it's done
+              <button
+                onClick={() => toggleConfirm('done')}
+                aria-expanded={confirming === 'done'}
+                title="Mark accomplished"
+                aria-label="Mark accomplished"
+                className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg shadow-2xs transition-all bg-[#4A6B56] hover:bg-[#3d5947] text-white"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
           </div>
         </div>
     </Sheet>

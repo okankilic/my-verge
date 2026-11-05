@@ -1,6 +1,6 @@
 // In-app replacement for window.alert. DialogHost (mounted once in App) renders the toasts.
-// There is deliberately no confirm: reversible actions run at once and offer Undo through a toast action,
-// and irreversible ones confirm inline in the page.
+// There are no confirm dialogs and no Undo toasts: actions that change a plan confirm inline in the page
+// through InlineConfirm (src/components/InlineConfirm.tsx). notifyUndo stays available but is unused today.
 
 export type NoticeTone = 'info' | 'success' | 'error';
 

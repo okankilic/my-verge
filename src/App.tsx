@@ -41,7 +41,7 @@ import { saveAttachment, deleteAttachmentBlobs } from './services/attachments';
 import { syncNativeReminders, onReminderTapped } from './services/reminderScheduler';
 import { isNative, applyNativeTheme } from './services/platform';
 import { onSharedContent, toDraft } from './services/shareInbox';
-import { notify, notifyUndo, UNDO_MS } from './services/dialogs';
+import { notify } from './services/dialogs';
 import { photoKey } from './utils/photoKey';
 import { newStep, stepProgress, toggleStep } from './utils/steps';
 import { formatMoney, newExpense, stampCurrency, wishCurrency } from './utils/expenses';
@@ -96,9 +96,6 @@ export default function App() {
   const [isMilestoneOpen, setIsMilestoneOpen] = useState(false);
   const [isSerendipityOpen, setIsSerendipityOpen] = useState(false);
   const [isVaultRangeOpen, setIsVaultRangeOpen] = useState(false);
-
-  // Attachment blobs of deleted items are removed only once their Undo window has passed
-  const pendingBlobDeletes = useRef(new Map<string, ReturnType<typeof setTimeout>>());
 
   // Desktop Mobile Frame Toggle
   const [isMobileFrame, setIsMobileFrame] = useState(false);
@@ -293,88 +290,56 @@ export default function App() {
     setViewingItem((prev) => (prev?.id === id ? { ...prev, ...patch } : prev));
   };
 
-  // No confirm step: the change applies at once and the toast offers Undo
+  // The ✓ buttons confirm through InlineConfirm before calling this, so there's no Undo.
+  // Finished plans can't be reopened, so this only ever completes.
   const handleToggleComplete = (item: BucketItem) => {
-    const isNowCompleted = item.status !== 'completed';
-    const previous: Partial<BucketItem> = {
-      status: item.status,
-      startedAt: item.startedAt,
-      completedAt: item.completedAt,
-      keptInVault: item.keptInVault,
-      hiddenInMemories: item.hiddenInMemories,
-      // A note, rating or expense added in the reflection sheet goes away with the completion it belongs to
-      completionReflection: item.completionReflection,
-      completionRating: item.completionRating,
-      expenses: item.expenses,
-      updatedAt: item.updatedAt,
-    };
-    notifyUndo(isNowCompleted ? `You did it: "${item.title}"!` : `"${item.title}" is back in your Journal.`, () => {
-      patchItem(item.id, previous);
-      // Dropping the celebrated item hides its reflection sheet (MilestoneSheet renders nothing without one)
-      if (isNowCompleted) {
-        setCelebratingItem((prev) => (prev?.id === item.id ? null : prev));
-      }
-    });
+    if (item.status === 'completed') return;
+    notify(`You did it: "${item.title}"!`, 'success');
     const nowIso = new Date().toISOString();
 
-    if (isNowCompleted) {
-      try {
-        confetti({
-          particleCount: 50,
-          spread: 60,
-          origin: { y: 0.7 },
-          colors: ['#5B3FD9', '#A594F9', '#16161A', '#ECECF0'],
-        });
-      } catch (err) {
-        // graceful
-      }
-      playChimeSound();
-
-      // The finish sheet's "Keep in Vault" switch starts from the category's setting
-      const keptInVault = Boolean(categories.find((c) => c.id === item.categoryId)?.keepInVault);
-
-      setItems((prev) =>
-        prev.map((i) =>
-          i.id === item.id
-            ? {
-                ...i,
-                status: 'completed',
-                startedAt: undefined,
-                completedAt: nowIso,
-                keptInVault,
-                // Every finish starts on the Memories timeline; the sheet's switch can hide it
-                hiddenInMemories: false,
-                updatedAt: nowIso,
-              }
-            : i
-        )
-      );
-
-      setCelebratingItem({
-        ...item,
-        status: 'completed',
-        startedAt: undefined,
-        completedAt: nowIso,
-        keptInVault,
-        hiddenInMemories: false,
+    try {
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.7 },
+        colors: ['#5B3FD9', '#A594F9', '#16161A', '#ECECF0'],
       });
-      setIsMilestoneOpen(true);
-      if (viewingItem?.id === item.id) {
-        setViewingItem(null);
-      }
-    } else {
-      setItems((prev) =>
-        prev.map((i) =>
-          i.id === item.id
-            ? {
-                ...i,
-                status: 'active',
-                completedAt: undefined,
-                updatedAt: nowIso,
-              }
-            : i
-        )
-      );
+    } catch (err) {
+      // graceful
+    }
+    playChimeSound();
+
+    // The finish sheet's "Keep in Vault" switch starts from the category's setting
+    const keptInVault = Boolean(categories.find((c) => c.id === item.categoryId)?.keepInVault);
+
+    setItems((prev) =>
+      prev.map((i) =>
+        i.id === item.id
+          ? {
+              ...i,
+              status: 'completed',
+              startedAt: undefined,
+              completedAt: nowIso,
+              keptInVault,
+              // Every finish starts on the Memories timeline; the sheet's switch can hide it
+              hiddenInMemories: false,
+              updatedAt: nowIso,
+            }
+          : i
+      )
+    );
+
+    setCelebratingItem({
+      ...item,
+      status: 'completed',
+      startedAt: undefined,
+      completedAt: nowIso,
+      keptInVault,
+      hiddenInMemories: false,
+    });
+    setIsMilestoneOpen(true);
+    if (viewingItem?.id === item.id) {
+      setViewingItem(null);
     }
   };
 
@@ -390,36 +355,26 @@ export default function App() {
     setCelebratingItem((prev) => (prev?.id === item.id ? { ...prev, hiddenInMemories } : prev));
   };
 
-  const handleToggleStarted = (item: BucketItem) => {
-    const previous = { startedAt: item.startedAt, updatedAt: item.updatedAt };
+  // Start confirms through InlineConfirm before calling this, so there's no Undo.
+  // There's no Stop: a started plan is finished or deleted, never moved back to the Journal.
+  const handleStart = (item: BucketItem) => {
+    if (item.startedAt || item.status !== 'active') return;
     // Prep never blocks starting; the toast just mentions what's still left
     const prepLeft = stepProgress(item.prepSteps);
     const leftCount = prepLeft.total - prepLeft.done;
     const prepNote = leftCount > 0 ? ` ${leftCount} prep ${leftCount === 1 ? 'item' : 'items'} to go.` : '';
-    const isStarting = !item.startedAt;
-    const fromTab = currentTab;
-    notifyUndo(
-      item.startedAt ? `Paused "${item.title}". It's back in your Journal.` : `"${item.title}" is on Now. Enjoy!${prepNote}`,
-      () => {
-        patchItem(item.id, previous);
-        if (isStarting && fromTab !== 'inprogress') {
-          setCurrentTab((tab) => (tab === 'inprogress' ? fromTab : tab));
-        }
-      }
-    );
+    notify(`"${item.title}" is on Now. Enjoy!${prepNote}`, 'success');
     const nowIso = new Date().toISOString();
-    const startedAt = item.startedAt ? undefined : nowIso;
+    const startedAt = nowIso;
 
-    if (isStarting) {
-      // Take the user to the wish they just started
-      setCurrentTab('inprogress');
-      setCategoryByTab((prev) => {
-        const pick = prev.inprogress;
-        return pick && pick !== 'all' && pick !== item.categoryId ? { ...prev, inprogress: undefined } : prev;
-      });
-      setViewingItem((prev) => (prev?.id === item.id ? null : prev));
-      setFocusedNowId(item.id);
-    }
+    // Take the user to the wish they just started
+    setCurrentTab('inprogress');
+    setCategoryByTab((prev) => {
+      const pick = prev.inprogress;
+      return pick && pick !== 'all' && pick !== item.categoryId ? { ...prev, inprogress: undefined } : prev;
+    });
+    setViewingItem((prev) => (prev?.id === item.id ? null : prev));
+    setFocusedNowId(item.id);
 
     setItems((prev) =>
       prev.map((i) =>
@@ -460,17 +415,9 @@ export default function App() {
   const handleRemoveStep = (item: BucketItem, stepId: string, list: StepListKey = 'steps') => {
     const step = item[list]?.find((s) => s.id === stepId);
     if (!step) return;
-    const index = item[list]!.indexOf(step);
+    // StepList confirms the removal first
     updateSteps(item.id, (steps) => steps.filter((s) => s.id !== stepId), list);
-    // Undo puts it back where it was
-    notifyUndo(`Removed "${step.title}".`, () =>
-      updateSteps(
-        item.id,
-        (steps) =>
-          steps.some((s) => s.id === stepId) ? steps : [...steps.slice(0, index), step, ...steps.slice(index)],
-        list
-      )
-    );
+    notify(`Removed "${step.title}".`, 'info');
   };
 
   // Applies a change to an item's expenses, working from the latest copy like updateSteps
@@ -494,16 +441,9 @@ export default function App() {
   const handleRemoveExpense = (item: BucketItem, expenseId: string) => {
     const expense = item.expenses?.find((e) => e.id === expenseId);
     if (!expense) return;
-    const index = item.expenses!.indexOf(expense);
+    // ExpenseList confirms the removal first
     updateExpenses(item.id, (expenses) => expenses.filter((e) => e.id !== expenseId));
-    // Undo puts it back where it was
-    notifyUndo(`Removed ${formatMoney(expense.amount, wishCurrency(item))} expense.`, () =>
-      updateExpenses(item.id, (expenses) =>
-        expenses.some((e) => e.id === expenseId)
-          ? expenses
-          : [...expenses.slice(0, index), expense, ...expenses.slice(index)]
-      )
-    );
+    notify(`Removed ${formatMoney(expense.amount, wishCurrency(item))} expense.`, 'info');
   };
 
   const handleAddPhoto = (item: BucketItem, photoDataUrl: string, note?: string) => {
@@ -566,18 +506,10 @@ export default function App() {
     if (index === -1) return;
     const target = items[index];
 
+    // Delete is confirmed inline first, so its files can go right away
     const attachmentIds = target.attachments?.map((a) => a.id) || [];
     if (attachmentIds.length > 0) {
-      pendingBlobDeletes.current.set(
-        id,
-        setTimeout(() => {
-          pendingBlobDeletes.current.delete(id);
-          deleteAttachmentBlobs(attachmentIds).catch((err) =>
-            console.error('Failed to delete attachments:', err)
-          );
-          // A second past the toast, so a last-moment Undo never finds its files gone
-        }, UNDO_MS + 1000)
-      );
+      deleteAttachmentBlobs(attachmentIds).catch((err) => console.error('Failed to delete attachments:', err));
     }
 
     setItems((prev) => prev.filter((i) => i.id !== id));
@@ -588,16 +520,7 @@ export default function App() {
       setViewingItem(null);
     }
 
-    notifyUndo(`"${target.title}" is gone.`, () => {
-      clearTimeout(pendingBlobDeletes.current.get(id));
-      pendingBlobDeletes.current.delete(id);
-      // Back into the slot it had, as far as the list still allows
-      setItems((prev) =>
-        prev.some((i) => i.id === id)
-          ? prev
-          : [...prev.slice(0, index), target, ...prev.slice(index)]
-      );
-    });
+    notify(`"${target.title}" is gone.`, 'info');
   };
 
   // Closing the global search also clears it, so no hidden filter stays applied
@@ -842,7 +765,7 @@ export default function App() {
                   items={filteredActiveItems}
                   categories={categories}
                   onToggleComplete={handleToggleComplete}
-                  onToggleStarted={handleToggleStarted}
+                  onStart={handleStart}
                   onDelete={handleDeleteItem}
                   onSelect={(it) => setViewingItem(it)}
                   onReorder={handleReorderJournal}
@@ -858,7 +781,7 @@ export default function App() {
               categories={categories}
               onNotificationsEnabled={() => syncNativeReminders(items)}
               onToggleComplete={handleToggleComplete}
-              onToggleStarted={handleToggleStarted}
+              onStart={handleStart}
               onDelete={handleDeleteItem}
               onSelect={(it) => setViewingItem(it)}
             />
@@ -871,7 +794,6 @@ export default function App() {
               categories={categories}
               onSelect={(it) => setViewingItem(it)}
               onToggleComplete={handleToggleComplete}
-              onStop={handleToggleStarted}
               onDelete={handleDeleteItem}
               onAddPhoto={handleAddPhoto}
               onAddAttachment={handleAddAttachment}
@@ -893,12 +815,9 @@ export default function App() {
               onOpenRange={() => setIsVaultRangeOpen(true)}
               onCloseRange={() => setIsVaultRangeOpen(false)}
               categories={categories}
+              selectedCategoryId={selectedCategoryId}
+              onSelectCategory={setSelectedCategoryId}
               onSelect={(it) => setViewingItem(it)}
-              onToggleComplete={handleToggleComplete}
-              onEdit={(it) => {
-                setEditingItem(it);
-                setIsFormOpen(true);
-              }}
             />
           )}
 
@@ -908,11 +827,15 @@ export default function App() {
               items={filteredItems}
               categories={categories}
               onSelect={(it) => setViewingItem(it)}
-              onToggleComplete={handleToggleComplete}
               onEdit={(it) => {
                 setCelebratingItem(it);
                 setIsMilestoneOpen(true);
               }}
+              onToggleComplete={handleToggleComplete}
+              onDelete={handleDeleteItem}
+              onAddPhoto={handleAddPhoto}
+              onAddAttachment={handleAddAttachment}
+              onAddExpense={handleAddExpense}
             />
           )}
 
@@ -971,7 +894,7 @@ export default function App() {
         }}
         onDelete={handleDeleteItem}
         onToggleComplete={handleToggleComplete}
-        onToggleStarted={handleToggleStarted}
+        onStart={handleStart}
         onToggleKeptInVault={handleToggleKeptInVault}
         onToggleHiddenInMemories={handleToggleHiddenInMemories}
         onToggleStep={handleToggleStep}

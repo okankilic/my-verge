@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Check, ClipboardList, ListChecks, X } from 'lucide-react';
 import { STEP_TITLE_MAX_LENGTH, WishStep } from '../types';
 import { stepProgress } from '../utils/steps';
+import { InlineConfirm } from './InlineConfirm';
 
 // 'step': the steps toward a wish. 'prep': what to get ready before starting it.
 type StepKind = 'step' | 'prep';
@@ -36,6 +37,8 @@ export const StepList: React.FC<StepListProps> = ({
   onDraftChange,
 }) => {
   const [localDraft, setLocalDraft] = useState('');
+  // The step whose removal is waiting for a confirm
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const draft = controlledDraft ?? localDraft;
   const setDraft = onDraftChange ?? setLocalDraft;
   const inputRef = useRef<HTMLInputElement>(null);
@@ -70,7 +73,8 @@ export const StepList: React.FC<StepListProps> = ({
       {total > 0 && (
         <ul className={compact ? '' : 'bg-card border border-ink/10 rounded-xl divide-y divide-ink/8'}>
           {steps.map((step) => (
-            <li key={step.id} className={`flex items-center ${compact ? '-ml-2.5' : 'pr-1'}`}>
+            <li key={step.id}>
+              <div className={`flex items-center ${compact ? '-ml-2.5' : 'pr-1'}`}>
               <button
                 type="button"
                 role="checkbox"
@@ -99,13 +103,27 @@ export const StepList: React.FC<StepListProps> = ({
               {!compact && onRemove && (
                 <button
                   type="button"
-                  onClick={() => onRemove(step.id)}
+                  onClick={() => setConfirmingId((prev) => (prev === step.id ? null : step.id))}
+                  aria-expanded={confirmingId === step.id}
                   aria-label={`Remove ${text.noun} "${step.title}"`}
                   title={`Remove ${text.noun}`}
                   className="min-w-[44px] min-h-[44px] shrink-0 flex items-center justify-center rounded-lg text-ink/35 hover:text-ink/70"
                 >
                   <X className="w-4 h-4" />
                 </button>
+              )}
+              </div>
+              {confirmingId === step.id && onRemove && (
+                <InlineConfirm
+                  className="px-3 pb-3"
+                  message={`Remove "${step.title}"?`}
+                  confirmLabel="Remove"
+                  onCancel={() => setConfirmingId(null)}
+                  onConfirm={() => {
+                    setConfirmingId(null);
+                    onRemove(step.id);
+                  }}
+                />
               )}
             </li>
           ))}

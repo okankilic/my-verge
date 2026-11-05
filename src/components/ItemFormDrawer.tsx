@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   Bell,
@@ -18,6 +18,7 @@ import { StepList } from './StepList';
 import { newStep, toggleStep } from '../utils/steps';
 import { CURRENCIES } from '../data/currencies';
 import { currencySymbol } from '../utils/expenses';
+import { InlineConfirm } from './InlineConfirm';
 
 // Title placeholder per category id
 const TITLE_PLACEHOLDERS: Record<string, string> = {
@@ -92,6 +93,12 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   const [prepSteps, setPrepSteps] = useState<WishStep[]>([]);
   const [prepDraft, setPrepDraft] = useState<string>('');
 
+  // Closing with unsaved changes, and switching the currency of a plan with amounts, confirm first
+  const [isConfirmingDiscard, setIsConfirmingDiscard] = useState(false);
+  const [pendingCurrency, setPendingCurrency] = useState<string | null>(null);
+  const baselineRef = useRef<string | null>(null);
+  const [baselineToken, setBaselineToken] = useState(0);
+
   // Populate form if editing
   useEffect(() => {
     if (editingItem) {
@@ -147,7 +154,34 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       setPrepSteps([]);
       setPrepDraft('');
     }
+    setIsConfirmingDiscard(false);
+    setPendingCurrency(null);
+    // The baseline is taken on the next render, once the fields above hold their new values
+    setBaselineToken((t) => t + 1);
   }, [editingItem, draft, defaultCategoryId, defaultCurrency, isOpen]);
+
+  const snapshot = JSON.stringify({
+    categoryId, title, description, priority, targetDate, enableReminder, reminderDate, reminderRecurrence,
+    authorOrCreator, formatOrEdition, locationName, locationCity, estimatedCost, savedAmount, currency,
+    linkUrl, steps, stepDraft, prepSteps, prepDraft,
+  });
+  useEffect(() => {
+    baselineRef.current = snapshot;
+  }, [baselineToken]);
+  const isDirty = baselineRef.current !== null && snapshot !== baselineRef.current;
+
+  // Backdrop, Escape, X and Cancel all come through here
+  const requestClose = () => {
+    if (isDirty) setIsConfirmingDiscard(true);
+    else onClose();
+  };
+
+  const hasAmounts = Boolean(estimatedCost.trim() || savedAmount.trim() || editingItem?.expenses?.length);
+  const handleCurrencyChange = (code: string) => {
+    if (code === currency) return;
+    if (hasAmounts) setPendingCurrency(code);
+    else setCurrency(code);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -213,7 +247,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <Sheet isOpen onClose={onClose} width="xl" labelledBy="item-form-title">
+    <Sheet isOpen onClose={requestClose} width="xl" labelledBy="item-form-title">
         {/* Header */}
         <div className="px-5 py-4 border-b border-ink/10 flex items-center justify-between">
           <div>
@@ -226,7 +260,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             aria-label="Close"
             className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-ink/60 hover:text-ink hover:bg-ink/5"
           >
@@ -488,8 +522,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 </div>
                 {/* One currency per wish, for its budget and expenses */}
                 <select
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
+                  value={pendingCurrency ?? currency}
+                  onChange={(e) => handleCurrencyChange(e.target.value)}
                   aria-label="Currency"
                   title="Currency for this plan's budget and expenses"
                   className="min-h-[44px] px-2 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
@@ -501,6 +535,19 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                   ))}
                 </select>
               </div>
+              {pendingCurrency && (
+                <InlineConfirm
+                  tone="positive"
+                  className="pb-1"
+                  message={`Switch to ${pendingCurrency}? Your amounts keep their numbers.`}
+                  confirmLabel="Switch"
+                  onCancel={() => setPendingCurrency(null)}
+                  onConfirm={() => {
+                    setCurrency(pendingCurrency);
+                    setPendingCurrency(null);
+                  }}
+                />
+              )}
               <div className="grid grid-cols-2 gap-2">
                 <input
                   type="number"
@@ -529,10 +576,24 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
         </form>
 
         {/* Fixed Sticky Confirmation Bottom Bar */}
-        <div className="p-4 bg-paper border-t border-ink/10 flex items-center justify-end gap-3">
+        <div className="p-4 bg-paper border-t border-ink/10">
+          {isConfirmingDiscard && (
+            <InlineConfirm
+              className="mb-3"
+              message="Close without saving your changes?"
+              confirmLabel="Discard"
+              cancelLabel="Keep"
+              onCancel={() => setIsConfirmingDiscard(false)}
+              onConfirm={() => {
+                setIsConfirmingDiscard(false);
+                onClose();
+              }}
+            />
+          )}
+          <div className="flex items-center justify-end gap-3">
           <button
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             className="min-h-[44px] px-4 py-2 text-xs font-semibold text-ink/70 hover:text-ink rounded-xl hover:bg-ink/5 transition-colors"
           >
             Cancel
@@ -545,6 +606,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
           >
             Save
           </button>
+          </div>
         </div>
     </Sheet>
   );

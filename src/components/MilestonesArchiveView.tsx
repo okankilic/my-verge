@@ -1,23 +1,33 @@
 import React, { useState } from 'react';
-import { Star, RotateCcw, Quote, Compass, Check, EyeOff, ChevronRight } from 'lucide-react';
+import { Star, Quote, Compass, Check, EyeOff, ChevronRight } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
 import { StepCount } from './StepList';
+import { ItemActions } from './ItemActions';
+import { ItemMediaStrip } from './ItemMediaStrip';
 
 interface MilestonesArchiveViewProps {
   items: BucketItem[];
   categories: CategoryDefinition[];
   onSelect: (item: BucketItem) => void;
-  onToggleComplete: (item: BucketItem) => void;
   onEdit: (item: BucketItem) => void;
+  onToggleComplete: (item: BucketItem) => void;
+  onDelete: (id: string) => void;
+  onAddPhoto: (item: BucketItem, photoDataUrl: string, note?: string) => void;
+  onAddAttachment: (item: BucketItem, file: File, note?: string) => void;
+  onAddExpense: (item: BucketItem, amount: number, note?: string) => void;
 }
 
 export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
   items,
   categories,
   onSelect,
-  onToggleComplete,
   onEdit,
+  onToggleComplete,
+  onDelete,
+  onAddPhoto,
+  onAddAttachment,
+  onAddExpense,
 }) => {
   const [showHidden, setShowHidden] = useState(false);
   const finishedItems = items.filter((item) => item.status === 'completed');
@@ -104,7 +114,7 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
                       )}
                       <div
                         onClick={() => onSelect(item)}
-                        className="bg-card border border-ink/12 rounded-2xl p-5 shadow-xs hover:border-ink/25 transition-all flex flex-col justify-between space-y-4 cursor-pointer"
+                        className="bg-card border border-ink/12 rounded-2xl p-5 shadow-xs hover:border-ink/25 transition-all cursor-pointer"
                       >
                         <div>
                           {/* Top unboxed metadata */}
@@ -159,31 +169,25 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
                               />
                             </div>
                           )}
+
+                          <ItemMediaStrip
+                            photos={(item.photos || []).slice(1)}
+                            photoNotes={item.photoNotes}
+                            attachments={item.attachments}
+                          />
                         </div>
 
-                        <div className="pt-3 border-t border-ink/8 flex items-center justify-end text-xs text-ink/60">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onEdit(item);
-                              }}
-                              className="min-h-[44px] text-xs text-ink/70 hover:text-ink px-2"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onToggleComplete(item);
-                              }}
-                              title="Move back to active plans"
-                              className="min-h-[44px] px-2.5 py-1 text-xs text-ink/60 hover:text-ink flex items-center gap-1 rounded-lg hover:bg-paper"
-                            >
-                              <RotateCcw className="w-3 h-3" />
-                              <span>Reopen</span>
-                            </button>
-                          </div>
+                        <div className="mt-2">
+                          <ItemActions
+                            item={item}
+                            onToggleComplete={onToggleComplete}
+                            onDelete={onDelete}
+                            onAddPhoto={onAddPhoto}
+                            onAddAttachment={onAddAttachment}
+                            onAddExpense={onAddExpense}
+                            onEdit={onEdit}
+                            className="-mx-3 -mb-3"
+                          />
                         </div>
                       </div>
                     </div>

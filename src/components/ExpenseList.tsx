@@ -3,6 +3,7 @@ import { Receipt, X } from 'lucide-react';
 import { WishExpense } from '../types';
 import { expenseTotal, formatMoney } from '../utils/expenses';
 import { ExpenseSheet } from './ExpenseSheet';
+import { InlineConfirm } from './InlineConfirm';
 
 interface ExpenseListProps {
   expenses: WishExpense[];
@@ -15,6 +16,8 @@ interface ExpenseListProps {
 // The money spent on a wish, with its total
 export const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, title, currency, onAdd, onRemove }) => {
   const [isAdding, setIsAdding] = useState(false);
+  // The expense whose removal is waiting for a confirm
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const total = expenseTotal(expenses);
 
   return (
@@ -32,7 +35,8 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, title, curre
       {expenses.length > 0 && (
         <ul className="bg-card border border-ink/10 rounded-xl divide-y divide-ink/8">
           {expenses.map((expense) => (
-            <li key={expense.id} className="flex items-center gap-2 pl-3 pr-1 min-h-[44px]">
+            <li key={expense.id}>
+              <div className="flex items-center gap-2 pl-3 pr-1 min-h-[44px]">
               <div className="flex-1 min-w-0">
                 <span className="block text-sm text-ink/85 leading-snug truncate">{expense.note || 'Expense'}</span>
                 <span className="block font-mono-journal text-[10px] text-ink/45">
@@ -44,13 +48,27 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, title, curre
               </span>
               <button
                 type="button"
-                onClick={() => onRemove(expense.id)}
+                onClick={() => setConfirmingId((prev) => (prev === expense.id ? null : expense.id))}
+                aria-expanded={confirmingId === expense.id}
                 aria-label={`Remove expense ${formatMoney(expense.amount, currency)}${expense.note ? ` "${expense.note}"` : ''}`}
                 title="Remove expense"
                 className="min-w-[44px] min-h-[44px] shrink-0 flex items-center justify-center rounded-lg text-ink/35 hover:text-ink/70"
               >
                 <X className="w-4 h-4" />
               </button>
+              </div>
+              {confirmingId === expense.id && (
+                <InlineConfirm
+                  className="px-3 pb-3"
+                  message={`Remove the ${formatMoney(expense.amount, currency)} expense?`}
+                  confirmLabel="Remove"
+                  onCancel={() => setConfirmingId(null)}
+                  onConfirm={() => {
+                    setConfirmingId(null);
+                    onRemove(expense.id);
+                  }}
+                />
+              )}
             </li>
           ))}
         </ul>

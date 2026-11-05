@@ -8,7 +8,7 @@ interface ItemRowProps {
   item: BucketItem;
   categoryDef?: CategoryDefinition;
   onToggleComplete: (item: BucketItem) => void;
-  onToggleStarted: (item: BucketItem) => void;
+  onStart: (item: BucketItem) => void;
   onDelete: (id: string) => void;
   onSelect: (item: BucketItem) => void;
 }
@@ -17,7 +17,7 @@ export const ItemRow: React.FC<ItemRowProps> = ({
   item,
   categoryDef,
   onToggleComplete,
-  onToggleStarted,
+  onStart,
   onDelete,
   onSelect,
 }) => {
@@ -62,7 +62,7 @@ export const ItemRow: React.FC<ItemRowProps> = ({
 
       <ItemActions
         item={item}
-        onToggleStarted={onToggleStarted}
+        onStart={onStart}
         onToggleComplete={onToggleComplete}
         onDelete={onDelete}
       />
