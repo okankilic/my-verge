@@ -219,7 +219,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
         <div className="px-5 py-4 border-b border-ink/10 flex items-center justify-between">
           <div>
             <h2 id="item-form-title" className="font-serif-journal text-xl font-medium text-ink">
-              {editingItem ? 'Edit wish' : 'Make a wish'}
+              {editingItem ? 'Edit plan' : 'New plan'}
             </h2>
             <p className="text-xs text-ink/60 mt-0.5">
               What do you want to make real?
@@ -492,7 +492,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
                   aria-label="Currency"
-                  title="Currency for this wish's budget and expenses"
+                  title="Currency for this plan's budget and expenses"
                   className="min-h-[44px] px-2 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
                 >
                   {CURRENCIES.map((c) => (

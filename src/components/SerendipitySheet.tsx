@@ -72,7 +72,7 @@ export const SerendipitySheet: React.FC<SerendipitySheetProps> = ({
             Serendipity Roll
           </h2>
           <p className="text-xs text-ink/65 mt-1">
-            Let fate nudge your focus for today from your active bucket lists.
+            Let fate nudge your focus for today from your active plans.
           </p>
         </div>
 
@@ -138,7 +138,7 @@ export const SerendipitySheet: React.FC<SerendipitySheetProps> = ({
           </div>
         ) : (
           <div className="p-6 text-center text-xs text-ink/60">
-            No active wishes yet. Create one to enable Serendipity rolls!
+            No active plans yet. Create one to enable Serendipity rolls!
           </div>
         )}
       </div>

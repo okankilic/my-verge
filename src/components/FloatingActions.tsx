@@ -33,8 +33,8 @@ export const FloatingActions: React.FC<FloatingActionsProps> = ({
     <button
       type="button"
       onClick={onOpenCreate}
-      title="New Wish"
-      aria-label="New Wish"
+      title="New plan"
+      aria-label="New plan"
       className="w-14 h-14 rounded-full flex items-center justify-center bg-ink text-paper shadow-lg shadow-black/20 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/40"
     >
       <Plus className="w-6 h-6 stroke-[2.5]" />

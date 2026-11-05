@@ -51,7 +51,7 @@ function planFor(item: BucketItem, now: number): Planned[] {
     notification: {
       id: stableIntId(index === 0 ? item.id : `${item.id}#${index}`),
       title: item.title,
-      body: "It's time for this wish!",
+      body: "It's time for this plan!",
       schedule,
       extra: { itemId: item.id },
     },

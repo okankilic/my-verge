@@ -1,6 +1,6 @@
 {
   "name": "Willa",
-  "description": "An editorial mobile bucket list and reminder journal to store, organize, and remind life's aspirations across Go, Do, Buy, Remember, Read, and Watch.",
+  "description": "An editorial mobile plan and reminder journal to store, organize, and remind the things you want to do across Go, Workout, Buy, Remember, Read, and Watch.",
   "requestFramePermissions": ["notifications"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

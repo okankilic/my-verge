@@ -67,11 +67,11 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Willa uses the camera so you can add photos and videos to your wishes.</string>
+	<string>Willa uses the camera so you can add photos and videos to your plans.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Willa records audio when you capture a video for a wish.</string>
+	<string>Willa records audio when you capture a video for a plan.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Willa lets you attach photos and videos from your library to your wishes.</string>
+	<string>Willa lets you attach photos and videos from your library to your plans.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 </dict>

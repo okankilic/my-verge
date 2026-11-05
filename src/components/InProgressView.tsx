@@ -65,7 +65,7 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
         <p className="font-serif-journal text-lg text-ink/70">Ready when you are</p>
         <p className="text-xs text-ink/50 mt-1 max-w-sm mx-auto">
           Tap <Play aria-hidden className="inline w-3 h-3 -mt-0.5 mx-0.5" />
-          <span className="sr-only">Start</span> on any wish in your Journal when you begin living it.
+          <span className="sr-only">Start</span> on any plan in your Journal when you begin living it.
         </p>
       </div>
     );

@@ -429,24 +429,24 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
                 onEdit(item);
               }}
               className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg border border-ink/15 bg-card text-ink/80 hover:text-ink hover:bg-paper hover:border-ink/30 transition-colors"
-              title="Edit wish"
-              aria-label="Edit wish"
+              title="Edit plan"
+              aria-label="Edit plan"
             >
               <Edit3 className="w-4 h-4" />
             </button>
             <button
               onClick={() => shareItem(item, categoryDef)}
               className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg border border-ink/15 bg-card text-ink/80 hover:text-ink hover:bg-paper hover:border-ink/30 transition-colors"
-              title="Share wish"
-              aria-label="Share wish"
+              title="Share plan"
+              aria-label="Share plan"
             >
               <Share2 className="w-4 h-4" />
             </button>
             <button
               onClick={() => onDelete(item.id)}
               className="min-h-[40px] min-w-[40px] flex items-center justify-center text-ink/40 hover:text-red-600 rounded-lg hover:bg-red-500/10 transition-colors"
-              title="Delete wish"
-              aria-label="Delete wish"
+              title="Delete plan"
+              aria-label="Delete plan"
             >
               <Trash2 className="w-4 h-4" />
             </button>

@@ -51,7 +51,7 @@ export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
             <Trophy className="w-6 h-6 stroke-[2]" />
           </div>
           <h2 id="milestone-title" className="font-serif-journal text-2xl font-semibold text-ink">
-            Wish done!
+            Plan done!
           </h2>
           <p className="text-xs text-ink/70 mt-1 max-w-xs mx-auto">
             Look what you did:

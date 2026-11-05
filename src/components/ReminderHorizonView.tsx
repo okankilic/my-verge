@@ -312,7 +312,7 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
             All clear for now
           </p>
           <p className="text-xs text-ink/50 mt-1 max-w-sm mx-auto">
-            Add a reminder or an Until date to any wish and it shows up here.
+            Add a reminder or an Until date to any plan and it shows up here.
           </p>
         </div>
       )}

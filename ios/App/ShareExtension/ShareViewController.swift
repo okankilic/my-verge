@@ -17,7 +17,7 @@ class ShareViewController: UIViewController {
         super.viewDidAppear(animated)
         Task { @MainActor in
             let saved = await saveShare()
-            showConfirmation(saved ? "Saved! Open Willa to finish your wish." : "Sorry, that couldn't be saved.")
+            showConfirmation(saved ? "Saved! Open Willa to finish your plan." : "Sorry, that couldn't be saved.")
         }
     }
 

@@ -63,7 +63,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                 Willa
               </span>
               <span className="text-[10px] sm:text-[11px] font-sans tracking-tight text-ink/55 leading-tight mt-0.5">
-                From wish to done
+                From plan to done
               </span>
             </span>
           </button>

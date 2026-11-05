@@ -58,7 +58,7 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
             ) : (
               <>
                 Tap <Check aria-hidden className="inline w-3 h-3 -mt-0.5 mx-0.5 stroke-[2.5]" />
-                <span className="sr-only">Accomplish</span> on a wish when you've done it to write a few words and keep the memory.
+                <span className="sr-only">Accomplish</span> on a plan when you've done it to write a few words and keep the memory.
               </>
             )}
           </p>
@@ -177,7 +177,7 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
                                 e.stopPropagation();
                                 onToggleComplete(item);
                               }}
-                              title="Move back to active wishes"
+                              title="Move back to active plans"
                               className="min-h-[44px] px-2.5 py-1 text-xs text-ink/60 hover:text-ink flex items-center gap-1 rounded-lg hover:bg-paper"
                             >
                               <RotateCcw className="w-3 h-3" />
@@ -208,7 +208,7 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
               type="button"
               onClick={() => setShowHidden((v) => !v)}
               aria-expanded={showHidden}
-              aria-label={showHidden ? 'Collapse hidden wishes' : 'Show hidden wishes'}
+              aria-label={showHidden ? 'Collapse hidden plans' : 'Show hidden plans'}
               className="min-h-[44px] px-3 text-xs font-medium text-ink/70 hover:text-ink"
             >
               {showHidden ? 'Close' : 'Show'}

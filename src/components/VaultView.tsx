@@ -94,7 +94,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
             <button
               type="button"
               onClick={() => onRangeChange('all')}
-              aria-label="Show wishes from all time"
+              aria-label="Show plans from all time"
               className="min-h-[44px] px-2 text-xs text-ink/60 hover:text-ink"
             >
               Clear
@@ -116,7 +116,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
         (range === 'all' ? (
           <EmptyShelf
             title="Your Vault is ready to fill"
-            hint="Read and Watch wishes, wishes with a budget, and finished wishes you keep will show up here."
+            hint="Read and Watch plans, plans with a budget, and finished plans you keep will show up here."
           />
         ) : (
           <EmptyShelf
@@ -129,7 +129,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
         <div className="flex-1 overflow-y-auto">
           <div className="px-4 py-3 border-b border-ink/10">
             <span id="vault-range-title" className="font-serif-journal text-base text-ink">
-              Show wishes from
+              Show plans from
             </span>
           </div>
           <div role="radiogroup" aria-labelledby="vault-range-title" className="p-2">
@@ -163,7 +163,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
         <section className="space-y-4">
           <div className="flex items-center justify-between gap-3">
             <h3 className="font-serif-journal text-lg font-medium text-ink">
-              Personal Library & Reading Wishes
+              Personal Library & Reading Plans
             </h3>
             <span className="shrink-0 text-xs text-ink/60 font-mono">
               {readingItems.filter((i) => i.status === 'completed').length} / {readingItems.length} read

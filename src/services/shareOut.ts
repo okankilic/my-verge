@@ -45,7 +45,7 @@ async function coverBlob(item: BucketItem): Promise<Blob | null> {
 
 function coverFileName(blob: Blob): string {
   const ext = blob.type === 'image/png' ? 'png' : blob.type === 'image/webp' ? 'webp' : 'jpg';
-  return `willa-wish.${ext}`;
+  return `willa-plan.${ext}`;
 }
 
 const isCancel = (err: unknown) =>
@@ -96,6 +96,6 @@ export async function shareItem(item: BucketItem, category?: CategoryDefinition)
     // Dismissing the share sheet rejects; that's not an error worth showing
     if (isCancel(err)) return;
     console.error('Share failed:', err);
-    notify("Couldn't share this wish. Try again?", 'error');
+    notify("Couldn't share this plan. Try again?", 'error');
   }
 }

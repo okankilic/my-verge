@@ -137,7 +137,7 @@ export default function App() {
     if (!isHydrated || !keptItemsCopyRef.current) return;
     keptItemsCopyRef.current = false;
     notify(
-      "Your saved wishes couldn't be opened, so the samples are here for now. A copy is kept safe on this device.",
+      "Your saved plans couldn't be opened, so the samples are here for now. A copy is kept safe on this device.",
       'info',
       { durationMs: 10000 }
     );
@@ -214,7 +214,7 @@ export default function App() {
       playChimeSound();
       sendBrowserNotification(
         `Willa: ${firstDue.title}`,
-        `Reminder for your bucket list wish: ${firstDue.title}`
+        `Reminder for your plan: ${firstDue.title}`
       );
       const nowIso = new Date().toISOString();
       const freshIds = new Set(fresh.map((i) => i.id));
@@ -260,7 +260,7 @@ export default function App() {
       const newItem: BucketItem = {
         id: `verge-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
         categoryId: itemData.categoryId || 'go',
-        title: itemData.title || 'Untitled Wish',
+        title: itemData.title || 'Untitled plan',
         description: itemData.description || '',
         priority: itemData.priority || 'this_year',
         targetDate: itemData.targetDate,
@@ -737,7 +737,7 @@ export default function App() {
       <div className="min-h-screen bg-page flex items-center justify-center px-4">
         <div className="max-w-xs text-center space-y-3">
           <h1 className="font-serif-journal text-lg text-ink">Your journal didn't open this time</h1>
-          <p className="text-sm text-ink/60">Your wishes are still saved on this device. Try again?</p>
+          <p className="text-sm text-ink/60">Your plans are still saved on this device. Try again?</p>
           <button
             type="button"
             onClick={() => {
@@ -847,7 +847,7 @@ export default function App() {
                     <Compass className="w-6 h-6 stroke-[1.5]" />
                   </div>
                   <h3 className="font-serif-journal text-base font-medium text-ink">
-                    Your Journal is ready for a wish
+                    Your Journal is ready for a plan
                   </h3>
                   <p className="text-xs text-ink/60 max-w-xs mx-auto">
                     Add one now, or clear the filters to see the rest.

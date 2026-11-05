@@ -197,7 +197,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <div className="min-w-0">
               <h4 className="text-xs font-semibold text-ink">Currency</h4>
               <p className="text-[11px] text-ink/60 mt-0.5">
-                New wishes start with this. You can change it on each wish.
+                New plans start with this. You can change it on each plan.
               </p>
             </div>
             <select
@@ -216,9 +216,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
           {/* Vault: which categories' finished wishes start out kept */}
           <div className="bg-card border border-ink/10 rounded-2xl p-4">
-            <h4 className="text-xs font-semibold text-ink">Keep finished wishes from</h4>
+            <h4 className="text-xs font-semibold text-ink">Keep finished plans from</h4>
             <p className="text-[11px] text-ink/60 mt-0.5">
-              Keep in Vault starts on for these categories. You can still change it each time you finish a wish.
+              Keep in Vault starts on for these categories. You can still change it each time you finish a plan.
             </p>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {categories.map((cat) => {
@@ -272,7 +272,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="min-w-0">
                 <h4 className="text-xs font-semibold text-ink">Restore from Backup</h4>
                 <p className="text-[11px] text-ink/60 mt-0.5">
-                  Load wishes from a previously saved JSON file
+                  Load plans from a previously saved JSON file
                 </p>
               </div>
               <button
@@ -350,7 +350,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="bg-card border border-red-500/30 rounded-2xl p-4">
                 <h4 className="text-xs font-semibold text-ink">Reset to sample journal?</h4>
                 <InlineConfirm
-                  message="This swaps your wishes, photos and files for the samples."
+                  message="This swaps your plans, photos and files for the samples."
                   confirmLabel="Reset"
                   onConfirm={handleResetToSample}
                   onCancel={() => setIsConfirmingReset(false)}
