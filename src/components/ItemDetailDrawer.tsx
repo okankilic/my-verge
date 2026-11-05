@@ -28,7 +28,7 @@ import { externalLinkProps } from '../services/platform';
 import { shareItem } from '../services/shareOut';
 import { isReminderDue as isDue, reminderNextAt } from '../services/notifications';
 import { Sheet } from './Sheet';
-import { KeepInVaultSwitch, HideInMemoriesSwitch } from './KeepInVaultSwitch';
+import { HideInMemoriesSwitch } from './KeepInVaultSwitch';
 import { ItemMediaStrip } from './ItemMediaStrip';
 import { StepList } from './StepList';
 import { ExpenseList } from './ExpenseList';
@@ -52,7 +52,6 @@ interface ItemDetailDrawerProps {
   onDelete: (id: string) => void;
   onToggleComplete: (item: BucketItem) => void;
   onStart: (item: BucketItem) => void;
-  onToggleKeptInVault: (item: BucketItem) => void;
   onToggleHiddenInMemories: (item: BucketItem) => void;
   onToggleStep: (item: BucketItem, stepId: string, list?: StepListKey) => void;
   onAddStep: (item: BucketItem, title: string, list?: StepListKey) => void;
@@ -70,7 +69,6 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
   onDelete,
   onToggleComplete,
   onStart,
-  onToggleKeptInVault,
   onToggleHiddenInMemories,
   onToggleStep,
   onAddStep,
@@ -147,6 +145,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
 
           <button
             onClick={onClose}
+            aria-label="Close"
             className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-ink/50 hover:text-ink hover:bg-ink/5 transition-colors"
           >
             <X className="w-5 h-5" />
@@ -247,7 +246,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
           {formattedTargetDate && (
             <div className="flex items-center gap-2 text-xs text-ink/70">
               <Calendar className="w-4 h-4 text-accent" />
-              <span>Target timeline: {formattedTargetDate}</span>
+              <span>Until {formattedTargetDate}</span>
             </div>
           )}
 
@@ -287,7 +286,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               <div className="flex items-center justify-between text-xs font-medium">
                 <div className="flex items-center gap-1.5 text-[#059669]">
                   <DollarSign className="w-4 h-4" />
-                  <span>Aspiration Budget</span>
+                  <span>Budget</span>
                 </div>
                 <span className="font-mono text-sm font-semibold text-ink">
                   {formatMoney(item.budget.savedAmount, currency)} / {formatMoney(item.budget.estimatedCost, currency)}
@@ -306,9 +305,9 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               </div>
               <div className="flex justify-between text-[11px] text-ink/50 font-mono">
                 <span>
-                  {Math.round((item.budget.savedAmount / item.budget.estimatedCost) * 100)}% Funded
+                  {Math.round((item.budget.savedAmount / item.budget.estimatedCost) * 100)}% saved
                 </span>
-                <span>{formatMoney(item.budget.estimatedCost - item.budget.savedAmount, currency)} remaining</span>
+                <span>{formatMoney(item.budget.estimatedCost - item.budget.savedAmount, currency)} to go</span>
               </div>
               {spent > 0 && (
                 <div className="pt-2 border-t border-ink/8 text-[11px] text-ink/70 font-mono">
@@ -324,9 +323,10 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               <span className="text-xs text-ink/60 truncate mr-2">{item.linkUrl}</span>
               <a
                 {...externalLinkProps(item.linkUrl)}
+                aria-label="Open link"
                 className="text-xs text-link font-semibold hover:underline flex items-center gap-1 shrink-0"
               >
-                <span>Visit Link</span>
+                <span>Open</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
@@ -346,10 +346,10 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
                   <Bell className="w-4 h-4 text-accent" />
                   <span>
                     {isReminderDue
-                      ? 'Alert Due Right Now!'
+                      ? 'Due now'
                       : nextReminderAt === null
                         ? 'Reminder passed'
-                        : `Scheduled: ${new Date(nextReminderAt).toLocaleString(undefined, {
+                        : `Next reminder ${new Date(nextReminderAt).toLocaleString(undefined, {
                             month: 'short',
                             day: 'numeric',
                             hour: 'numeric',
@@ -358,7 +358,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
                   </span>
                 </div>
                 {item.reminder.recurrence !== 'none' && (
-                  <span className="text-[11px] opacity-70">({item.reminder.recurrence})</span>
+                  <span className="text-[11px] opacity-70">Repeats {item.reminder.recurrence}</span>
                 )}
               </div>
 
@@ -393,13 +393,10 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
           )}
 
           {isCompleted && (
-            <div className="space-y-2">
-              <KeepInVaultSwitch checked={Boolean(item.keptInVault)} onToggle={() => onToggleKeptInVault(item)} />
-              <HideInMemoriesSwitch
-                checked={Boolean(item.hiddenInMemories)}
-                onToggle={() => onToggleHiddenInMemories(item)}
-              />
-            </div>
+            <HideInMemoriesSwitch
+              checked={Boolean(item.hiddenInMemories)}
+              onToggle={() => onToggleHiddenInMemories(item)}
+            />
           )}
         </div>
 
@@ -458,7 +455,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               <button
                 onClick={() => toggleConfirm('start')}
                 aria-expanded={confirming === 'start'}
-                title="Start — mark as in progress"
+                title="Start — move to Now"
                 aria-label="Start"
                 className="min-h-[40px] px-3 flex items-center justify-center gap-1.5 rounded-lg border border-ink/15 bg-card text-xs font-semibold text-ink/80 hover:text-ink hover:bg-paper hover:border-ink/30 transition-colors"
               >
@@ -471,8 +468,8 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               <button
                 onClick={() => toggleConfirm('done')}
                 aria-expanded={confirming === 'done'}
-                title="Mark accomplished"
-                aria-label="Mark accomplished"
+                title="Mark as done"
+                aria-label="Mark as done"
                 className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg shadow-2xs transition-all bg-[#4A6B56] hover:bg-[#3d5947] text-white"
               >
                 <CheckCircle2 className="w-4 h-4" />

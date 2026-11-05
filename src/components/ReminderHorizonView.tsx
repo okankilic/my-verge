@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Bell, BellOff, AlertTriangle } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
+import { EmptyState } from './EmptyState';
 import { renderCategoryIcon } from '../utils/categoryIcons';
 import {
   getNotificationPermission,
@@ -11,6 +12,8 @@ import {
 } from '../services/notifications';
 import { ItemActions } from './ItemActions';
 import { targetDateTime } from '../utils/targetDate';
+import { HORIZON_RANGES, TimeRange, rangeLabel } from '../utils/timeRange';
+import { TimeRangeFilter } from './TimeRangeFilter';
 
 interface ReminderHorizonViewProps {
   items: BucketItem[];
@@ -20,6 +23,14 @@ interface ReminderHorizonViewProps {
   onDelete: (id: string) => void;
   onSelect: (item: BucketItem) => void;
   onNotificationsEnabled: () => void;
+  // The time filter; App.tsx already narrows items to it
+  range: TimeRange;
+  onRangeChange: (range: TimeRange) => void;
+  isRangeOpen: boolean;
+  onOpenRange: () => void;
+  onCloseRange: () => void;
+  // Set while search or a category pick hides plans
+  onClearFilters?: () => void;
 }
 
 export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
@@ -30,6 +41,12 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
   onDelete,
   onSelect,
   onNotificationsEnabled,
+  range,
+  onRangeChange,
+  isRangeOpen,
+  onOpenRange,
+  onCloseRange,
+  onClearFilters,
 }) => {
   const [notificationState, setNotificationState] = useState<string>('unsupported');
 
@@ -186,12 +203,24 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
 
   return (
     <div className="space-y-5">
+      <TimeRangeFilter
+        id="horizon"
+        range={range}
+        options={HORIZON_RANGES}
+        onChange={onRangeChange}
+        isOpen={isRangeOpen}
+        onOpen={onOpenRange}
+        onClose={onCloseRange}
+        ariaLabel="Filter the Horizon by time"
+        sheetTitle="Show plans for"
+      />
+
       {/* Enable-alerts prompt (only while the browser hasn't been asked yet) */}
       {notificationState === 'default' && (
         <div className="bg-warm border border-[#C05621]/30 rounded-lg px-4 py-2.5 flex items-center justify-between gap-3">
           <span className="flex items-center gap-2 text-xs text-ink/75 min-w-0">
             <Bell className="w-3.5 h-3.5 shrink-0 text-[#C05621]" />
-            <span>Turn on alerts to get reminder notifications</span>
+            <span>Turn on alerts to get a nudge when a reminder is due.</span>
           </span>
           <button
             onClick={handleEnableNotifications}
@@ -204,7 +233,7 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
       {notificationState === 'denied' && (
         <p className="flex items-center gap-2 px-1 text-[11px] text-ink/55">
           <BellOff className="w-3.5 h-3.5 shrink-0" />
-          <span>Alerts are turned off in your system settings.</span>
+          <span>Alerts are off. Turn them on in your system settings.</span>
         </p>
       )}
 
@@ -223,7 +252,8 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
                     className="absolute -left-[23.5px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#C05621] ring-4 ring-page"
                   />
                   <AlertTriangle className="w-4 h-4" />
-                  <span>Due ({dueItems.length})</span>
+                  <span>Due</span>
+                  <span className="font-mono text-[11px] font-normal text-[#C05621]/70">{dueItems.length}</span>
                 </div>
 
                 {dueItems.map((item) =>
@@ -287,14 +317,16 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
 
       {/* Empty state: nothing due and nothing scheduled */}
       {dueItems.length === 0 && upcomingItems.length === 0 && (
-        <div className="p-8 text-center bg-card border border-ink/10 rounded-xl">
-          <p className="font-serif-journal text-base text-ink/70">
-            All clear for now
-          </p>
-          <p className="text-xs text-ink/50 mt-1 max-w-sm mx-auto">
-            Add a reminder or an Until date to any plan and it shows up here.
-          </p>
-        </div>
+        <EmptyState
+          icon={<Bell className="w-6 h-6 stroke-[1.5]" />}
+          title={range === 'all' ? 'All clear for now' : `${rangeLabel(range)} is all clear`}
+          hint={
+            range === 'all'
+              ? 'Add a reminder or an Until date to a plan and it shows up here.'
+              : 'Try another time range to see more.'
+          }
+          onClearFilters={onClearFilters}
+        />
       )}
     </div>
   );

@@ -51,7 +51,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
   onAddAttachment,
   onAddExpense,
   onEdit,
-  doneLabel = 'Mark accomplished',
+  doneLabel = 'Mark as done',
   className = '-mx-3 -mb-1.5',
 }) => {
   const isCompleted = item.status === 'completed';
@@ -88,7 +88,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
             media.push({ kind: 'video', file, previewUrl: URL.createObjectURL(file) });
           }
         } else {
-          notify('Pick an image, video or PDF instead.', 'error');
+          notify('Pick a photo, video or PDF instead.', 'error');
         }
       } catch (err) {
         console.error('Failed to read file:', err);
@@ -140,7 +140,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
               toggleConfirm('start');
             }}
             aria-expanded={confirming === 'start'}
-            title="Start — mark as in progress"
+            title="Start — move to Now"
             aria-label="Start"
             className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${
               confirming === 'start' ? 'text-ink bg-paper' : 'text-ink/60 hover:text-ink hover:bg-paper'
@@ -210,8 +210,8 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
               e.stopPropagation();
               attachInputRef.current?.click();
             }}
-            title="Add image, video or PDF"
-            aria-label="Add image, video or PDF"
+            title="Add photo, video or PDF"
+            aria-label="Add photo, video or PDF"
             className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/60 hover:text-accent hover:bg-paper transition-colors"
           >
             <Paperclip className="w-3.5 h-3.5" />
@@ -267,7 +267,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
             onEdit(item);
           }}
           title="Edit plan"
-          aria-label="Edit"
+          aria-label="Edit plan"
           className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/60 hover:text-ink hover:bg-paper transition-colors"
         >
           <Pencil className="w-3.5 h-3.5" />

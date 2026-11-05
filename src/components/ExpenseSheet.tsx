@@ -41,7 +41,7 @@ export const ExpenseSheet: React.FC<ExpenseSheetProps> = ({ isOpen, title, curre
       >
         <div className="px-4 py-3 border-b border-ink/10">
           <span id="expense-sheet-title" className="font-serif-journal text-base text-ink block">
-            Add an expense
+            Add expense
           </span>
           <span className="text-[11px] text-ink/55 block truncate">{title}</span>
         </div>

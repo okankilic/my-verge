@@ -1,15 +1,19 @@
 // Calendar-aligned time ranges in local time; weeks start on Monday.
 export type TimeRange =
   | 'all'
+  | 'today'
   | 'this-week'
   | 'last-week'
   | 'this-month'
   | 'last-month'
   | 'this-year'
   | 'last-year'
+  | 'next-3-months'
+  | 'next-6-months'
   | `year:${number}`;
 
-export const PRESET_RANGES: TimeRange[] = [
+// The Vault looks back
+export const VAULT_RANGES: TimeRange[] = [
   'all',
   'this-week',
   'last-week',
@@ -19,14 +23,28 @@ export const PRESET_RANGES: TimeRange[] = [
   'last-year',
 ];
 
+// The Horizon looks ahead
+export const HORIZON_RANGES: TimeRange[] = [
+  'all',
+  'today',
+  'this-week',
+  'this-month',
+  'next-3-months',
+  'next-6-months',
+  'this-year',
+];
+
 const LABELS: Record<string, string> = {
   all: 'All time',
+  today: 'Today',
   'this-week': 'This week',
   'last-week': 'Last week',
   'this-month': 'This month',
   'last-month': 'Last month',
   'this-year': 'This year',
   'last-year': 'Last year',
+  'next-3-months': 'In three months',
+  'next-6-months': 'In six months',
 };
 
 export const rangeLabel = (range: TimeRange) =>
@@ -41,6 +59,12 @@ const startOfWeek = (d: Date) => {
 const addDays = (d: Date, days: number) =>
   new Date(d.getFullYear(), d.getMonth(), d.getDate() + days);
 
+// The same day some months later, clamped to the month's end (Nov 30 + 3 months is Feb 28)
+const addMonths = (d: Date, months: number) => {
+  const lastDay = new Date(d.getFullYear(), d.getMonth() + months + 1, 0).getDate();
+  return new Date(d.getFullYear(), d.getMonth() + months, Math.min(d.getDate(), lastDay));
+};
+
 // Half-open [start, end); null means no bounds
 export const rangeBounds = (range: TimeRange, now = new Date()): [Date, Date] | null => {
   const y = now.getFullYear();
@@ -48,6 +72,16 @@ export const rangeBounds = (range: TimeRange, now = new Date()): [Date, Date] | 
   switch (range) {
     case 'all':
       return null;
+    case 'today': {
+      const start = addDays(now, 0);
+      return [start, addDays(start, 1)];
+    }
+    case 'next-3-months':
+    case 'next-6-months': {
+      // From the start of today up to and including the same day 3 or 6 months ahead
+      const start = addDays(now, 0);
+      return [start, addDays(addMonths(start, range === 'next-3-months' ? 3 : 6), 1)];
+    }
     case 'this-week': {
       const start = startOfWeek(now);
       return [start, addDays(start, 7)];
@@ -71,13 +105,16 @@ export const rangeBounds = (range: TimeRange, now = new Date()): [Date, Date] | 
   }
 };
 
-export const isInRange = (iso: string | undefined, range: TimeRange, now = new Date()) => {
+// The same test for a timestamp; null (no readable time) is only in All time
+export const isTimeInRange = (time: number | null, range: TimeRange, now = new Date()) => {
   const bounds = rangeBounds(range, now);
   if (!bounds) return true;
-  if (!iso) return false;
-  const t = new Date(iso).getTime();
-  return t >= bounds[0].getTime() && t < bounds[1].getTime();
+  if (time === null || Number.isNaN(time)) return false;
+  return time >= bounds[0].getTime() && time < bounds[1].getTime();
 };
+
+export const isInRange = (iso: string | undefined, range: TimeRange, now = new Date()) =>
+  isTimeInRange(iso ? new Date(iso).getTime() : null, range, now);
 
 // Years before last year that have a date, newest first (this and last year are presets)
 export const earlierYears = (dates: (string | undefined)[], now = new Date()): TimeRange[] => {

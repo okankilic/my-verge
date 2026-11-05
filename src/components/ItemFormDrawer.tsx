@@ -22,22 +22,22 @@ import { InlineConfirm } from './InlineConfirm';
 
 // Title placeholder per category id
 const TITLE_PLACEHOLDERS: Record<string, string> = {
-  go: 'e.g., Hike the coastal trails of Cabo de Gata',
-  workout: 'e.g., Run a 10K without stopping',
-  buy: 'e.g., Wood-fired stoneware teapot',
-  pay: 'e.g., Renew the car insurance',
-  remember: 'e.g., Attention is the rarest and purest generosity',
-  read: 'e.g., Invisible Cities by Italo Calvino',
-  watch: 'e.g., Cinema Paradiso in 35mm restoration',
-  listen: 'e.g., Kind of Blue on vinyl, start to finish',
-  cook: "e.g., Grandma's sourdough loaf",
-  taste: 'e.g., Khao soi at a Chiang Mai night market',
-  learn: 'e.g., Hold a simple conversation in Italian',
-  make: 'e.g., Hand-bind a leather hardcover journal',
-  play: 'e.g., Finish a game of Go with a friend',
-  call: 'e.g., Catch up with an old school friend',
-  give: 'e.g., Plant a tree for a friend',
-  fix: 'e.g., Repair the squeaky bedroom door',
+  go: 'e.g. Hike the coastal trails of Cabo de Gata',
+  workout: 'e.g. Run a 10K without stopping',
+  buy: 'e.g. Wood-fired stoneware teapot',
+  pay: 'e.g. Renew the car insurance',
+  remember: 'e.g. Attention is the rarest and purest generosity',
+  read: 'e.g. Invisible Cities by Italo Calvino',
+  watch: 'e.g. Cinema Paradiso in 35mm restoration',
+  listen: 'e.g. Kind of Blue on vinyl, start to finish',
+  cook: "e.g. Grandma's sourdough loaf",
+  taste: 'e.g. Khao soi at a Chiang Mai night market',
+  learn: 'e.g. Hold a simple conversation in Italian',
+  make: 'e.g. Hand-bind a leather hardcover journal',
+  play: 'e.g. Finish a game of Go with a friend',
+  call: 'e.g. Catch up with an old school friend',
+  give: 'e.g. Plant a tree for a friend',
+  fix: 'e.g. Repair the squeaky bedroom door',
 };
 
 interface ItemFormDrawerProps {
@@ -255,7 +255,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
               {editingItem ? 'Edit plan' : 'New plan'}
             </h2>
             <p className="text-xs text-ink/60 mt-0.5">
-              What do you want to make real?
+              What's your next plan?
             </p>
           </div>
           <button
@@ -313,7 +313,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder={TITLE_PLACEHOLDERS[categoryId] || 'e.g., Something you want to make real'}
+                placeholder={TITLE_PLACEHOLDERS[categoryId] || "e.g. Something you'd love to do"}
                 className="w-full min-h-[44px] px-3.5 py-2.5 text-sm bg-card border border-ink/20 rounded-xl text-ink placeholder-ink/40 focus:outline-none focus:border-ink"
               />
             </div>
@@ -336,7 +336,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 </div>
                 <div>
                   <label htmlFor="item-format" className="block text-[11px] uppercase tracking-wider text-ink/60 font-semibold mb-1">
-                    Format / Edition
+                    Format or edition
                   </label>
                   <input
                     id="item-format"
@@ -431,7 +431,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 type="text"
                 value={locationCity}
                 onChange={(e) => setLocationCity(e.target.value)}
-                placeholder="City, Country"
+                placeholder="City or country"
                 aria-label="City or country"
                 className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
               />

@@ -70,7 +70,7 @@ export const MediaNoteSheet: React.FC<MediaNoteSheetProps> = ({
             onChange={(e) => setNote(e.target.value.slice(0, MEDIA_NOTE_MAX_LENGTH))}
             maxLength={MEDIA_NOTE_MAX_LENGTH}
             rows={2}
-            placeholder="Optional note…"
+            placeholder="Add a note (optional)"
             className="w-full px-3 py-2 text-sm bg-card border border-ink/15 rounded-lg text-ink resize-none focus:outline-none focus:border-ink"
           />
           <div className="text-right font-mono-journal text-[11px] text-ink/45">

@@ -1,11 +1,12 @@
 import React from 'react';
-import { Calendar, Check, ChevronRight } from 'lucide-react';
+import { BookMarked, ChevronRight } from 'lucide-react';
 import { renderCategoryIcon } from '../utils/categoryIcons';
 import { PlanStatus, planStatus, summarizeByCategory } from '../utils/vaultSummary';
 import { expenseTotal, formatMoney, wishCurrency } from '../utils/expenses';
-import { PRESET_RANGES, TimeRange, rangeLabel } from '../utils/timeRange';
+import { VAULT_RANGES, TimeRange, rangeLabel } from '../utils/timeRange';
 import { BucketItem, CategoryDefinition } from '../types';
-import { Sheet } from './Sheet';
+import { TimeRangeFilter } from './TimeRangeFilter';
+import { EmptyState } from './EmptyState';
 
 interface VaultViewProps {
   items: BucketItem[];
@@ -20,29 +21,25 @@ interface VaultViewProps {
   isRangeOpen: boolean;
   onOpenRange: () => void;
   onCloseRange: () => void;
+  // Set while search or a category pick hides plans
+  onClearFilters?: () => void;
 }
 
-const isShelved = (i: BucketItem) =>
-  i.categoryId === 'read' || i.categoryId === 'watch' || (i.budget?.estimatedCost ?? 0) > 0;
+// Categories whose plans show in the Vault (Settings' "Show in Vault")
+export const keptCategoryIds = (categories: CategoryDefinition[]) =>
+  new Set(categories.filter((c) => c.keepInVault).map((c) => c.id));
 
-// Active Read, Watch and budgeted wishes, plus finished ones while kept.
+// Active and finished wishes in a category switched on in Settings; archived ones never show.
 // App.tsx uses this for the category ribbon counts, so they match what the Vault sums up.
-export const isInVault = (i: BucketItem) =>
-  (i.status === 'active' && isShelved(i)) || (i.status === 'completed' && Boolean(i.keptInVault));
+export const isInVault = (i: BucketItem, keptIds: Set<string>) =>
+  keptIds.has(i.categoryId) && (i.status === 'active' || i.status === 'completed');
 
-// The date the time filter goes by: when a kept wish was finished, else when it was added
+// The date the time filter goes by: when a done wish was finished, else when it was added
 export const vaultDate = (i: BucketItem) =>
   (i.status === 'completed' && i.completedAt) || i.createdAt;
 
-const EmptyShelf: React.FC<{ title: string; hint: string }> = ({ title, hint }) => (
-  <div className="p-8 text-center bg-card border border-ink/10 rounded-xl">
-    <p className="font-serif-journal text-base text-ink/70">{title}</p>
-    <p className="text-xs text-ink/50 mt-1 max-w-sm mx-auto">{hint}</p>
-  </div>
-);
-
 const STATUS_GROUPS: { status: PlanStatus; label: string }[] = [
-  { status: 'completed', label: 'Completed' },
+  { status: 'completed', label: 'Done' },
   { status: 'inProgress', label: 'In progress' },
   { status: 'awaiting', label: 'Awaiting' },
 ];
@@ -82,9 +79,11 @@ export const VaultView: React.FC<VaultViewProps> = ({
   isRangeOpen,
   onOpenRange,
   onCloseRange,
+  onClearFilters,
 }) => {
-  // Only plans the Vault keeps: active Read, Watch or budgeted plans, and finished plans kept here
-  const vaultPlans = items.filter(isInVault);
+  // Only plans from the categories switched on in Settings
+  const keptIds = keptCategoryIds(categories);
+  const vaultPlans = items.filter((i) => isInVault(i, keptIds));
   const isEmpty = vaultPlans.length === 0;
 
   // Per-category counts and money
@@ -105,77 +104,34 @@ export const VaultView: React.FC<VaultViewProps> = ({
 
   return (
     <div className="space-y-8">
-      {/* Time filter */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-sm text-ink/70 truncate">{rangeLabel(range)}</span>
-          {range !== 'all' && (
-            <button
-              type="button"
-              onClick={() => onRangeChange('all')}
-              aria-label="Show plans from all time"
-              className="min-h-[44px] px-2 text-xs text-ink/60 hover:text-ink"
-            >
-              Clear
-            </button>
-          )}
-        </div>
-        <button
-          type="button"
-          onClick={onOpenRange}
-          aria-label="Filter the Vault by time"
-          className="min-h-[44px] px-3 shrink-0 flex items-center gap-1.5 text-xs font-medium bg-card border border-ink/15 rounded-lg text-ink/80 hover:border-ink/30"
-        >
-          <Calendar className="w-3.5 h-3.5" />
-          <span>Time</span>
-        </button>
-      </div>
+      <TimeRangeFilter
+        id="vault"
+        range={range}
+        options={[...VAULT_RANGES, ...yearRanges]}
+        onChange={onRangeChange}
+        isOpen={isRangeOpen}
+        onOpen={onOpenRange}
+        onClose={onCloseRange}
+        ariaLabel="Filter the Vault by time"
+        sheetTitle="Show plans from"
+      />
 
       {isEmpty &&
         (range === 'all' ? (
-          <EmptyShelf
+          <EmptyState
+            icon={<BookMarked className="w-6 h-6 stroke-[1.5]" />}
             title="Your Vault is ready to fill"
-            hint="Read and Watch plans, plans with a budget, and finished plans you keep will show up here."
+            hint="Plans from the categories you pick in Settings show up here."
+            onClearFilters={onClearFilters}
           />
         ) : (
-          <EmptyShelf
-            title={`Nothing from ${rangeLabel(range).toLowerCase()} yet`}
+          <EmptyState
+            icon={<BookMarked className="w-6 h-6 stroke-[1.5]" />}
+            title={`${rangeLabel(range)} is ready to fill`}
             hint="Try another time range to see more."
+            onClearFilters={onClearFilters}
           />
         ))}
-
-      <Sheet isOpen={isRangeOpen} onClose={onCloseRange} width="md" labelledBy="vault-range-title">
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-4 py-3 border-b border-ink/10">
-            <span id="vault-range-title" className="font-serif-journal text-base text-ink">
-              Show plans from
-            </span>
-          </div>
-          <div role="radiogroup" aria-labelledby="vault-range-title" className="p-2">
-            {[...PRESET_RANGES, ...yearRanges].map((option) => {
-              const isSelected = option === range;
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  role="radio"
-                  aria-checked={isSelected}
-                  onClick={() => {
-                    onRangeChange(option);
-                    onCloseRange();
-                  }}
-                  className={`w-full min-h-[44px] px-3 rounded-lg flex items-center justify-between text-sm text-left transition-colors ${
-                    isSelected ? 'bg-paper-deep text-ink font-medium' : 'text-ink/80 hover:bg-paper'
-                  }`}
-                >
-                  <span>{rangeLabel(option)}</span>
-                  {isSelected && <Check className="w-4 h-4" />}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </Sheet>
 
       {/* Summary per category */}
       {summaries.length > 0 && (
@@ -185,7 +141,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
             {summaries.map((s) => {
               const cat = categories.find((c) => c.id === s.categoryId);
               const counts = [
-                s.completed > 0 && `${s.completed} completed`,
+                s.completed > 0 && `${s.completed} done`,
                 s.inProgress > 0 && `${s.inProgress} in progress`,
                 s.awaiting > 0 && `${s.awaiting} awaiting`,
               ].filter(Boolean);

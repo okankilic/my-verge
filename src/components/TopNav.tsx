@@ -135,7 +135,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                 ? 'border-ink text-ink font-semibold'
                 : 'border-transparent hover:text-ink'
             }`}
-            title="Settings & Backup"
+            title="Settings and backup"
           >
             <Settings className="w-3.5 h-3.5" />
             <span>Settings</span>
@@ -148,8 +148,8 @@ export const TopNav: React.FC<TopNavProps> = ({
           {SHOW_SERENDIPITY && (
             <button
               onClick={onOpenSerendipity}
-              title="Roll for today's bucket inspiration"
-              aria-label="Roll for today's bucket inspiration"
+              title="Pick a plan for today"
+              aria-label="Pick a plan for today"
               className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-lg bg-card border border-ink/15 text-ink/80 hover:bg-paper hover:border-ink/30 transition-all"
             >
               <Dices className="w-4 h-4 text-accent" />
@@ -160,7 +160,7 @@ export const TopNav: React.FC<TopNavProps> = ({
           {showMobileFrameToggle && (
             <button
               onClick={onToggleMobileFrame}
-              title={isMobileFrame ? 'Expand to desktop spread' : 'View in mobile phone frame'}
+              title={isMobileFrame ? 'Desktop view' : 'Phone view'}
               className="hidden lg:flex items-center justify-center min-h-[38px] min-w-[38px] rounded-lg border border-ink/15 text-ink/70 hover:text-ink hover:bg-ink/5 transition-colors"
             >
               {isMobileFrame ? <Monitor className="w-4 h-4" /> : <Smartphone className="w-4 h-4" />}

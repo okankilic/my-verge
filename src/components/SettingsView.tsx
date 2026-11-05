@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Bell, Download, Upload, Volume2, RefreshCw } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Bell, Volume2, RefreshCw } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
-import { exportBackup, normalizeCategories, normalizeItems, ThemePreference } from '../services/storage';
+import { ThemePreference } from '../services/storage';
 import { INITIAL_ITEMS } from '../data/initialData';
 import { DEFAULT_CATEGORIES } from '../data/categories';
 import {
@@ -45,13 +45,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onDefaultCurrencyChange,
   onNotificationsEnabled,
 }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [notificationState, setNotificationState] = useState<string>('unsupported');
-  const [pendingRestore, setPendingRestore] = useState<{
-    items: BucketItem[];
-    categories: CategoryDefinition[];
-    fileName: string;
-  } | null>(null);
   const [isConfirmingReset, setIsConfirmingReset] = useState(false);
 
   useEffect(() => {
@@ -73,61 +67,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     deleteAttachmentBlobs(orphaned).catch((err) =>
       console.error('Failed to delete attachments:', err)
     );
-  };
-
-  const handleExport = () => {
-    exportBackup(items, categories).catch((err) => {
-      // Dismissing the native share sheet rejects; that's not an error worth showing
-      if (/cancel/i.test(String(err?.message ?? err))) return;
-      console.error('Backup export failed:', err);
-      notify("Couldn't save the backup. Try again?", 'error');
-    });
-  };
-
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    // Reset so picking the same file again still fires onChange
-    e.target.value = '';
-    if (!file) return;
-
-    let parsed: { items?: unknown; categories?: unknown };
-    try {
-      parsed = JSON.parse(await file.text());
-    } catch {
-      notify("That file couldn't be read. Is it a Willa backup?", 'error');
-      return;
-    }
-
-    // Keep only entries that look like items, and fill in fields the views rely on
-    const importedItems: BucketItem[] = Array.isArray(parsed.items)
-      ? normalizeItems(
-          parsed.items
-            .filter(
-              (i): i is BucketItem =>
-                Boolean(i) && typeof i.id === 'string' && typeof i.title === 'string'
-            )
-            .map((i) => ({ ...i, description: i.description ?? '', photos: i.photos ?? [] }))
-        )
-      : [];
-    if (importedItems.length === 0) {
-      notify("That doesn't look like a Willa backup.", 'error');
-      return;
-    }
-    const importedCategories =
-      Array.isArray(parsed.categories) && parsed.categories.length > 0
-        ? normalizeCategories(parsed.categories)
-        : categories;
-
-    // Applied only after the inline confirm below
-    setPendingRestore({ items: importedItems, categories: importedCategories, fileName: file.name });
-  };
-
-  const handleConfirmRestore = () => {
-    if (!pendingRestore) return;
-    deleteOrphanedBlobs(pendingRestore.items);
-    onReloadData(pendingRestore.items, pendingRestore.categories);
-    setPendingRestore(null);
-    notify('Welcome back! Your journal is restored.', 'success');
   };
 
   const handleResetToSample = () => {
@@ -187,11 +126,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </select>
           </div>
 
-          {/* Vault: which categories' finished wishes start out kept */}
+          {/* Vault: which categories' plans show there */}
           <div className="bg-card border border-ink/10 rounded-2xl p-4">
-            <h4 className="text-xs font-semibold text-ink">Keep finished plans from</h4>
+            <h4 className="text-xs font-semibold text-ink">Show in Vault</h4>
             <p className="text-[11px] text-ink/60 mt-0.5">
-              Keep in Vault starts on for these categories. You can still change it each time you finish a plan.
+              Plans from these categories show in your Vault.
             </p>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {categories.map((cat) => {
@@ -222,68 +161,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           </div>
 
-          {/* Backup / Export */}
-          <div className="bg-card border border-ink/10 rounded-2xl p-4 flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <h4 className="text-xs font-semibold text-ink">Export Full Backup</h4>
-              <p className="text-[11px] text-ink/60 mt-0.5">
-                Download all your lists, categories, and reflections as JSON
-              </p>
-            </div>
-            <button
-              onClick={handleExport}
-              className="min-h-[44px] px-3.5 py-1.5 text-xs font-semibold bg-ink text-paper rounded-xl hover:bg-ink/85 transition-colors flex items-center gap-1.5 shrink-0"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export</span>
-            </button>
-          </div>
-
-          {/* Import / Restore */}
-          <div className="bg-card border border-ink/10 rounded-2xl p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <h4 className="text-xs font-semibold text-ink">Restore from Backup</h4>
-                <p className="text-[11px] text-ink/60 mt-0.5">
-                  Load plans from a previously saved JSON file
-                </p>
-              </div>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="min-h-[44px] px-3.5 py-1.5 text-xs font-semibold bg-card border border-ink/20 text-ink rounded-xl hover:bg-paper transition-colors flex items-center gap-1.5 shrink-0"
-              >
-                <Upload className="w-3.5 h-3.5" />
-                <span>Import</span>
-              </button>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleImport}
-                accept=".json"
-                className="hidden"
-              />
-            </div>
-            {pendingRestore && (
-              <InlineConfirm
-                message={`This swaps your journal for ${pendingRestore.items.length} ${
-                  pendingRestore.items.length === 1 ? 'entry' : 'entries'
-                } from "${pendingRestore.fileName}".`}
-                confirmLabel="Restore"
-                onConfirm={handleConfirmRestore}
-                onCancel={() => setPendingRestore(null)}
-              />
-            )}
-          </div>
-
           {/* Notifications */}
           <div className="bg-card border border-ink/10 rounded-2xl p-4 flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <h4 className="text-xs font-semibold text-ink">Reminder Alerts</h4>
+              <h4 className="text-xs font-semibold text-ink">Reminder alerts</h4>
               <p className="text-[11px] text-ink/60 mt-0.5">
                 {notificationState === 'granted'
                   ? 'On. Reminders arrive as notifications.'
                   : notificationState === 'denied'
-                    ? 'Off. Turn them on in your system settings.'
+                    ? 'Alerts are off. Turn them on in your system settings.'
                     : notificationState === 'unsupported'
                       ? "This device can't show notifications."
                       : 'Get a nudge when a reminder is due.'}
@@ -303,7 +189,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {/* Sound Chime Preview */}
           <div className="bg-card border border-ink/10 rounded-2xl p-4 flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <h4 className="text-xs font-semibold text-ink">Reminder Chime</h4>
+              <h4 className="text-xs font-semibold text-ink">Reminder chime</h4>
               <p className="text-[11px] text-ink/60 mt-0.5">
                 A soft bell that plays with each reminder.
               </p>

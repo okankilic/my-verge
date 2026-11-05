@@ -1,5 +1,4 @@
 import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
-import { Share } from '@capacitor/share';
 import { BucketItem, BudgetInfo, CategoryDefinition, ReminderConfig, WishStep } from '../types';
 import { DEFAULT_CURRENCY, LEGACY_CURRENCY_SYMBOLS, isCurrencyCode } from '../data/currencies';
 import { INITIAL_ITEMS } from '../data/initialData';
@@ -124,14 +123,18 @@ function cleanSteps(raw: unknown): WishStep[] | undefined {
 
 // Older builds had sub-categories; drop the field so it doesn't linger in saves and backups.
 // Wishes in a retired verb move to the verb it merged into.
-// Finished wishes from before "Keep in Vault" stay where the Vault used to show them.
+// The old per-wish keptInVault flag is dropped: the Vault now follows each category's Settings toggle.
 // Preset photos saved under their old dev-only paths move to their public/presets ones, captions included.
 // Malformed steps (in either checklist) and expenses are dropped.
 // The budget's old currency symbol moves to the wish as an ISO code; invalid codes are dropped.
 // Entries that aren't objects are dropped, and photos that aren't a list of strings are cleaned, so one damaged entry can't break loading.
 export function normalizeItems<T extends BucketItem>(raw: T[]): BucketItem[] {
   return raw.filter(isRecord).map((entry) => {
-    const { subCategory: _subCategory, ...item } = entry as T & { subCategory?: string };
+    const {
+      subCategory: _subCategory,
+      keptInVault: _keptInVault,
+      ...item
+    } = entry as T & { subCategory?: string; keptInVault?: boolean };
     item.photos = Array.isArray(item.photos) ? item.photos.filter((p) => typeof p === 'string') : [];
     if (item.photos.some((p) => p in LEGACY_PRESET_PATHS)) {
       const notes: Record<string, string> = { ...item.photoNotes };
@@ -185,10 +188,6 @@ export function normalizeItems<T extends BucketItem>(raw: T[]): BucketItem[] {
           )
         : [];
       item.expenses = expenses.length > 0 ? expenses : undefined;
-    }
-    if (item.status === 'completed' && item.keptInVault === undefined) {
-      item.keptInVault =
-        item.categoryId === 'read' || item.categoryId === 'watch' || (item.budget?.estimatedCost ?? 0) > 0;
     }
     return item;
   });
@@ -265,35 +264,4 @@ export async function loadDefaultCurrency(): Promise<string> {
 
 export function saveDefaultCurrency(code: string): void {
   queueWrite(CURRENCY_STORAGE_KEY, code, 'currency');
-}
-
-// Web: download the JSON. Native: write it to the cache and open the share sheet (Save to Files, AirDrop, Drive...)
-export async function exportBackup(items: BucketItem[], categories: CategoryDefinition[]): Promise<void> {
-  const data = {
-    appName: 'Willa',
-    exportDate: new Date().toISOString(),
-    items,
-    categories,
-  };
-  const json = JSON.stringify(data, null, 2);
-  const fileName = `willa-backup-${new Date().toISOString().split('T')[0]}.json`;
-
-  if (isNative) {
-    const { uri } = await Filesystem.writeFile({
-      path: fileName,
-      data: json,
-      directory: Directory.Cache,
-      encoding: Encoding.UTF8,
-    });
-    await Share.share({ title: 'Willa backup', files: [uri] });
-    return;
-  }
-
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = fileName;
-  a.click();
-  URL.revokeObjectURL(url);
 }

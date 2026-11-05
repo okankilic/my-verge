@@ -50,14 +50,15 @@ import { TopNav } from './components/TopNav';
 import { BottomTabBar } from './components/BottomTabBar';
 import { FloatingActions } from './components/FloatingActions';
 import { CategoryRibbon } from './components/CategoryRibbon';
+import { EmptyState } from './components/EmptyState';
 import { JournalList } from './components/JournalList';
 import { ItemDetailDrawer } from './components/ItemDetailDrawer';
 import { ItemFormDrawer } from './components/ItemFormDrawer';
 import { MilestoneSheet } from './components/MilestoneSheet';
 import { ReminderHorizonView } from './components/ReminderHorizonView';
-import { targetDateTime } from './utils/targetDate';
-import { VaultView, isInVault, vaultDate } from './components/VaultView';
-import { TimeRange, earlierYears, isInRange } from './utils/timeRange';
+import { horizonTime, targetDateTime } from './utils/targetDate';
+import { VaultView, isInVault, keptCategoryIds, vaultDate } from './components/VaultView';
+import { TimeRange, earlierYears, isInRange, isTimeInRange } from './utils/timeRange';
 import { MilestonesArchiveView } from './components/MilestonesArchiveView';
 import { InProgressView } from './components/InProgressView';
 import { SerendipitySheet } from './components/SerendipitySheet';
@@ -85,6 +86,7 @@ export default function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   // The Vault's time filter, in memory only like the category picks
   const [vaultRange, setVaultRange] = useState<TimeRange>('all');
+  const [horizonRange, setHorizonRange] = useState<TimeRange>('all');
   // The wish just started, scrolled to and highlighted on Now
   const [focusedNowId, setFocusedNowId] = useState<string | null>(null);
 
@@ -96,6 +98,7 @@ export default function App() {
   const [isMilestoneOpen, setIsMilestoneOpen] = useState(false);
   const [isSerendipityOpen, setIsSerendipityOpen] = useState(false);
   const [isVaultRangeOpen, setIsVaultRangeOpen] = useState(false);
+  const [isHorizonRangeOpen, setIsHorizonRangeOpen] = useState(false);
 
   // Desktop Mobile Frame Toggle
   const [isMobileFrame, setIsMobileFrame] = useState(false);
@@ -210,8 +213,8 @@ export default function App() {
       setActiveToastItem(firstDue);
       playChimeSound();
       sendBrowserNotification(
-        `Willa: ${firstDue.title}`,
-        `Reminder for your plan: ${firstDue.title}`
+        firstDue.title,
+        "It's time for this plan!"
       );
       const nowIso = new Date().toISOString();
       const freshIds = new Set(fresh.map((i) => i.id));
@@ -309,9 +312,6 @@ export default function App() {
     }
     playChimeSound();
 
-    // The finish sheet's "Keep in Vault" switch starts from the category's setting
-    const keptInVault = Boolean(categories.find((c) => c.id === item.categoryId)?.keepInVault);
-
     setItems((prev) =>
       prev.map((i) =>
         i.id === item.id
@@ -320,7 +320,6 @@ export default function App() {
               status: 'completed',
               startedAt: undefined,
               completedAt: nowIso,
-              keptInVault,
               // Every finish starts on the Memories timeline; the sheet's switch can hide it
               hiddenInMemories: false,
               updatedAt: nowIso,
@@ -334,19 +333,12 @@ export default function App() {
       status: 'completed',
       startedAt: undefined,
       completedAt: nowIso,
-      keptInVault,
       hiddenInMemories: false,
     });
     setIsMilestoneOpen(true);
     if (viewingItem?.id === item.id) {
       setViewingItem(null);
     }
-  };
-
-  const handleToggleKeptInVault = (item: BucketItem) => {
-    const keptInVault = !item.keptInVault;
-    patchItem(item.id, { keptInVault });
-    setCelebratingItem((prev) => (prev?.id === item.id ? { ...prev, keptInVault } : prev));
   };
 
   const handleToggleHiddenInMemories = (item: BucketItem) => {
@@ -545,6 +537,9 @@ export default function App() {
     );
   }, [items, searchQuery]);
 
+  // Categories whose done plans the Vault keeps (set in Settings)
+  const keptIds = useMemo(() => keptCategoryIds(categories), [categories]);
+
   // Items each tab lists, so the category ribbon counts match what the tab shows
   const inTabScope = (item: BucketItem) => {
     switch (currentTab) {
@@ -553,9 +548,13 @@ export default function App() {
       case 'inprogress':
         return item.status === 'active' && Boolean(item.startedAt);
       case 'reminders':
-        return item.status === 'active' && (Boolean(item.reminder?.date) || targetDateTime(item) !== null);
+        return (
+          item.status === 'active' &&
+          (Boolean(item.reminder?.date) || targetDateTime(item) !== null) &&
+          (horizonRange === 'all' || isTimeInRange(horizonTime(item), horizonRange))
+        );
       case 'vault':
-        return isInVault(item) && isInRange(vaultDate(item), vaultRange);
+        return isInVault(item, keptIds) && isInRange(vaultDate(item), vaultRange);
       case 'milestones':
         return item.status === 'completed' && !item.hiddenInMemories;
       default:
@@ -573,7 +572,7 @@ export default function App() {
       }
     });
     return counts;
-  }, [searchedItems, currentTab, vaultRange]);
+  }, [searchedItems, currentTab, vaultRange, horizonRange, keptIds]);
 
   // Global category filter: every tab except Settings renders from these items
   const filteredItems = useMemo(() => {
@@ -586,9 +585,17 @@ export default function App() {
     () => filteredItems.filter((item) => isInRange(vaultDate(item), vaultRange)),
     [filteredItems, vaultRange]
   );
+  // Horizon plans within the picked time (a due reminder counts as now)
+  const horizonItems = useMemo(
+    () =>
+      horizonRange === 'all'
+        ? filteredItems
+        : filteredItems.filter((item) => isTimeInRange(horizonTime(item), horizonRange)),
+    [filteredItems, horizonRange]
+  );
   const vaultYearRanges = useMemo(
-    () => earlierYears(searchedItems.filter(isInVault).map(vaultDate)),
-    [searchedItems]
+    () => earlierYears(searchedItems.filter((i) => isInVault(i, keptIds)).map(vaultDate)),
+    [searchedItems, keptIds]
   );
 
   // Filtered Feed Items, in the user's priority order (the order of the items array)
@@ -619,6 +626,15 @@ export default function App() {
       .filter((item) => item.status === 'active' && item.startedAt)
       .sort((a, b) => new Date(b.startedAt!).getTime() - new Date(a.startedAt!).getTime());
   }, [filteredItems]);
+
+  // Empty states offer Clear only while search or the tab's category pick hides plans
+  const clearFilters =
+    selectedCategoryId !== 'all' || searchQuery.trim() !== ''
+      ? () => {
+          setSelectedCategoryId('all');
+          setSearchQuery('');
+        }
+      : undefined;
 
   if (!isHydrated) {
     if (!loadFailed) return <div className="min-h-screen bg-page" />;
@@ -724,42 +740,25 @@ export default function App() {
             <div className="space-y-3">
               {/* Clean Single Paper Card Container for Items */}
               {filteredActiveItems.length === 0 ? (
-                <div className="p-10 text-center bg-card border border-ink/10 rounded-lg space-y-3 mt-3">
-                  <div className="w-12 h-12 bg-paper text-ink/40 rounded-lg mx-auto flex items-center justify-center">
-                    <Compass className="w-6 h-6 stroke-[1.5]" />
-                  </div>
-                  <h3 className="font-serif-journal text-base font-medium text-ink">
-                    Your Journal is ready for a plan
-                  </h3>
-                  <p className="text-xs text-ink/60 max-w-xs mx-auto">
-                    Add one now, or clear the filters to see the rest.
-                  </p>
-                  <div className="flex items-center justify-center gap-2 pt-1">
-                    {(selectedCategoryId !== 'all' || searchQuery.trim() !== '') && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedCategoryId('all');
-                          setSearchQuery('');
-                        }}
-                        className="min-h-[40px] px-3.5 py-2 bg-card border border-ink/15 text-ink text-xs font-semibold rounded-lg hover:bg-paper transition-all"
-                      >
-                        Clear
-                      </button>
-                    )}
+                <EmptyState
+                  icon={<Compass className="w-6 h-6 stroke-[1.5]" />}
+                  title="Your Journal is ready for a plan"
+                  hint="Tap New to add one."
+                  onClearFilters={clearFilters}
+                  action={
                     <button
                       type="button"
                       onClick={() => {
                         setEditingItem(null);
                         setIsFormOpen(true);
                       }}
-                      className="min-h-[40px] px-4 py-2 bg-ink text-paper text-xs font-semibold rounded-lg hover:bg-ink/85 transition-all inline-flex items-center gap-1.5"
+                      className="min-h-[44px] px-4 bg-ink text-paper text-xs font-semibold rounded-lg hover:bg-ink/85 transition-all inline-flex items-center gap-1.5"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>New</span>
                     </button>
-                  </div>
-                </div>
+                  }
+                />
               ) : (
                 <JournalList
                   items={filteredActiveItems}
@@ -777,13 +776,19 @@ export default function App() {
           {/* TAB 2: REMINDER HORIZON */}
           {currentTab === 'reminders' && (
             <ReminderHorizonView
-              items={filteredItems}
+              items={horizonItems}
+              range={horizonRange}
+              onRangeChange={setHorizonRange}
+              isRangeOpen={isHorizonRangeOpen}
+              onOpenRange={() => setIsHorizonRangeOpen(true)}
+              onCloseRange={() => setIsHorizonRangeOpen(false)}
               categories={categories}
               onNotificationsEnabled={() => syncNativeReminders(items)}
               onToggleComplete={handleToggleComplete}
               onStart={handleStart}
               onDelete={handleDeleteItem}
               onSelect={(it) => setViewingItem(it)}
+              onClearFilters={clearFilters}
             />
           )}
 
@@ -801,6 +806,7 @@ export default function App() {
               onAddExpense={handleAddExpense}
               focusId={focusedNowId}
               onFocusDone={() => setFocusedNowId(null)}
+              onClearFilters={clearFilters}
             />
           )}
 
@@ -818,6 +824,7 @@ export default function App() {
               selectedCategoryId={selectedCategoryId}
               onSelectCategory={setSelectedCategoryId}
               onSelect={(it) => setViewingItem(it)}
+              onClearFilters={clearFilters}
             />
           )}
 
@@ -836,6 +843,7 @@ export default function App() {
               onAddPhoto={handleAddPhoto}
               onAddAttachment={handleAddAttachment}
               onAddExpense={handleAddExpense}
+              onClearFilters={clearFilters}
             />
           )}
 
@@ -849,6 +857,8 @@ export default function App() {
                 setCategories(newCats);
                 // The selected categories may no longer exist
                 setCategoryByTab({});
+                setVaultRange('all');
+                setHorizonRange('all');
                 setActiveToastItem(null);
               }}
               onCategoriesChange={setCategories}
@@ -895,7 +905,6 @@ export default function App() {
         onDelete={handleDeleteItem}
         onToggleComplete={handleToggleComplete}
         onStart={handleStart}
-        onToggleKeptInVault={handleToggleKeptInVault}
         onToggleHiddenInMemories={handleToggleHiddenInMemories}
         onToggleStep={handleToggleStep}
         onAddStep={handleAddStep}
@@ -935,7 +944,6 @@ export default function App() {
           setCelebratingItem(null);
         }}
         onSaveReflection={handleSaveReflection}
-        onToggleKeep={handleToggleKeptInVault}
         onToggleHide={handleToggleHiddenInMemories}
         onAddExpense={handleAddExpense}
         onRemoveExpense={handleRemoveExpense}

@@ -6,6 +6,7 @@ import { expenseTotal, formatMoney, wishCurrency } from '../utils/expenses';
 import { ItemActions } from './ItemActions';
 import { ItemMediaStrip } from './ItemMediaStrip';
 import { StepList } from './StepList';
+import { EmptyState } from './EmptyState';
 
 interface InProgressViewProps {
   items: BucketItem[];
@@ -20,6 +21,8 @@ interface InProgressViewProps {
   // A wish that was just started: scrolled into view, focused and briefly highlighted
   focusId?: string | null;
   onFocusDone?: () => void;
+  // Set while search or a category pick hides plans
+  onClearFilters?: () => void;
 }
 
 const FOCUS_HIGHLIGHT_MS = 1600;
@@ -38,6 +41,7 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
   onAddExpense,
   focusId,
   onFocusDone,
+  onClearFilters,
 }) => {
   const cardRefs = useRef(new Map<string, HTMLElement>());
   const hasFocusTarget = !!focusId && items.some((i) => i.id === focusId);
@@ -56,16 +60,17 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
 
   if (items.length === 0) {
     return (
-      <div className="p-12 text-center bg-card border border-ink/10 rounded-2xl">
-        <div className="w-12 h-12 bg-paper text-ink/40 rounded-lg mx-auto flex items-center justify-center mb-3">
-          <Hourglass className="w-6 h-6 stroke-[1.5]" />
-        </div>
-        <p className="font-serif-journal text-lg text-ink/70">Ready when you are</p>
-        <p className="text-xs text-ink/50 mt-1 max-w-sm mx-auto">
-          Tap <Play aria-hidden className="inline w-3 h-3 -mt-0.5 mx-0.5" />
-          <span className="sr-only">Start</span> on any plan in your Journal when you begin living it.
-        </p>
-      </div>
+      <EmptyState
+        icon={<Hourglass className="w-6 h-6 stroke-[1.5]" />}
+        title="Ready when you are"
+        hint={
+          <>
+            Tap <Play aria-hidden className="inline w-3 h-3 -mt-0.5 mx-0.5" />
+            <span className="sr-only">Start</span> on a plan in your Journal to start it.
+          </>
+        }
+        onClearFilters={onClearFilters}
+      />
     );
   }
 

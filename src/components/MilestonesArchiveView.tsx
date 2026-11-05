@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Star, Quote, Compass, Check, EyeOff, ChevronRight } from 'lucide-react';
+import { Star, Quote, Check, EyeOff, ChevronRight, Film } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { renderCategoryIcon } from '../utils/categoryIcons';
 import { StepCount } from './StepList';
 import { ItemActions } from './ItemActions';
 import { ItemMediaStrip } from './ItemMediaStrip';
+import { EmptyState } from './EmptyState';
 
 interface MilestonesArchiveViewProps {
   items: BucketItem[];
@@ -16,6 +17,8 @@ interface MilestonesArchiveViewProps {
   onAddPhoto: (item: BucketItem, photoDataUrl: string, note?: string) => void;
   onAddAttachment: (item: BucketItem, file: File, note?: string) => void;
   onAddExpense: (item: BucketItem, amount: number, note?: string) => void;
+  // Set while search or a category pick hides plans
+  onClearFilters?: () => void;
 }
 
 export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
@@ -28,6 +31,7 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
   onAddPhoto,
   onAddAttachment,
   onAddExpense,
+  onClearFilters,
 }) => {
   const [showHidden, setShowHidden] = useState(false);
   const finishedItems = items.filter((item) => item.status === 'completed');
@@ -58,21 +62,21 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
   return (
     <div className="space-y-6">
       {accomplishedItems.length === 0 ? (
-        <div className="p-12 text-center bg-card border border-ink/10 rounded-2xl">
-          <p className="font-serif-journal text-lg text-ink/70">
-            {hiddenItems.length > 0 ? 'Your memories are tucked away' : 'Your memories start here'}
-          </p>
-          <p className="text-xs text-ink/50 mt-1 max-w-sm mx-auto">
-            {hiddenItems.length > 0 ? (
-              'They\'re all hidden. Open one below and switch off Hide in Memories to bring it back.'
+        <EmptyState
+          icon={<Film className="w-6 h-6 stroke-[1.5]" />}
+          title={hiddenItems.length > 0 ? 'Your memories are tucked away' : 'Your memories start here'}
+          hint={
+            hiddenItems.length > 0 ? (
+              "They're all hidden. Open one below and switch off Hide in Memories to bring it back."
             ) : (
               <>
                 Tap <Check aria-hidden className="inline w-3 h-3 -mt-0.5 mx-0.5 stroke-[2.5]" />
-                <span className="sr-only">Accomplish</span> on a plan when you've done it to write a few words and keep the memory.
+                <span className="sr-only">Done</span> on a plan when it's done to keep the memory.
               </>
-            )}
-          </p>
-        </div>
+            )
+          }
+          onClearFilters={onClearFilters}
+        />
       ) : (
         <div className="relative pl-8">
           {/* Timeline rail */}

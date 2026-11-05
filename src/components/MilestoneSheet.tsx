@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Trophy, Star } from 'lucide-react';
 import { BucketItem } from '../types';
 import { Sheet } from './Sheet';
-import { KeepInVaultSwitch, HideInMemoriesSwitch } from './KeepInVaultSwitch';
+import { HideInMemoriesSwitch } from './KeepInVaultSwitch';
 import { ExpenseList } from './ExpenseList';
 import { wishCurrency } from '../utils/expenses';
 
@@ -11,7 +11,6 @@ interface MilestoneSheetProps {
   isOpen: boolean;
   onClose: () => void;
   onSaveReflection: (itemId: string, reflection: string, rating: number) => void;
-  onToggleKeep: (item: BucketItem) => void;
   onToggleHide: (item: BucketItem) => void;
   onAddExpense: (item: BucketItem, amount: number, note?: string) => void;
   onRemoveExpense: (item: BucketItem, expenseId: string) => void;
@@ -22,7 +21,6 @@ export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
   isOpen,
   onClose,
   onSaveReflection,
-  onToggleKeep,
   onToggleHide,
   onAddExpense,
   onRemoveExpense,
@@ -111,10 +109,7 @@ export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
           />
 
           {/* Applies at once, not on close */}
-          <div className="space-y-2">
-            <KeepInVaultSwitch checked={Boolean(item.keptInVault)} onToggle={() => onToggleKeep(item)} />
-            <HideInMemoriesSwitch checked={Boolean(item.hiddenInMemories)} onToggle={() => onToggleHide(item)} />
-          </div>
+          <HideInMemoriesSwitch checked={Boolean(item.hiddenInMemories)} onToggle={() => onToggleHide(item)} />
 
           <div className="pt-2 flex items-center justify-end gap-3">
             <button

@@ -21,8 +21,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({ value, onChange, onClose }
             if (e.key === 'Escape') onClose();
           }}
           autoFocus
-          placeholder="Search all plans, places, authors..."
-          aria-label="Search all items"
+          placeholder="Search plans, places, authors…"
+          aria-label="Search all plans"
           className="w-full min-h-[44px] pl-9 pr-11 py-2 text-sm bg-card border border-ink/15 rounded-lg text-ink placeholder:text-ink/40 focus:outline-none focus:border-ink [&::-webkit-search-cancel-button]:hidden"
         />
         {value && (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Archive, EyeOff, LucideIcon } from 'lucide-react';
+import { EyeOff, LucideIcon } from 'lucide-react';
 
 interface SettingSwitchProps {
   checked: boolean;
@@ -53,22 +53,12 @@ interface SwitchProps {
   onToggle: () => void;
 }
 
-export const KeepInVaultSwitch: React.FC<SwitchProps> = (props) => (
-  <SettingSwitch
-    {...props}
-    icon={Archive}
-    label="Keep in Vault"
-    onText="Stays on your Vault shelves."
-    offText="Leaves the Vault once finished."
-  />
-);
-
 export const HideInMemoriesSwitch: React.FC<SwitchProps> = (props) => (
   <SettingSwitch
     {...props}
     icon={EyeOff}
     label="Hide in Memories"
-    onText="Left off your Memories timeline."
+    onText="Stays off your Memories timeline."
     offText="Shows on your Memories timeline."
   />
 );
