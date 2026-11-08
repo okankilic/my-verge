@@ -63,6 +63,7 @@ import { MilestonesArchiveView } from './components/MilestonesArchiveView';
 import { InProgressView } from './components/InProgressView';
 import { SerendipitySheet } from './components/SerendipitySheet';
 import { SettingsView } from './components/SettingsView';
+import { Sheet } from './components/Sheet';
 import { DialogHost } from './components/DialogHost';
 
 export default function App() {
@@ -97,6 +98,7 @@ export default function App() {
   const [celebratingItem, setCelebratingItem] = useState<BucketItem | null>(null);
   const [isMilestoneOpen, setIsMilestoneOpen] = useState(false);
   const [isSerendipityOpen, setIsSerendipityOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isVaultRangeOpen, setIsVaultRangeOpen] = useState(false);
   const [isHorizonRangeOpen, setIsHorizonRangeOpen] = useState(false);
 
@@ -280,7 +282,7 @@ export default function App() {
       setItems((prev) => [newItem, ...prev]);
       // New wishes land at the top of the Journal; say so when it isn't the tab on screen
       if (currentTab !== 'feed') {
-        notify('Added to your Journal!', 'success', {
+        notify('Added to your Plans!', 'success', {
           action: { label: 'Open', onAction: () => setCurrentTab('feed') },
         });
       }
@@ -521,7 +523,7 @@ export default function App() {
     setIsSearchOpen(!isSearchOpen);
   };
 
-  // Global search: every tab except Settings renders from these items
+  // Global search: every tab renders from these items
   const searchedItems = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return items;
@@ -574,7 +576,7 @@ export default function App() {
     return counts;
   }, [searchedItems, currentTab, vaultRange, horizonRange, keptIds]);
 
-  // Global category filter: every tab except Settings renders from these items
+  // Global category filter: every tab renders from these items
   const filteredItems = useMemo(() => {
     if (selectedCategoryId === 'all') return searchedItems;
     return searchedItems.filter((item) => item.categoryId === selectedCategoryId);
@@ -673,6 +675,8 @@ export default function App() {
         onCloseSearch={handleToggleSearch}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        isSettingsOpen={isSettingsOpen}
+        onToggleSettings={() => setIsSettingsOpen((open) => !open)}
       />
 
       {/* Main Container */}
@@ -724,16 +728,14 @@ export default function App() {
           )}
 
           {/* Global Category Ribbon */}
-          {currentTab !== 'settings' && (
-            <div className="mb-3">
-              <CategoryRibbon
-                categories={categories}
-                selectedCategoryId={selectedCategoryId}
-                onSelectCategory={setSelectedCategoryId}
-                countsByCategory={countsByCategory}
-              />
-            </div>
-          )}
+          <div className="mb-3">
+            <CategoryRibbon
+              categories={categories}
+              selectedCategoryId={selectedCategoryId}
+              onSelectCategory={setSelectedCategoryId}
+              countsByCategory={countsByCategory}
+            />
+          </div>
 
           {/* TAB 1: STREAMLINED JOURNAL FEED */}
           {currentTab === 'feed' && (
@@ -742,7 +744,7 @@ export default function App() {
               {filteredActiveItems.length === 0 ? (
                 <EmptyState
                   icon={<Compass className="w-6 h-6 stroke-[1.5]" />}
-                  title="Your Journal is ready for a plan"
+                  title="Ready for your next plan"
                   hint="Tap New to add one."
                   onClearFilters={clearFilters}
                   action={
@@ -847,29 +849,6 @@ export default function App() {
             />
           )}
 
-          {/* TAB 5: SETTINGS & BACKUP */}
-          {currentTab === 'settings' && (
-            <SettingsView
-              items={items}
-              categories={categories}
-              onReloadData={(newItems, newCats) => {
-                setItems(stampCurrency(newItems, defaultCurrency));
-                setCategories(newCats);
-                // The selected categories may no longer exist
-                setCategoryByTab({});
-                setVaultRange('all');
-                setHorizonRange('all');
-                setActiveToastItem(null);
-              }}
-              onCategoriesChange={setCategories}
-              theme={theme}
-              onThemeChange={setTheme}
-              defaultCurrency={defaultCurrency}
-              onDefaultCurrencyChange={setDefaultCurrency}
-              onNotificationsEnabled={() => syncNativeReminders(items)}
-            />
-          )}
-
           {/* Bottom spacer: keeps content clear of the mobile tab bar and the floating Search/New buttons */}
           <div aria-hidden className="pb-36 md:pb-24" />
         </main>
@@ -891,6 +870,35 @@ export default function App() {
         onTabChange={setCurrentTab}
         activeRemindersCount={dueRemindersCount}
       />
+
+      {/* Settings, toggled by the gear in TopNav. Before the other sheets so a drawer opened by a reminder or share lands on top */}
+      <Sheet
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        width="md"
+        labelledBy="settings-sheet-title"
+      >
+        <SettingsView
+          items={items}
+          categories={categories}
+          onReloadData={(newItems, newCats) => {
+            setItems(stampCurrency(newItems, defaultCurrency));
+            setCategories(newCats);
+            // The selected categories may no longer exist
+            setCategoryByTab({});
+            setVaultRange('all');
+            setHorizonRange('all');
+            setActiveToastItem(null);
+          }}
+          onCategoriesChange={setCategories}
+          theme={theme}
+          onThemeChange={setTheme}
+          defaultCurrency={defaultCurrency}
+          onDefaultCurrencyChange={setDefaultCurrency}
+          onNotificationsEnabled={() => syncNativeReminders(items)}
+          onClose={() => setIsSettingsOpen(false)}
+        />
+      </Sheet>
 
       {/* Item Detail Sheet (Tap-to-Inspect) */}
       <ItemDetailDrawer

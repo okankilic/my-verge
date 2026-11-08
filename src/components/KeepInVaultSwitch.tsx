@@ -57,8 +57,8 @@ export const HideInMemoriesSwitch: React.FC<SwitchProps> = (props) => (
   <SettingSwitch
     {...props}
     icon={EyeOff}
-    label="Hide in Memories"
-    onText="Stays off your Memories timeline."
-    offText="Shows on your Memories timeline."
+    label="Hide in Moments"
+    onText="Stays off your Moments timeline."
+    offText="Shows on your Moments timeline."
   />
 );

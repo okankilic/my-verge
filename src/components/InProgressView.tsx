@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Hourglass, MapPin, Play } from 'lucide-react';
+import { Zap, MapPin, Play } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
 import { expenseTotal, formatMoney, wishCurrency } from '../utils/expenses';
@@ -61,12 +61,12 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
   if (items.length === 0) {
     return (
       <EmptyState
-        icon={<Hourglass className="w-6 h-6 stroke-[1.5]" />}
+        icon={<Zap className="w-6 h-6 stroke-[1.5]" />}
         title="Ready when you are"
         hint={
           <>
             Tap <Play aria-hidden className="inline w-3 h-3 -mt-0.5 mx-0.5" />
-            <span className="sr-only">Start</span> on a plan in your Journal to start it.
+            <span className="sr-only">Start</span> on any of your Plans to start it.
           </>
         }
         onClearFilters={onClearFilters}

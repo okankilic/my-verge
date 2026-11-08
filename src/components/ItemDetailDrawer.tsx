@@ -17,7 +17,7 @@ import {
   Compass,
   Clock,
   Play,
-  Hourglass,
+  Zap,
   Trophy,
   Star,
   Share2,
@@ -237,7 +237,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
           {/* In Progress */}
           {formattedStartedAt && (
             <div className="flex items-center gap-2 text-xs text-ink/70">
-              <Hourglass className="w-4 h-4 text-positive" />
+              <Zap className="w-4 h-4 text-positive" />
               <span>In progress since {formattedStartedAt}</span>
             </div>
           )}

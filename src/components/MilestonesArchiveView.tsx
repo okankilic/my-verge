@@ -64,14 +64,14 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
       {accomplishedItems.length === 0 ? (
         <EmptyState
           icon={<Film className="w-6 h-6 stroke-[1.5]" />}
-          title={hiddenItems.length > 0 ? 'Your memories are tucked away' : 'Your memories start here'}
+          title={hiddenItems.length > 0 ? 'Your moments are tucked away' : 'Your moments start here'}
           hint={
             hiddenItems.length > 0 ? (
-              "They're all hidden. Open one below and switch off Hide in Memories to bring it back."
+              "They're all hidden. Open one below and switch off Hide in Moments to bring it back."
             ) : (
               <>
                 Tap <Check aria-hidden className="inline w-3 h-3 -mt-0.5 mx-0.5 stroke-[2.5]" />
-                <span className="sr-only">Done</span> on a plan when it's done to keep the memory.
+                <span className="sr-only">Done</span> on a plan when it's done to keep the moment.
               </>
             )
           }

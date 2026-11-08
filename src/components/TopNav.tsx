@@ -1,5 +1,5 @@
 import React from 'react';
-import { Smartphone, Monitor, Dices, Film, Settings, Hourglass } from 'lucide-react';
+import { Smartphone, Monitor, Dices, Film, Settings, Zap } from 'lucide-react';
 import { ViewTab } from '../types';
 import { SearchBar } from './SearchBar';
 
@@ -18,6 +18,8 @@ interface TopNavProps {
   onCloseSearch: () => void;
   searchQuery: string;
   onSearchChange: (q: string) => void;
+  isSettingsOpen: boolean;
+  onToggleSettings: () => void;
 }
 
 export const TopNav: React.FC<TopNavProps> = ({
@@ -32,6 +34,8 @@ export const TopNav: React.FC<TopNavProps> = ({
   onCloseSearch,
   searchQuery,
   onSearchChange,
+  isSettingsOpen,
+  onToggleSettings,
 }) => {
   return (
     <header
@@ -73,7 +77,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                 : 'border-transparent hover:text-ink'
             }`}
           >
-            Journal
+            Plans
           </button>
           <button
             onClick={() => onTabChange('reminders')}
@@ -98,7 +102,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                 : 'border-transparent hover:text-ink'
             }`}
           >
-            <Hourglass className="w-3.5 h-3.5" />
+            <Zap className="w-3.5 h-3.5" />
             <span>Now</span>
           </button>
           <button
@@ -110,7 +114,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             }`}
           >
             <Film className="w-3.5 h-3.5" />
-            <span>Memories</span>
+            <span>Moments</span>
           </button>
           <button
             onClick={() => onTabChange('vault')}
@@ -121,18 +125,6 @@ export const TopNav: React.FC<TopNavProps> = ({
             }`}
           >
             Vault
-          </button>
-          <button
-            onClick={() => onTabChange('settings')}
-            className={`whitespace-nowrap pb-0.5 border-b-2 transition-all flex items-center gap-1.5 ${
-              currentTab === 'settings'
-                ? 'border-ink text-ink font-semibold'
-                : 'border-transparent hover:text-ink'
-            }`}
-            title="Settings and backup"
-          >
-            <Settings className="w-3.5 h-3.5" />
-            <span>Settings</span>
           </button>
         </nav>
 
@@ -160,6 +152,20 @@ export const TopNav: React.FC<TopNavProps> = ({
               {isMobileFrame ? <Monitor className="w-4 h-4" /> : <Smartphone className="w-4 h-4" />}
             </button>
           )}
+
+          {/* Toggles the Settings sheet, on every width; it isn't on the dock */}
+          <button
+            type="button"
+            onClick={onToggleSettings}
+            title="Settings"
+            aria-label="Settings"
+            aria-expanded={isSettingsOpen}
+            className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/40 ${
+              isSettingsOpen ? 'text-ink bg-ink/10' : 'text-ink/70 hover:text-ink hover:bg-ink/5'
+            }`}
+          >
+            <Settings className="w-5 h-5" />
+          </button>
         </div>
       </div>
 

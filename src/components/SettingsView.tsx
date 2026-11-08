@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, Volume2, RefreshCw } from 'lucide-react';
+import { Bell, Volume2, RefreshCw, X } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { ThemePreference } from '../services/storage';
 import { INITIAL_ITEMS } from '../data/initialData';
@@ -26,6 +26,7 @@ interface SettingsViewProps {
   defaultCurrency: string;
   onDefaultCurrencyChange: (code: string) => void;
   onNotificationsEnabled: () => void;
+  onClose: () => void;
 }
 
 const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
@@ -44,6 +45,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   defaultCurrency,
   onDefaultCurrencyChange,
   onNotificationsEnabled,
+  onClose,
 }) => {
   const [notificationState, setNotificationState] = useState<string>('unsupported');
   const [isConfirmingReset, setIsConfirmingReset] = useState(false);
@@ -77,9 +79,23 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   return (
-    <div className="max-w-xl mx-auto animate-in fade-in duration-150">
-      <div>
+    <>
+      <div className="pl-4 pr-1.5 py-1 border-b border-ink/10 flex items-center justify-between shrink-0">
+        <span id="settings-sheet-title" className="font-serif-journal text-base text-ink">
+          Settings
+        </span>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          title="Close"
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/70 hover:text-ink hover:bg-ink/5 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
 
+      <div className="flex-1 overflow-y-auto p-4">
         <div className="space-y-4">
           {/* Appearance */}
           <div className="bg-card border border-ink/10 rounded-2xl p-4 flex items-center justify-between gap-3">
@@ -207,7 +223,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <div className="pt-2">
             {isConfirmingReset ? (
               <div className="bg-card border border-red-500/30 rounded-2xl p-4">
-                <h4 className="text-xs font-semibold text-ink">Reset to sample journal?</h4>
+                <h4 className="text-xs font-semibold text-ink">Reset to sample plans?</h4>
                 <InlineConfirm
                   message="This swaps your plans, photos and files for the samples."
                   confirmLabel="Reset"
@@ -227,6 +243,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };

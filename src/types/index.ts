@@ -97,4 +97,4 @@ export interface BucketItem {
   updatedAt: string;
 }
 
-export type ViewTab = 'feed' | 'reminders' | 'inprogress' | 'vault' | 'milestones' | 'settings';
+export type ViewTab = 'feed' | 'reminders' | 'inprogress' | 'vault' | 'milestones';

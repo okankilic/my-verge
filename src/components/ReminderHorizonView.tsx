@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, BellOff, AlertTriangle } from 'lucide-react';
+import { Bell, BellOff, AlertTriangle, Sunrise } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { EmptyState } from './EmptyState';
 import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
@@ -318,7 +318,7 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
       {/* Empty state: nothing due and nothing scheduled */}
       {dueItems.length === 0 && upcomingItems.length === 0 && (
         <EmptyState
-          icon={<Bell className="w-6 h-6 stroke-[1.5]" />}
+          icon={<Sunrise className="w-6 h-6 stroke-[1.5]" />}
           title={range === 'all' ? 'All clear for now' : `${rangeLabel(range)} is all clear`}
           hint={
             range === 'all'

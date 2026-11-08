@@ -1,5 +1,5 @@
 import React from 'react';
-import { Compass, Bell, Hourglass, BookMarked, Film, Settings } from 'lucide-react';
+import { Compass, Sunrise, Zap, BookMarked, Film } from 'lucide-react';
 import { ViewTab } from '../types';
 
 interface BottomTabBarProps {
@@ -8,7 +8,7 @@ interface BottomTabBarProps {
   activeRemindersCount: number;
 }
 
-// Phone-only dock listing every tab, with Now in the middle.
+// Phone-only dock listing every tab but Settings (a gear in TopNav), with Now in the middle.
 // Search and New float above it in FloatingActions.
 export const BottomTabBar: React.FC<BottomTabBarProps> = ({
   currentTab,
@@ -16,12 +16,11 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
   activeRemindersCount,
 }) => {
   const tabs = [
-    { id: 'feed' as ViewTab, label: 'Journal', icon: Compass },
-    { id: 'reminders' as ViewTab, label: 'Horizon', icon: Bell, badge: activeRemindersCount },
-    { id: 'inprogress' as ViewTab, label: 'Now', icon: Hourglass },
-    { id: 'milestones' as ViewTab, label: 'Memories', icon: Film },
+    { id: 'feed' as ViewTab, label: 'Plans', icon: Compass },
+    { id: 'reminders' as ViewTab, label: 'Horizon', icon: Sunrise, badge: activeRemindersCount },
+    { id: 'inprogress' as ViewTab, label: 'Now', icon: Zap },
+    { id: 'milestones' as ViewTab, label: 'Moments', icon: Film },
     { id: 'vault' as ViewTab, label: 'Vault', icon: BookMarked },
-    { id: 'settings' as ViewTab, label: 'Settings', icon: Settings },
   ];
 
   return (
@@ -29,7 +28,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
       className="fixed bottom-0 left-0 right-0 z-40 bg-page/95 backdrop-blur-md border-t border-ink/25 md:hidden shadow-lg shadow-black/5"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="h-16 max-w-lg mx-auto grid grid-cols-6">
+      <div className="h-16 max-w-lg mx-auto grid grid-cols-5">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = tab.id === currentTab;
