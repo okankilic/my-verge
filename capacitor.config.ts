@@ -2,11 +2,11 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.okankilic.myverge',
-  appName: 'Willa',
+  appName: 'Wishcrumbs',
   webDir: 'dist',
   plugins: {
     LocalNotifications: {
-      iconColor: '#5B3FD9',
+      iconColor: '#A4552F',
     },
   },
 };

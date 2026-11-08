@@ -36,7 +36,7 @@ export const SettingSwitch: React.FC<SettingSwitchProps> = ({
     <span
       aria-hidden
       className={`relative w-10 h-6 shrink-0 rounded-full transition-colors ${
-        checked ? 'bg-[#4A6B56]' : 'bg-ink/20'
+        checked ? 'bg-switch-on' : 'bg-ink/20'
       }`}
     >
       <span

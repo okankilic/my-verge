@@ -1,6 +1,6 @@
 import React from 'react';
 import { CategoryDefinition } from '../types';
-import { renderCategoryIcon } from '../utils/categoryIcons';
+import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
 
 interface CategoryRibbonProps {
   categories: CategoryDefinition[];
@@ -112,7 +112,7 @@ export const CategoryRibbon: React.FC<CategoryRibbonProps> = ({
                 : 'border border-ink/15 bg-card text-ink/80 shadow-2xs hover:bg-paper hover:border-ink/30 hover:text-ink active:scale-95'
             }`}
           >
-            <span style={{ color: cat.accentColor }}>{renderCategoryIcon(cat.icon, 'w-3.5 h-3.5')}</span>
+            <span style={isSelected ? undefined : { color: categoryColor(cat.accentColor) }}>{renderCategoryIcon(cat.icon, 'w-3.5 h-3.5')}</span>
             <span>{cat.verb}</span>
             <span className={countBadgeClass(isSelected)}>{count}</span>
           </button>

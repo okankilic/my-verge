@@ -15,6 +15,7 @@ const category = (verb: string, icon: string, tagline: string, accentColor: stri
 // Every verb is a built-in category, each with its fixed Lucide icon
 export const DEFAULT_CATEGORIES: CategoryDefinition[] = [
   category('Go', 'Compass', 'Places, trips & sights worth seeing', '#B45309'), // amber/terracotta
+  category('Visit', 'MapPin', 'People & places to drop in on', '#0369A1'), // ocean blue
   category('Workout', 'Dumbbell', 'Runs, classes & training goals', '#3B82F6'), // cobalt
   category('Buy', 'ShoppingBag', 'Lovely things to own & collect', '#059669'), // forest emerald
   category('Pay', 'Receipt', 'Bills, subscriptions & debts to settle', '#0D9488'), // sea green
@@ -25,7 +26,8 @@ export const DEFAULT_CATEGORIES: CategoryDefinition[] = [
   category('Cook', 'ChefHat', 'Recipes & dishes to make at home', '#D97706'), // ochre
   category('Taste', 'Utensils', 'Restaurants, street food & flavors to try', '#65A30D'), // olive
   category('Learn', 'GraduationCap', 'Languages, courses & skills to practice', '#4338CA'), // indigo
-  category('Make', 'Palette', 'Art, writing, builds & handmade things', '#9333EA'), // purple
+  category('See', 'Eye', 'Exhibitions, landmarks & wonders to take in', '#9333EA'), // purple
+  category('Try', 'FlaskConical', 'New hobbies, experiences & first times', '#A21CAF'), // fuchsia
   category('Play', 'Gamepad2', 'Games, sports & playful pursuits', '#DB2777'), // pink
   category('Call', 'Phone', 'People to reach out to & catch up with', '#2563EB'), // blue
   category('Give', 'Gift', 'Gifts, kindness & ways to give back', '#E11D48'), // rose
@@ -38,6 +40,6 @@ export const CATEGORY_VERB_ICONS: Record<string, string> = Object.fromEntries(
 
 // Verbs retired from older builds, and the verb their wishes moved to
 export const MERGED_VERBS: Record<string, string> = {
-  Visit: 'Go', Explore: 'Go', See: 'Go', Try: 'Go', Grow: 'Go', Do: 'Go',
-  Practice: 'Learn', Build: 'Make', Write: 'Make', Collect: 'Buy',
+  Explore: 'Go', Grow: 'Go', Do: 'Go',
+  Practice: 'Learn', Make: 'Learn', Build: 'Learn', Write: 'Learn', Collect: 'Buy',
 };

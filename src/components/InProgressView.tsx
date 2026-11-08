@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Hourglass, MapPin, Play } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
-import { renderCategoryIcon } from '../utils/categoryIcons';
+import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
 import { expenseTotal, formatMoney, wishCurrency } from '../utils/expenses';
 import { ItemActions } from './ItemActions';
 import { ItemMediaStrip } from './ItemMediaStrip';
@@ -103,7 +103,7 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
             <div className="flex items-center gap-1.5">
               <span
                 className="shrink-0"
-                style={{ color: cat?.accentColor || 'var(--color-ink)' }}
+                style={{ color: categoryColor(cat?.accentColor) }}
               >
                 {renderCategoryIcon(cat?.icon || item.categoryId, 'w-3.5 h-3.5')}
               </span>
@@ -127,7 +127,7 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
                   </span>
                 )}
                 {spent > 0 && (
-                  <span className="font-mono-journal shrink-0 text-[#059669]">
+                  <span className="font-mono-journal shrink-0 text-positive">
                     {formatMoney(spent, wishCurrency(item))} spent
                   </span>
                 )}

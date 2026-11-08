@@ -1,6 +1,6 @@
 import React from 'react';
 import { BookMarked, ChevronRight } from 'lucide-react';
-import { renderCategoryIcon } from '../utils/categoryIcons';
+import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
 import { PlanStatus, planStatus, summarizeByCategory } from '../utils/vaultSummary';
 import { expenseTotal, formatMoney, wishCurrency } from '../utils/expenses';
 import { VAULT_RANGES, TimeRange, rangeLabel } from '../utils/timeRange';
@@ -155,7 +155,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
                     aria-pressed={selectedCategoryId === s.categoryId}
                     className="w-full min-h-[44px] px-4 py-3 flex items-start gap-2.5 text-left"
                   >
-                  <span className="mt-0.5 shrink-0" style={{ color: cat?.accentColor || 'var(--color-ink)' }}>
+                  <span className="mt-0.5 shrink-0" style={{ color: categoryColor(cat?.accentColor) }}>
                     {renderCategoryIcon(cat?.icon || s.categoryId, 'w-4 h-4')}
                   </span>
                   <div className="flex-1 min-w-0">
@@ -164,7 +164,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
                     {codes.map((code) => (
                       <div key={code} className="mt-0.5 flex flex-wrap gap-x-3 text-[11px] font-mono">
                         {s.spent.has(code) && (
-                          <span className="text-[#059669]">Spent {formatMoney(s.spent.get(code), code)}</span>
+                          <span className="text-positive">Spent {formatMoney(s.spent.get(code), code)}</span>
                         )}
                         {s.budgeted.has(code) && (
                           <span className="text-ink/60">Budget {formatMoney(s.budgeted.get(code), code)}</span>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { BucketItem, CategoryDefinition } from '../types';
-import { renderCategoryIcon } from '../utils/categoryIcons';
+import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
 import { ItemActions } from './ItemActions';
 import { StepCount } from './StepList';
 
@@ -37,7 +37,7 @@ export const ItemRow: React.FC<ItemRowProps> = ({
       <div className="flex items-center gap-1.5">
         <span
           className="shrink-0 transition-colors"
-          style={{ color: categoryDef?.accentColor || 'var(--color-ink)' }}
+          style={{ color: categoryColor(categoryDef?.accentColor) }}
         >
           {renderCategoryIcon(categoryDef?.icon || item.categoryId, 'w-3.5 h-3.5')}
         </span>

@@ -3,58 +3,74 @@
 /* Theme tokens: light values here, dark overrides below. Plain @theme (not inline)
    so utilities reference the variables and flip with the theme. */
 @theme {
-  --color-ink: #16161A;        /* text, borders, primary buttons */
-  --color-page: #FFFFFF;       /* page background and nav bars */
-  --color-paper: #F6F6F8;      /* secondary surfaces, text on ink */
-  --color-card: #FFFFFF;       /* cards, modals, drawers */
-  --color-paper-deep: #ECECF0; /* hover and inset tints */
-  --color-warm: #FFF4EC;       /* due / alert tints */
-  --color-sage-tint: #F0F5F2;
-  --color-sage-deep: #2A4333;
-  --color-link: #4B3BC4;
-  --color-accent: #5B3FD9;     /* the Willa violet: brand mark, stars, highlight icons */
+  --color-ink: #493B35;        /* Cocoa: text, borders, primary buttons */
+  --color-page: #F4EDE2;       /* Oat: page background and nav bars */
+  --color-paper: #F4EDE2;      /* secondary surfaces, text on ink */
+  --color-card: #FFFBF5;       /* cards and drawers */
+  --color-paper-deep: #E9DFCF; /* hover and inset tints */
+  --color-warm: #FBE9DC;       /* due / alert tints */
+  --color-sage-tint: #EBF0E7;
+  --color-sage-deep: #3F5238;
+  --color-link: #9C4F2A;
+  --color-accent: #A4552F;     /* deep Terracotta, dark enough for text and icons; the logo uses raw #D98F6B */
+  --color-alert: #A8481A;      /* due / alert text and icons */
+  --color-positive: #4A6B56;   /* done and spent text and icons */
+  --color-danger: #B91C1C;      /* delete and reset text and icons */
+  --color-switch-on: #4A6B56;   /* switch track when on */
 }
 
 @layer base {
   :root {
-    --font-serif: 'Space Grotesk', system-ui, -apple-system, sans-serif; /* display face */
+    --font-serif: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; /* display face */
     --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
     /* Shadow under list items (feed rows, horizon cards) */
-    --item-shadow: 0 1px 2px rgb(22 22 26 / 0.08), 0 4px 14px rgb(22 22 26 / 0.08);
+    --item-shadow: 0 1px 2px rgb(73 59 53 / 0.08), 0 4px 14px rgb(73 59 53 / 0.08);
+    /* How far category colors blend toward ink (categoryColor in src/utils/categoryIcons.tsx) */
+    --category-lift: 0%;
     color-scheme: light;
   }
 
   /* Dark: follows the system unless the user picked Light in Settings */
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --color-ink: #EDEDF2;
-      --color-page: #0E0E11;
-      --color-paper: #0E0E11;
-      --color-card: #18181C;
-      --color-paper-deep: #25252B;
-      --color-warm: #2A1E17;
-      --color-sage-tint: #1C2620;
-      --color-sage-deep: #B9D3C1;
-      --color-link: #B3A8FF;
-      --color-accent: #A594F9;
-      --item-shadow: 0 1px 3px rgb(0 0 0 / 0.65), 0 6px 18px rgb(0 0 0 / 0.5);
+      --color-ink: #F4E8D4;
+      --color-page: #243D35;
+      --color-paper: #243D35;
+      --color-card: #2E4A41;
+      --color-paper-deep: #38564C;
+      --color-warm: #4A3F2C;
+      --color-sage-tint: #2B4A3D;
+      --color-sage-deep: #C9DBC0;
+      --color-link: #E9A988;
+      --color-accent: #E9A988;
+      --color-alert: #F2B48F;
+      --color-positive: #B4CFA8;
+      --color-danger: #FFB3A7;
+      --color-switch-on: #7FAE8E;
+      --category-lift: 55%;
+      --item-shadow: 0 1px 3px rgb(0 0 0 / 0.45), 0 6px 18px rgb(0 0 0 / 0.3);
       color-scheme: dark;
     }
   }
 
   :root[data-theme="dark"] {
-    --color-ink: #EDEDF2;
-    --color-page: #0E0E11;
-    --color-paper: #0E0E11;
-    --color-card: #18181C;
-    --color-paper-deep: #25252B;
-    --color-warm: #2A1E17;
-    --color-sage-tint: #1C2620;
-    --color-sage-deep: #B9D3C1;
-    --color-link: #B3A8FF;
-    --color-accent: #A594F9;
-    --item-shadow: 0 1px 3px rgb(0 0 0 / 0.65), 0 6px 18px rgb(0 0 0 / 0.5);
+    --color-ink: #F4E8D4;
+    --color-page: #243D35;
+    --color-paper: #243D35;
+    --color-card: #2E4A41;
+    --color-paper-deep: #38564C;
+    --color-warm: #4A3F2C;
+    --color-sage-tint: #2B4A3D;
+    --color-sage-deep: #C9DBC0;
+    --color-link: #E9A988;
+    --color-accent: #E9A988;
+    --color-alert: #F2B48F;
+    --color-positive: #B4CFA8;
+    --color-danger: #FFB3A7;
+    --color-switch-on: #7FAE8E;
+    --category-lift: 55%;
+    --item-shadow: 0 1px 3px rgb(0 0 0 / 0.45), 0 6px 18px rgb(0 0 0 / 0.3);
     color-scheme: dark;
   }
 
@@ -89,7 +105,7 @@
   font-family: var(--font-mono);
 }
 
-/* App background: a plain page (the old dot-grid texture was dropped for Willa's minimal look) */
+/* App background: a plain page (the old dot-grid texture was dropped) */
 .paper-texture {
   background-color: var(--color-page);
 }

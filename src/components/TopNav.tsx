@@ -39,31 +39,25 @@ export const TopNav: React.FC<TopNavProps> = ({
       style={{ paddingTop: 'calc(0.625rem + env(safe-area-inset-top))' }}
     >
       <div className="max-w-6xl mx-auto flex items-center justify-between gap-3 md:gap-8">
-        {/* Zone 1: Brand Wordmark with Marcellus editorial typography & slogan */}
+        {/* Zone 1: brand mark, wordmark and tagline */}
         <div className="flex items-center gap-3 shrink-0">
           <button
             onClick={() => onTabChange('feed')}
             className="text-left group focus-visible:outline-none flex items-center gap-2.5"
           >
-            {/* Willa mark: a monoline W (the path) with a violet dot over its middle peak (the wish); source in assets/brand/render.mjs */}
+            {/* Wishcrumbs mark: four crumbs growing along a trail; source in assets/brand/render.mjs */}
             <svg viewBox="0 0 100 100" className="w-8 h-8 sm:w-9 sm:h-9 shrink-0" aria-hidden="true">
-              <polyline
-                points="22,40 36,72 50,46 64,72 78,40"
-                stroke="currentColor"
-                strokeWidth="9"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-                className="text-ink"
-              />
-              <circle cx="50" cy="27" r="6.5" className="fill-accent" />
+              <circle cx="14" cy="84" r="8" className="fill-ink" />
+              <circle cx="34" cy="70" r="10.5" className="fill-ink" />
+              <circle cx="60" cy="56" r="13" className="fill-ink" />
+              <circle cx="78" cy="25" r="16.5" className="fill-[#D98F6B]" />
             </svg>
             <span className="flex flex-col justify-center">
               <span className="font-serif-journal text-xl sm:text-2xl font-bold tracking-tight text-ink group-hover:text-accent transition-colors leading-tight">
-                Willa
+                wishcrumbs
               </span>
               <span className="text-[10px] sm:text-[11px] font-sans tracking-tight text-ink/55 leading-tight mt-0.5">
-                From plan to done
+                Your life, piece by piece
               </span>
             </span>
           </button>

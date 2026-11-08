@@ -1,5 +1,5 @@
 {
-  "name": "Willa",
+  "name": "Wishcrumbs",
   "description": "An editorial mobile plan and reminder journal to store, organize, and remind the things you want to do across Go, Workout, Buy, Remember, Read, and Watch.",
   "requestFramePermissions": ["notifications"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

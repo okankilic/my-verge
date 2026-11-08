@@ -45,7 +45,7 @@ export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
     <Sheet isOpen onClose={handleClose} width="md" labelledBy="milestone-title">
       <div className="overflow-y-auto p-6 sm:p-7">
         <div className="text-center mb-6">
-          <div className="w-12 h-12 bg-[#4A6B56]/15 text-[#4A6B56] rounded-2xl mx-auto flex items-center justify-center mb-3">
+          <div className="w-12 h-12 bg-positive/15 text-positive rounded-2xl mx-auto flex items-center justify-center mb-3">
             <Trophy className="w-6 h-6 stroke-[2]" />
           </div>
           <h2 id="milestone-title" className="font-serif-journal text-2xl font-semibold text-ink">

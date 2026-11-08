@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Star, Quote, Check, EyeOff, ChevronRight, Film } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
-import { renderCategoryIcon } from '../utils/categoryIcons';
+import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
 import { StepCount } from './StepList';
 import { ItemActions } from './ItemActions';
 import { ItemMediaStrip } from './ItemMediaStrip';
@@ -111,7 +111,7 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
                       <span
                         aria-hidden
                         className="absolute -left-[25.5px] top-1 w-3 h-3 rounded-full ring-4 ring-page"
-                        style={{ backgroundColor: cat?.accentColor || '#4A6B56' }}
+                        style={{ backgroundColor: categoryColor(cat?.accentColor || '#4A6B56') }}
                       />
                       {dateStr && (
                         <div className="font-mono text-[11px] text-ink/55 mb-1.5 leading-5">{dateStr}</div>
@@ -126,7 +126,7 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
                             <div className="flex items-center gap-1.5 font-medium">
                               <span
                                 className="flex items-center gap-1.5 font-semibold"
-                                style={{ color: cat?.accentColor || '#4A6B56' }}
+                                style={{ color: categoryColor(cat?.accentColor || '#4A6B56') }}
                               >
                                 {renderCategoryIcon(cat?.icon || item.categoryId, 'w-3.5 h-3.5')}
                                 <span>{cat?.verb || item.categoryId}</span>
@@ -151,7 +151,7 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
                           {/* Reflection quote */}
                           {item.completionReflection ? (
                             <div className="mt-3 p-3 rounded-xl bg-paper border border-ink/8 relative">
-                              <Quote className="w-3.5 h-3.5 text-[#4A6B56]/40 absolute top-2.5 left-2.5" />
+                              <Quote className="w-3.5 h-3.5 text-positive/40 absolute top-2.5 left-2.5" />
                               <p className="font-serif-journal text-xs text-ink/80 italic pl-5 leading-relaxed">
                                 “{item.completionReflection}”
                               </p>
@@ -233,7 +233,7 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
                       onClick={() => onSelect(item)}
                       className="w-full min-h-[44px] px-4 py-2 flex items-center gap-2.5 text-left"
                     >
-                      <span className="shrink-0" style={{ color: cat?.accentColor || '#4A6B56' }}>
+                      <span className="shrink-0" style={{ color: categoryColor(cat?.accentColor || '#4A6B56') }}>
                         {renderCategoryIcon(cat?.icon || item.categoryId, 'w-3.5 h-3.5')}
                       </span>
                       <span className="flex-1 min-w-0 truncate text-sm text-ink/80">{item.title}</span>

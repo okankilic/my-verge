@@ -23,7 +23,7 @@ import {
   Share2,
 } from 'lucide-react';
 import { BucketItem, CategoryDefinition, PriorityLevel, StepListKey } from '../types';
-import { renderCategoryIcon } from '../utils/categoryIcons';
+import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
 import { externalLinkProps } from '../services/platform';
 import { shareItem } from '../services/shareOut';
 import { isReminderDue as isDue, reminderNextAt } from '../services/notifications';
@@ -129,7 +129,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
             <span className="flex items-center gap-1.5 font-semibold text-ink">
               <span
                 className="shrink-0 transition-colors"
-                style={{ color: categoryDef?.accentColor || 'var(--color-ink)' }}
+                style={{ color: categoryColor(categoryDef?.accentColor) }}
               >
                 {renderCategoryIcon(categoryDef?.icon || item.categoryId, 'w-3.5 h-3.5')}
               </span>
@@ -237,7 +237,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
           {/* In Progress */}
           {formattedStartedAt && (
             <div className="flex items-center gap-2 text-xs text-ink/70">
-              <Hourglass className="w-4 h-4 text-[#4A6B56]" />
+              <Hourglass className="w-4 h-4 text-positive" />
               <span>In progress since {formattedStartedAt}</span>
             </div>
           )}
@@ -284,7 +284,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
           {item.budget && item.budget.estimatedCost > 0 && (
             <div className="p-4 bg-card rounded-xl border border-ink/10 space-y-2">
               <div className="flex items-center justify-between text-xs font-medium">
-                <div className="flex items-center gap-1.5 text-[#059669]">
+                <div className="flex items-center gap-1.5 text-positive">
                   <DollarSign className="w-4 h-4" />
                   <span>Budget</span>
                 </div>
@@ -294,7 +294,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               </div>
               <div className="w-full h-2 bg-paper border border-ink/10 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-[#059669] transition-all"
+                  className="h-full bg-positive transition-all"
                   style={{
                     width: `${Math.min(
                       100,
@@ -337,7 +337,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
             <div
               className={`p-4 rounded-xl border space-y-2.5 ${
                 isReminderDue
-                  ? 'bg-warm border-[#C05621]/30 text-[#C05621]'
+                  ? 'bg-warm border-alert/30 text-alert'
                   : 'bg-card border-ink/10 text-ink'
               }`}
             >
@@ -370,7 +370,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
             <div className="p-4 bg-card rounded-xl border border-ink/10 space-y-2">
               <div className="flex items-center justify-between gap-2 text-xs text-ink/70">
                 <span className="flex items-center gap-2">
-                  <Trophy className="w-4 h-4 text-[#4A6B56]" />
+                  <Trophy className="w-4 h-4 text-positive" />
                   <span>{formattedCompletedAt ? `Done on ${formattedCompletedAt}` : 'Done'}</span>
                 </span>
                 {(item.completionRating ?? 0) > 0 && (
@@ -440,7 +440,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               onClick={() => toggleConfirm('delete')}
               aria-expanded={confirming === 'delete'}
               className={`min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg transition-colors ${
-                confirming === 'delete' ? 'text-red-600 bg-red-500/10' : 'text-ink/40 hover:text-red-600 hover:bg-red-500/10'
+                confirming === 'delete' ? 'text-danger bg-red-500/10' : 'text-ink/40 hover:text-danger hover:bg-red-500/10'
               }`}
               title="Delete plan"
               aria-label="Delete plan"

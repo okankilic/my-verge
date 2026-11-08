@@ -305,7 +305,7 @@ export default function App() {
         particleCount: 50,
         spread: 60,
         origin: { y: 0.7 },
-        colors: ['#5B3FD9', '#A594F9', '#16161A', '#ECECF0'],
+        colors: ['#D98F6B', '#E9BD78', '#9BAE91', '#B5A1C8'],
       });
     } catch (err) {
       // graceful
@@ -695,14 +695,14 @@ export default function App() {
 
           {/* In-App Active Reminder Notification Toast */}
           {activeToastItem && (
-            <div className="mb-3.5 p-3 bg-warm border border-[#C05621]/30 rounded-2xl shadow-xs flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
+            <div className="mb-3.5 p-3 bg-warm border border-alert/30 rounded-2xl shadow-xs flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
               <div
                 onClick={() => setViewingItem(activeToastItem)}
                 className="flex items-center gap-2.5 min-w-0 cursor-pointer"
               >
-                <Bell className="w-4 h-4 text-[#C05621] shrink-0" />
+                <Bell className="w-4 h-4 text-alert shrink-0" />
                 <div className="truncate">
-                  <span className="text-[10px] uppercase tracking-wider text-[#C05621] font-bold block">
+                  <span className="text-[10px] uppercase tracking-wider text-alert font-bold block">
                     Reminder
                   </span>
                   <span className="text-xs font-semibold text-ink truncate block">

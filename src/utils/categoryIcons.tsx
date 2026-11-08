@@ -57,3 +57,8 @@ export function renderCategoryIcon(iconName: string, className = 'w-3.5 h-3.5'):
   const IconComponent = ICONS_BY_LOWER_NAME.get((iconName || '').toLowerCase()) ?? Sparkles;
   return <IconComponent className={className} />;
 }
+
+// A category's color for the current theme: as stored in light mode, blended
+// toward ink in dark mode (--category-lift) so it stays readable on Forest.
+export const categoryColor = (hex?: string): string =>
+  hex ? `color-mix(in oklab, ${hex}, var(--color-ink) var(--category-lift))` : 'var(--color-ink)';

@@ -12,7 +12,7 @@ import {
   RecurrenceType,
   WishStep,
 } from '../types';
-import { renderCategoryIcon } from '../utils/categoryIcons';
+import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
 import { Sheet } from './Sheet';
 import { StepList } from './StepList';
 import { newStep, toggleStep } from '../utils/steps';
@@ -23,6 +23,7 @@ import { InlineConfirm } from './InlineConfirm';
 // Title placeholder per category id
 const TITLE_PLACEHOLDERS: Record<string, string> = {
   go: 'e.g. Hike the coastal trails of Cabo de Gata',
+  visit: "e.g. Grandma's house in Izmir",
   workout: 'e.g. Run a 10K without stopping',
   buy: 'e.g. Wood-fired stoneware teapot',
   pay: 'e.g. Renew the car insurance',
@@ -33,7 +34,8 @@ const TITLE_PLACEHOLDERS: Record<string, string> = {
   cook: "e.g. Grandma's sourdough loaf",
   taste: 'e.g. Khao soi at a Chiang Mai night market',
   learn: 'e.g. Hold a simple conversation in Italian',
-  make: 'e.g. Hand-bind a leather hardcover journal',
+  see: 'e.g. The northern lights from Tromsø',
+  try: 'e.g. Throw a bowl on a pottery wheel',
   play: 'e.g. Finish a game of Go with a friend',
   call: 'e.g. Catch up with an old school friend',
   give: 'e.g. Plant a tree for a friend',
@@ -289,7 +291,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                         : 'border-ink/15 bg-card text-ink/80 hover:border-ink/30'
                     }`}
                   >
-                    <span style={{ color: isSelected ? 'var(--color-paper)' : cat.accentColor }}>
+                    <span style={{ color: isSelected ? 'var(--color-paper)' : categoryColor(cat.accentColor) }}>
                       {renderCategoryIcon(cat.icon, 'w-3.5 h-3.5')}
                     </span>
                     <span className="text-[11px] leading-tight truncate max-w-full">
@@ -517,7 +519,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             <div className="p-3.5 bg-card rounded-2xl border border-ink/10 space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-ink">
-                  <DollarSign className="w-3.5 h-3.5 text-[#059669]" />
+                  <DollarSign className="w-3.5 h-3.5 text-positive" />
                   <span>Budget</span>
                 </div>
                 {/* One currency per wish, for its budget and expenses */}

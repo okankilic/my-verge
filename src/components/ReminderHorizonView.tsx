@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Bell, BellOff, AlertTriangle } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { EmptyState } from './EmptyState';
-import { renderCategoryIcon } from '../utils/categoryIcons';
+import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
 import {
   getNotificationPermission,
   requestNotificationPermission,
@@ -160,7 +160,7 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
           aria-hidden
           className="absolute -left-[25.5px] top-1 w-3 h-3 rounded-full ring-4 ring-page"
           style={{
-            backgroundColor: tone === 'due' ? '#C05621' : cat?.accentColor || 'var(--color-ink)',
+            backgroundColor: tone === 'due' ? '#C05621' : categoryColor(cat?.accentColor),
           }}
         />
         <div className="text-[11px] leading-5 mb-1.5 truncate">{schedule}</div>
@@ -168,7 +168,7 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
           onClick={() => onSelect(item)}
           className={`border rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3 space-y-1 cursor-pointer shadow-[var(--item-shadow)] transition-all duration-150 ${
             tone === 'due'
-              ? 'bg-warm border-[#C05621]/30 hover:border-[#C05621]/50'
+              ? 'bg-warm border-alert/30 hover:border-alert/50'
               : 'bg-card border-ink/12 hover:border-ink/25'
           }`}
         >
@@ -176,7 +176,7 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
           <div className="flex items-center gap-1.5">
             <span
               className="shrink-0"
-              style={{ color: cat?.accentColor || 'var(--color-ink)' }}
+              style={{ color: categoryColor(cat?.accentColor) }}
             >
               {renderCategoryIcon(cat?.icon || item.categoryId, 'w-3.5 h-3.5')}
             </span>
@@ -217,9 +217,9 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
 
       {/* Enable-alerts prompt (only while the browser hasn't been asked yet) */}
       {notificationState === 'default' && (
-        <div className="bg-warm border border-[#C05621]/30 rounded-lg px-4 py-2.5 flex items-center justify-between gap-3">
+        <div className="bg-warm border border-alert/30 rounded-lg px-4 py-2.5 flex items-center justify-between gap-3">
           <span className="flex items-center gap-2 text-xs text-ink/75 min-w-0">
-            <Bell className="w-3.5 h-3.5 shrink-0 text-[#C05621]" />
+            <Bell className="w-3.5 h-3.5 shrink-0 text-alert" />
             <span>Turn on alerts to get a nudge when a reminder is due.</span>
           </span>
           <button
@@ -246,14 +246,14 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
           <div className="space-y-8">
             {dueItems.length > 0 && (
               <section className="space-y-4">
-                <div className="relative flex items-center gap-2 text-xs uppercase tracking-wider font-semibold text-[#C05621]">
+                <div className="relative flex items-center gap-2 text-xs uppercase tracking-wider font-semibold text-alert">
                   <span
                     aria-hidden
                     className="absolute -left-[23.5px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#C05621] ring-4 ring-page"
                   />
                   <AlertTriangle className="w-4 h-4" />
                   <span>Due</span>
-                  <span className="font-mono text-[11px] font-normal text-[#C05621]/70">{dueItems.length}</span>
+                  <span className="font-mono text-[11px] font-normal text-alert/70">{dueItems.length}</span>
                 </div>
 
                 {dueItems.map((item) =>
@@ -262,7 +262,7 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
                     'due',
                     <>
                       <span className="font-mono font-medium text-accent">{formatReminderDate(item)}</span>
-                      <span className="font-semibold text-[#C05621]"> · Due now</span>
+                      <span className="font-semibold text-alert"> · Due now</span>
                       {formatTargetDay(item) && (
                         <span className="text-ink/40"> · until {formatTargetDay(item)}</span>
                       )}

@@ -11,7 +11,7 @@ import {
 } from '../services/notifications';
 import { deleteAttachmentBlobs } from '../services/attachments';
 import { notify } from '../services/dialogs';
-import { renderCategoryIcon } from '../utils/categoryIcons';
+import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
 import { CURRENCIES } from '../data/currencies';
 import { currencySymbol } from '../utils/expenses';
 import { InlineConfirm } from './InlineConfirm';
@@ -151,7 +151,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         : 'border-ink/15 bg-paper text-ink/75'
                     }`}
                   >
-                    <span style={isOn ? undefined : { color: cat.accentColor }}>
+                    <span style={isOn ? undefined : { color: categoryColor(cat.accentColor) }}>
                       {renderCategoryIcon(cat.icon, 'w-3.5 h-3.5')}
                     </span>
                     <span>{cat.verb}</span>
@@ -218,7 +218,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             ) : (
               <button
                 onClick={() => setIsConfirmingReset(true)}
-                className="w-full min-h-[44px] px-4 py-2 text-xs text-red-600/80 hover:text-red-600 border border-red-500/30 rounded-xl hover:bg-red-500/10 flex items-center justify-center gap-1.5 transition-colors"
+                className="w-full min-h-[44px] px-4 py-2 text-xs text-danger/80 hover:text-danger border border-red-500/30 rounded-xl hover:bg-red-500/10 flex items-center justify-center gap-1.5 transition-colors"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>Reset</span>

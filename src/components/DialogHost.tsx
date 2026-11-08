@@ -16,9 +16,9 @@ const noticeStyles: Record<NoticeTone, { box: string; icon: React.ReactNode }> =
   info: { box: 'bg-card border-ink/15', icon: <Info className="w-4 h-4 text-ink/60 shrink-0" /> },
   success: {
     box: 'bg-card border-[#4A6B56]/40',
-    icon: <CheckCircle2 className="w-4 h-4 text-[#4A6B56] shrink-0" />,
+    icon: <CheckCircle2 className="w-4 h-4 text-positive shrink-0" />,
   },
-  error: { box: 'bg-warm border-[#C05621]/30', icon: <AlertCircle className="w-4 h-4 text-[#C05621] shrink-0" /> },
+  error: { box: 'bg-warm border-alert/30', icon: <AlertCircle className="w-4 h-4 text-alert shrink-0" /> },
 };
 
 // Renders notify() as toasts, optionally with an action button (e.g. Undo). There are no confirm dialogs.

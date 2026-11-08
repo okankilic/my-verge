@@ -162,7 +162,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
           title={doneLabel}
           aria-label={doneLabel}
           className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${
-            confirming === 'done' ? 'text-[#4A6B56] bg-paper' : 'text-ink/60 hover:text-[#4A6B56] hover:bg-paper'
+            confirming === 'done' ? 'text-positive bg-paper' : 'text-ink/60 hover:text-positive hover:bg-paper'
           }`}
         >
           <Check className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -246,7 +246,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
             }}
             title="Add expense"
             aria-label="Add expense"
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/60 hover:text-[#059669] hover:bg-paper transition-colors"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/60 hover:text-positive hover:bg-paper transition-colors"
           >
             <DollarSign className="w-3.5 h-3.5" />
           </button>
@@ -283,7 +283,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
         title="Delete plan"
         aria-label="Delete plan"
         className={`ml-auto min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${
-          confirming === 'delete' ? 'text-red-600 bg-red-500/10' : 'text-ink/40 hover:text-red-600 hover:bg-red-500/10'
+          confirming === 'delete' ? 'text-danger bg-red-500/10' : 'text-ink/40 hover:text-danger hover:bg-red-500/10'
         }`}
       >
         <Trash2 className="w-3.5 h-3.5" />

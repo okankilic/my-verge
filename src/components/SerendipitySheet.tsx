@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Dices, Sparkles, Compass, ArrowRight, Check } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
-import { renderCategoryIcon } from '../utils/categoryIcons';
+import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
 import { Sheet } from './Sheet';
 
 interface SerendipitySheetProps {
@@ -83,7 +83,7 @@ export const SerendipitySheet: React.FC<SerendipitySheetProps> = ({
                 <span className="flex items-center gap-1.5 font-semibold text-ink">
                   <span
                     className="shrink-0 transition-colors"
-                    style={{ color: catDef?.accentColor || 'var(--color-ink)' }}
+                    style={{ color: categoryColor(catDef?.accentColor) }}
                   >
                     {renderCategoryIcon(catDef?.icon || selectedItem.categoryId, 'w-3.5 h-3.5')}
                   </span>
