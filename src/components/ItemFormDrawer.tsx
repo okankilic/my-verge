@@ -19,6 +19,9 @@ import { newStep, toggleStep } from '../utils/steps';
 import { CURRENCIES } from '../data/currencies';
 import { currencySymbol } from '../utils/expenses';
 import { InlineConfirm } from './InlineConfirm';
+import { ReminderWhenFields, fieldClass, fieldLabelClass } from './ReminderWhenFields';
+import { nextReminderDate, readReminderParts } from '../utils/reminderFields';
+import { reminderTime } from '../services/notifications';
 
 // Title placeholder per category id
 const TITLE_PLACEHOLDERS: Record<string, string> = {
@@ -34,6 +37,7 @@ const TITLE_PLACEHOLDERS: Record<string, string> = {
   cook: "e.g. Grandma's sourdough loaf",
   taste: 'e.g. Khao soi at a Chiang Mai night market',
   learn: 'e.g. Hold a simple conversation in Italian',
+  research: 'e.g. Compare heat pumps for the house',
   see: 'e.g. The northern lights from Tromsø',
   try: 'e.g. Throw a bowl on a pottery wheel',
   play: 'e.g. Finish a game of Go with a friend',
@@ -82,6 +86,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   // Location & Budget
   const [locationName, setLocationName] = useState<string>('');
   const [locationCity, setLocationCity] = useState<string>('');
+  const [enableBudget, setEnableBudget] = useState<boolean>(false);
   const [estimatedCost, setEstimatedCost] = useState<string>('');
   const [savedAmount, setSavedAmount] = useState<string>('');
   const [currency, setCurrency] = useState<string>(defaultCurrency);
@@ -124,6 +129,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       setFormatOrEdition(editingItem.mediaMeta?.formatOrEdition || '');
       setLocationName(editingItem.location?.name || '');
       setLocationCity(editingItem.location?.cityOrCountry || '');
+      setEnableBudget((editingItem.budget?.estimatedCost ?? 0) > 0);
       setEstimatedCost(editingItem.budget?.estimatedCost?.toString() || '');
       setSavedAmount(editingItem.budget?.savedAmount?.toString() || '');
       setCurrency(editingItem.currency || defaultCurrency);
@@ -147,6 +153,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       setFormatOrEdition('');
       setLocationName('');
       setLocationCity('');
+      setEnableBudget(false);
       setEstimatedCost('');
       setSavedAmount('');
       setCurrency(defaultCurrency);
@@ -164,16 +171,17 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
 
   const snapshot = JSON.stringify({
     categoryId, title, description, priority, targetDate, enableReminder, reminderDate, reminderRecurrence,
-    authorOrCreator, formatOrEdition, locationName, locationCity, estimatedCost, savedAmount, currency,
+    authorOrCreator, formatOrEdition, locationName, locationCity, enableBudget, estimatedCost, savedAmount, currency,
     linkUrl, steps, stepDraft, prepSteps, prepDraft,
   });
   useEffect(() => {
     baselineRef.current = snapshot;
   }, [baselineToken]);
-  const isDirty = baselineRef.current !== null && snapshot !== baselineRef.current;
 
   // Backdrop, Escape, X and Cancel all come through here
   const requestClose = () => {
+    // Read the baseline now: it is set after the render that fills the form, with no render following
+    const isDirty = baselineRef.current !== null && snapshot !== baselineRef.current;
     if (isDirty) setIsConfirmingDiscard(true);
     else onClose();
   };
@@ -183,6 +191,14 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
     if (code === currency) return;
     if (hasAmounts) setPendingCurrency(code);
     else setCurrency(code);
+  };
+
+  // A repeating reminder needs a date ahead of it; one already in the future stays as picked
+  const handleRepeatChange = (next: RecurrenceType) => {
+    setReminderRecurrence(next);
+    if (next === 'none') return;
+    const current = reminderDate ? reminderTime(reminderDate).getTime() : NaN;
+    if (!(current > Date.now())) setReminderDate(nextReminderDate(next, readReminderParts(reminderDate)));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -227,7 +243,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
 
     const target = parseFloat(estimatedCost);
     itemData.budget =
-      target > 0 ? { estimatedCost: target, savedAmount: parseFloat(savedAmount) || 0 } : undefined;
+      enableBudget && target > 0 ? { estimatedCost: target, savedAmount: parseFloat(savedAmount) || 0 } : undefined;
 
     if (enableReminder && reminderDate) {
       // Keep alert state unless the schedule itself changed, so unrelated edits don't re-chime
@@ -479,29 +495,16 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             </label>
 
             {enableReminder && (
-              <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-ink/8">
+              <div className="pt-2 space-y-3 border-t border-ink/8">
                 <div>
-                  <label htmlFor="item-reminder-date" className="block text-[11px] text-ink/60 font-medium mb-1">
-                    Date & time
-                  </label>
-                  <input
-                    id="item-reminder-date"
-                    type="datetime-local"
-                    value={reminderDate}
-                    onChange={(e) => setReminderDate(e.target.value)}
-                    required={enableReminder}
-                    className="w-full min-h-[44px] px-3 py-1.5 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="item-reminder-repeat" className="block text-[11px] text-ink/60 font-medium mb-1">
+                  <label htmlFor="item-reminder-repeat" className={fieldLabelClass}>
                     Repeat
                   </label>
                   <select
                     id="item-reminder-repeat"
                     value={reminderRecurrence}
-                    onChange={(e) => setReminderRecurrence(e.target.value as RecurrenceType)}
-                    className="w-full min-h-[44px] px-3 py-1.5 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
+                    onChange={(e) => handleRepeatChange(e.target.value as RecurrenceType)}
+                    className={fieldClass}
                   >
                     <option value="none">Once</option>
                     <option value="daily">Daily</option>
@@ -510,70 +513,104 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                     <option value="yearly">Yearly</option>
                   </select>
                 </div>
+                <ReminderWhenFields
+                  recurrence={reminderRecurrence}
+                  value={reminderDate}
+                  onChange={setReminderDate}
+                />
               </div>
             )}
           </div>
 
-          {/* Step 6: Budget */}
-          <div>
-            <div className="p-3.5 bg-card rounded-2xl border border-ink/10 space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-ink">
-                  <DollarSign className="w-3.5 h-3.5 text-positive" />
-                  <span>Budget</span>
+          {/* Step 6: Budget, laid out like the Reminder card above */}
+          <div className="p-4 rounded-2xl bg-card border border-ink/10 space-y-3">
+            {/* The whole row toggles, so the tap target is the full width */}
+            <label htmlFor="enableBudget" className="min-h-[44px] flex items-center justify-between cursor-pointer">
+              <span className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-accent" />
+                <span className="text-xs font-semibold uppercase tracking-wider text-ink">Budget</span>
+              </span>
+              <input
+                type="checkbox"
+                id="enableBudget"
+                checked={enableBudget}
+                onChange={(e) => {
+                  setEnableBudget(e.target.checked);
+                  setPendingCurrency(null);
+                }}
+                className="w-5 h-5 rounded text-ink border-ink/20 focus:ring-0 cursor-pointer"
+              />
+            </label>
+
+            {enableBudget && (
+              <div className="pt-2 space-y-3 border-t border-ink/8">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label htmlFor="item-budget-target" className={fieldLabelClass}>
+                      Target
+                    </label>
+                    <input
+                      id="item-budget-target"
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={estimatedCost}
+                      onChange={(e) => setEstimatedCost(e.target.value)}
+                      className={fieldClass}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="item-budget-currency" className={fieldLabelClass}>
+                      Currency
+                    </label>
+                    {/* One currency per wish, for its budget and expenses */}
+                    <select
+                      id="item-budget-currency"
+                      value={pendingCurrency ?? currency}
+                      onChange={(e) => handleCurrencyChange(e.target.value)}
+                      title="Currency for this plan's budget and expenses"
+                      className={fieldClass}
+                    >
+                      {CURRENCIES.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.code} · {currencySymbol(c.code)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {/* Saved is for tracking progress later, so a new plan only asks for the target */}
+                  {editingItem && (
+                    <div className="col-span-2">
+                      <label htmlFor="item-budget-saved" className={fieldLabelClass}>
+                        Saved
+                      </label>
+                      <input
+                        id="item-budget-saved"
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={savedAmount}
+                        onChange={(e) => setSavedAmount(e.target.value)}
+                        className={fieldClass}
+                      />
+                    </div>
+                  )}
                 </div>
-                {/* One currency per wish, for its budget and expenses */}
-                <select
-                  value={pendingCurrency ?? currency}
-                  onChange={(e) => handleCurrencyChange(e.target.value)}
-                  aria-label="Currency"
-                  title="Currency for this plan's budget and expenses"
-                  className="min-h-[44px] px-2 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
-                >
-                  {CURRENCIES.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.code} · {currencySymbol(c.code)}
-                    </option>
-                  ))}
-                </select>
+                {pendingCurrency && (
+                  <InlineConfirm
+                    tone="positive"
+                    message={`Switch to ${pendingCurrency}? Your amounts keep their numbers.`}
+                    confirmLabel="Switch"
+                    onCancel={() => setPendingCurrency(null)}
+                    onConfirm={() => {
+                      setCurrency(pendingCurrency);
+                      setPendingCurrency(null);
+                    }}
+                  />
+                )}
+                <p className="text-[11px] text-ink/50">Set a target to track your savings.</p>
               </div>
-              {pendingCurrency && (
-                <InlineConfirm
-                  tone="positive"
-                  className="pb-1"
-                  message={`Switch to ${pendingCurrency}? Your amounts keep their numbers.`}
-                  confirmLabel="Switch"
-                  onCancel={() => setPendingCurrency(null)}
-                  onConfirm={() => {
-                    setCurrency(pendingCurrency);
-                    setPendingCurrency(null);
-                  }}
-                />
-              )}
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={estimatedCost}
-                  onChange={(e) => setEstimatedCost(e.target.value)}
-                  placeholder="Target"
-                  aria-label="Target amount"
-                  className="min-h-[44px] px-2.5 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
-                />
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  value={savedAmount}
-                  onChange={(e) => setSavedAmount(e.target.value)}
-                  placeholder="Saved"
-                  aria-label="Saved amount"
-                  className="min-h-[44px] px-2.5 py-1 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none"
-                />
-              </div>
-              <p className="text-[11px] text-ink/50">Set a target to track your savings.</p>
-            </div>
+            )}
           </div>
         </form>
 

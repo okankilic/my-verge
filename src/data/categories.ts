@@ -26,6 +26,7 @@ export const DEFAULT_CATEGORIES: CategoryDefinition[] = [
   category('Cook', 'ChefHat', 'Recipes & dishes to make at home', '#D97706'), // ochre
   category('Taste', 'Utensils', 'Restaurants, street food & flavors to try', '#65A30D'), // olive
   category('Learn', 'GraduationCap', 'Languages, courses & skills to practice', '#4338CA'), // indigo
+  category('Research', 'Microscope', 'Topics, questions & options to look into', '#475569'), // slate
   category('See', 'Eye', 'Exhibitions, landmarks & wonders to take in', '#9333EA'), // purple
   category('Try', 'FlaskConical', 'New hobbies, experiences & first times', '#A21CAF'), // fuchsia
   category('Play', 'Gamepad2', 'Games, sports & playful pursuits', '#DB2777'), // pink
