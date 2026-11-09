@@ -46,6 +46,15 @@ const TITLE_PLACEHOLDERS: Record<string, string> = {
   fix: 'e.g. Repair the squeaky bedroom door',
 };
 
+// What the When field can hold; Past only exists in the form and is saved as a finished plan
+type WhenChoice = PriorityLevel | 'past';
+
+const todayLocal = () => {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
 interface ItemFormDrawerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -71,8 +80,9 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   const [categoryId, setCategoryId] = useState<string>('go');
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
-  const [priority, setPriority] = useState<PriorityLevel>('this_year');
+  const [priority, setPriority] = useState<WhenChoice>('this_year');
   const [targetDate, setTargetDate] = useState<string>('');
+  const [doneOn, setDoneOn] = useState<string>('');
   
   // Reminder state
   const [enableReminder, setEnableReminder] = useState<boolean>(false);
@@ -114,6 +124,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       setDescription(editingItem.description || '');
       setPriority(editingItem.priority || 'this_year');
       setTargetDate(editingItem.targetDate || '');
+      setDoneOn('');
       
       if (editingItem.reminder?.date) {
         setEnableReminder(true);
@@ -146,6 +157,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       setDescription(draft?.description || '');
       setPriority('this_year');
       setTargetDate('');
+      setDoneOn('');
       setEnableReminder(false);
       setReminderDate('');
       setReminderRecurrence('none');
@@ -170,7 +182,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   }, [editingItem, draft, defaultCategoryId, defaultCurrency, isOpen]);
 
   const snapshot = JSON.stringify({
-    categoryId, title, description, priority, targetDate, enableReminder, reminderDate, reminderRecurrence,
+    categoryId, title, description, priority, targetDate, doneOn, enableReminder, reminderDate, reminderRecurrence,
     authorOrCreator, formatOrEdition, locationName, locationCity, enableBudget, estimatedCost, savedAmount, currency,
     linkUrl, steps, stepDraft, prepSteps, prepDraft,
   });
@@ -191,6 +203,11 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
     if (code === currency) return;
     if (hasAmounts) setPendingCurrency(code);
     else setCurrency(code);
+  };
+
+  const handleWhenChange = (next: WhenChoice) => {
+    setPriority(next);
+    if (next === 'past' && !doneOn) setDoneOn(todayLocal());
   };
 
   // A repeating reminder needs a date ahead of it; one already in the future stays as picked
@@ -216,14 +233,21 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       title: title.trim(),
       description: description.trim(),
       // Until needs its date; without one the wish falls back to This year
-      priority: priority === 'until' && !targetDate ? 'this_year' : priority,
+      priority: priority === 'past' || (priority === 'until' && !targetDate) ? 'this_year' : priority,
       targetDate: priority === 'until' ? targetDate || undefined : undefined,
       // Photos are added on the Now card, so an edit leaves them alone; a shared image becomes the cover
       ...(editingItem ? {} : { photos: draft?.photos ?? [] }),
       linkUrl: linkUrl.trim() || undefined,
-      prepSteps: allPrep.length > 0 ? allPrep : undefined,
+      prepSteps: priority !== 'past' && allPrep.length > 0 ? allPrep : undefined,
       steps: allSteps.length > 0 ? allSteps : undefined,
       currency,
+      // Already done: straight to Moments. Today is stamped now; an earlier day at local noon, clear of time zone shifts
+      ...(priority === 'past'
+        ? {
+            status: 'completed' as const,
+            completedAt: (doneOn === todayLocal() ? new Date() : new Date(`${doneOn}T12:00`)).toISOString(),
+          }
+        : {}),
     };
 
     // Blank fields are set to undefined (not left out) so an edit clears them; App merges itemData over the item
@@ -245,7 +269,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
     itemData.budget =
       enableBudget && target > 0 ? { estimatedCost: target, savedAmount: parseFloat(savedAmount) || 0 } : undefined;
 
-    if (enableReminder && reminderDate) {
+    if (priority !== 'past' && enableReminder && reminderDate) {
       // Keep alert state unless the schedule itself changed, so unrelated edits don't re-chime
       const prev = editingItem?.reminder;
       const unchanged = prev?.date === reminderDate && prev?.recurrence === reminderRecurrence;
@@ -336,6 +360,61 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
               />
             </div>
 
+            {/* When, plus its date for Until or Past */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="item-priority" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
+                  When
+                </label>
+                <select
+                  id="item-priority"
+                  value={priority}
+                  onChange={(e) => handleWhenChange(e.target.value as WhenChoice)}
+                  className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
+                >
+                  <option value="urgent">Urgent</option>
+                  <option value="this_month">This month</option>
+                  <option value="this_year">This year</option>
+                  <option value="someday">Someday</option>
+                  <option value="until">Until</option>
+                  {/* Only a new plan can be logged as already done */}
+                  {!editingItem && <option value="past">Past</option>}
+                </select>
+              </div>
+
+              {priority === 'until' && (
+              <div>
+                <label htmlFor="item-target-date" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
+                  Target date
+                </label>
+                <input
+                  id="item-target-date"
+                  type="date"
+                  value={targetDate}
+                  onChange={(e) => setTargetDate(e.target.value)}
+                  className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
+                />
+              </div>
+              )}
+
+              {priority === 'past' && (
+              <div>
+                <label htmlFor="item-done-on" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
+                  Done on
+                </label>
+                <input
+                  id="item-done-on"
+                  type="date"
+                  required
+                  max={todayLocal()}
+                  value={doneOn}
+                  onChange={(e) => setDoneOn(e.target.value)}
+                  className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
+                />
+              </div>
+              )}
+            </div>
+
             {/* Read & Watch specialized author/creator metadata */}
             {(categoryId === 'read' || categoryId === 'watch') && (
               <div className="grid grid-cols-2 gap-3 p-3 bg-card rounded-xl border border-ink/10">
@@ -395,42 +474,6 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             </div>
           </div>
 
-          {/* Step 3: When, plus its date for Until */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="item-priority" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
-                When
-              </label>
-              <select
-                id="item-priority"
-                value={priority}
-                onChange={(e) => setPriority(e.target.value as PriorityLevel)}
-                className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
-              >
-                <option value="urgent">Urgent</option>
-                <option value="this_month">This month</option>
-                <option value="this_year">This year</option>
-                <option value="someday">Someday</option>
-                <option value="until">Until</option>
-              </select>
-            </div>
-
-            {priority === 'until' && (
-            <div>
-              <label htmlFor="item-target-date" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
-                Target date
-              </label>
-              <input
-                id="item-target-date"
-                type="date"
-                value={targetDate}
-                onChange={(e) => setTargetDate(e.target.value)}
-                className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
-              />
-            </div>
-            )}
-          </div>
-
           {/* Step 4: Where */}
           <div>
             <label htmlFor="item-place" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
@@ -456,15 +499,17 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             </div>
           </div>
 
-          <StepList
-            kind="prep"
-            steps={prepSteps}
-            onToggle={(stepId) => setPrepSteps((prev) => toggleStep(prev, stepId))}
-            onAdd={(stepTitle) => setPrepSteps((prev) => [...prev, newStep(stepTitle)])}
-            onRemove={(stepId) => setPrepSteps((prev) => prev.filter((s) => s.id !== stepId))}
-            draft={prepDraft}
-            onDraftChange={setPrepDraft}
-          />
+          {priority !== 'past' && (
+            <StepList
+              kind="prep"
+              steps={prepSteps}
+              onToggle={(stepId) => setPrepSteps((prev) => toggleStep(prev, stepId))}
+              onAdd={(stepTitle) => setPrepSteps((prev) => [...prev, newStep(stepTitle)])}
+              onRemove={(stepId) => setPrepSteps((prev) => prev.filter((s) => s.id !== stepId))}
+              draft={prepDraft}
+              onDraftChange={setPrepDraft}
+            />
+          )}
 
           <StepList
             steps={steps}
@@ -476,51 +521,53 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
           />
 
           {/* Step 5: Scheduled Reminders Engine */}
-          <div className="p-4 rounded-2xl bg-card border border-ink/10 space-y-3">
-            {/* The whole row toggles, so the tap target is the full width */}
-            <label htmlFor="enableReminder" className="min-h-[44px] flex items-center justify-between cursor-pointer">
-              <span className="flex items-center gap-2">
-                <Bell className="w-4 h-4 text-accent" />
-                <span className="text-xs font-semibold uppercase tracking-wider text-ink">
-                  Reminder
+          {priority !== 'past' && (
+            <div className="p-4 rounded-2xl bg-card border border-ink/10 space-y-3">
+              {/* The whole row toggles, so the tap target is the full width */}
+              <label htmlFor="enableReminder" className="min-h-[44px] flex items-center justify-between cursor-pointer">
+                <span className="flex items-center gap-2">
+                  <Bell className="w-4 h-4 text-accent" />
+                  <span className="text-xs font-semibold uppercase tracking-wider text-ink">
+                    Reminder
+                  </span>
                 </span>
-              </span>
-              <input
-                type="checkbox"
-                id="enableReminder"
-                checked={enableReminder}
-                onChange={(e) => setEnableReminder(e.target.checked)}
-                className="w-5 h-5 rounded text-ink border-ink/20 focus:ring-0 cursor-pointer"
-              />
-            </label>
-
-            {enableReminder && (
-              <div className="pt-2 space-y-3 border-t border-ink/8">
-                <div>
-                  <label htmlFor="item-reminder-repeat" className={fieldLabelClass}>
-                    Repeat
-                  </label>
-                  <select
-                    id="item-reminder-repeat"
-                    value={reminderRecurrence}
-                    onChange={(e) => handleRepeatChange(e.target.value as RecurrenceType)}
-                    className={fieldClass}
-                  >
-                    <option value="none">Once</option>
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="yearly">Yearly</option>
-                  </select>
-                </div>
-                <ReminderWhenFields
-                  recurrence={reminderRecurrence}
-                  value={reminderDate}
-                  onChange={setReminderDate}
+                <input
+                  type="checkbox"
+                  id="enableReminder"
+                  checked={enableReminder}
+                  onChange={(e) => setEnableReminder(e.target.checked)}
+                  className="w-5 h-5 rounded text-ink border-ink/20 focus:ring-0 cursor-pointer"
                 />
-              </div>
-            )}
-          </div>
+              </label>
+
+              {enableReminder && (
+                <div className="pt-2 space-y-3 border-t border-ink/8">
+                  <div>
+                    <label htmlFor="item-reminder-repeat" className={fieldLabelClass}>
+                      Repeat
+                    </label>
+                    <select
+                      id="item-reminder-repeat"
+                      value={reminderRecurrence}
+                      onChange={(e) => handleRepeatChange(e.target.value as RecurrenceType)}
+                      className={fieldClass}
+                    >
+                      <option value="none">Once</option>
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="yearly">Yearly</option>
+                    </select>
+                  </div>
+                  <ReminderWhenFields
+                    recurrence={reminderRecurrence}
+                    value={reminderDate}
+                    onChange={setReminderDate}
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Step 6: Budget, laid out like the Reminder card above */}
           <div className="p-4 rounded-2xl bg-card border border-ink/10 space-y-3">

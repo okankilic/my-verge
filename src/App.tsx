@@ -275,13 +275,21 @@ export default function App() {
         prepSteps: itemData.prepSteps,
         steps: itemData.steps,
         reminder: itemData.reminder,
-        status: 'active',
+        status: itemData.status ?? 'active',
+        completedAt: itemData.completedAt,
         createdAt: nowIso,
         updatedAt: nowIso,
       };
       setItems((prev) => [newItem, ...prev]);
       // New wishes land at the top of the Journal; say so when it isn't the tab on screen
-      if (currentTab !== 'feed') {
+      if (newItem.status === 'completed') {
+        // A plan logged as already done goes straight to Moments
+        if (currentTab !== 'milestones') {
+          notify('Added to your Moments!', 'success', {
+            action: { label: 'Open', onAction: () => setCurrentTab('milestones') },
+          });
+        }
+      } else if (currentTab !== 'feed') {
         notify('Added to your Plans!', 'success', {
           action: { label: 'Open', onAction: () => setCurrentTab('feed') },
         });
