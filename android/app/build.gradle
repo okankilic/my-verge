@@ -5,10 +5,10 @@ def appVersion = new groovy.json.JsonSlurper().parse(rootProject.file('../packag
 def (verMajor, verMinor, verPatch) = appVersion.tokenize('.-')[0..2]*.toInteger()
 
 android {
-    namespace = "com.okankilic.myverge"
+    namespace = "com.okankilic.wishcrumbs"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.okankilic.myverge"
+        applicationId "com.okankilic.wishcrumbs"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode verMajor * 10000 + verMinor * 100 + verPatch

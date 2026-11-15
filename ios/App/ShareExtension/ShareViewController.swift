@@ -4,7 +4,7 @@ import UniformTypeIdentifiers
 
 // Saves a shared link, text or photo for Wishcrumbs (ShareInboxPlugin picks it up when the app comes forward)
 class ShareViewController: UIViewController {
-    private let appGroup = "group.com.okankilic.myverge"
+    private let appGroup = "group.com.okankilic.wishcrumbs"
     private let maxImagePixels = 1600
     private var finished = false
 

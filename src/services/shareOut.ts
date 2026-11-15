@@ -47,7 +47,7 @@ async function coverBlob(item: BucketItem): Promise<Blob | null> {
 
 function coverFileName(blob: Blob): string {
   const ext = blob.type === 'image/png' ? 'png' : blob.type === 'image/webp' ? 'webp' : 'jpg';
-  return `stashlog-plan.${ext}`;
+  return `wishcrumbs-plan.${ext}`;
 }
 
 const isCancel = (err: unknown) =>

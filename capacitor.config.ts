@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.okankilic.myverge',
+  appId: 'com.okankilic.wishcrumbs',
   appName: 'Wishcrumbs',
   webDir: 'dist',
   plugins: {

@@ -9,15 +9,15 @@ import { CATEGORY_VERB_ICONS, DEFAULT_CATEGORIES, KEEP_IN_VAULT_VERBS, MERGED_VE
 import { withStore } from './idb';
 import { isNative } from './platform';
 
-const ITEMS_STORAGE_KEY = 'my_verge_bucket_items_v1';
-const CATEGORIES_STORAGE_KEY = 'my_verge_categories_v1';
-const THEME_STORAGE_KEY = 'my_verge_theme_v1';
-const CURRENCY_STORAGE_KEY = 'my_verge_currency_v1';
-const LANGUAGE_STORAGE_KEY = 'my_verge_language_v1';
+const ITEMS_STORAGE_KEY = 'wishcrumbs_bucket_items_v1';
+const CATEGORIES_STORAGE_KEY = 'wishcrumbs_categories_v1';
+const THEME_STORAGE_KEY = 'wishcrumbs_theme_v1';
+const CURRENCY_STORAGE_KEY = 'wishcrumbs_currency_v1';
+const LANGUAGE_STORAGE_KEY = 'wishcrumbs_language_v1';
 
 // Web: an IndexedDB key/value store. Native: one JSON file per key in the app's data
 // directory, which the OS doesn't evict the way it can evict WebView storage.
-const DB_NAME = 'my_verge_data_v1';
+const DB_NAME = 'wishcrumbs_data_v1';
 const STORE = 'kv';
 
 async function readKey(key: string): Promise<string | null> {

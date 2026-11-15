@@ -12,7 +12,7 @@ public class ShareInboxPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "getPending", returnType: CAPPluginReturnPromise)
     ]
 
-    static let appGroup = "group.com.okankilic.myverge"
+    static let appGroup = "group.com.okankilic.wishcrumbs"
 
     private var inboxURL: URL? {
         FileManager.default

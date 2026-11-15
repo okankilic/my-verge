@@ -4,7 +4,7 @@
 <dict>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.okankilic.myverge</string>
+		<string>group.com.okankilic.wishcrumbs</string>
 	</array>
 </dict>
 </plist>

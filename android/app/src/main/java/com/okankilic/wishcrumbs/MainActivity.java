@@ -1,4 +1,4 @@
-package com.okankilic.myverge;
+package com.okankilic.wishcrumbs;
 
 import android.os.Bundle;
 

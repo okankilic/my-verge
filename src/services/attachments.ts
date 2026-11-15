@@ -9,7 +9,7 @@ import { t } from '../i18n';
 // Binary attachments (videos, PDFs); items only keep AttachmentMeta.
 // Native: attachments/<id>/<name> in the app's data directory, which the OS doesn't evict.
 // Web: IndexedDB.
-const DB_NAME = 'my_verge_attachments_v1';
+const DB_NAME = 'wishcrumbs_attachments_v1';
 const STORE = 'files';
 
 export const MAX_ATTACHMENT_BYTES = 100 * 1024 * 1024;
