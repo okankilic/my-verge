@@ -11,7 +11,8 @@
     "cap:sync": "vite build && cap sync",
     "cap:android": "cap open android",
     "lint": "tsc --noEmit",
-    "version": "node scripts/version.mjs"
+    "version": "node scripts/version.mjs",
+    "prepare": "git config core.hooksPath .githooks || true"
   },
   "dependencies": {
     "@capacitor/android": "^8.6.0",
