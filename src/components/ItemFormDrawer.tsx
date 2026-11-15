@@ -24,13 +24,26 @@ import { nextReminderDate, readReminderParts } from '../utils/reminderFields';
 import { reminderTime } from '../services/notifications';
 import { t } from '../i18n';
 
-// What the When field can hold; Past only exists in the form and is saved as a finished plan
-type WhenChoice = PriorityLevel | 'past';
+// What the When field can hold. Past, Today and Tomorrow only exist in the form, on new plans:
+// Past is saved as a finished plan, Today and Tomorrow as Until with that day's date
+type WhenChoice = PriorityLevel | 'past' | 'today' | 'tomorrow';
 
-const todayLocal = () => {
+// A local YYYY-MM-DD date, offsetDays from today
+const localDate = (offsetDays = 0) => {
   const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+const todayLocal = () => localDate(0);
+
+// The stored timeframe and target date for a When choice; Until without a date falls back to This year
+const resolveWhen = (choice: WhenChoice, targetDate: string): Pick<BucketItem, 'priority' | 'targetDate'> => {
+  if (choice === 'today') return { priority: 'until', targetDate: localDate(0) };
+  if (choice === 'tomorrow') return { priority: 'until', targetDate: localDate(1) };
+  if (choice === 'until' && targetDate) return { priority: 'until', targetDate };
+  if (choice === 'past' || choice === 'until') return { priority: 'this_year', targetDate: undefined };
+  return { priority: choice, targetDate: undefined };
 };
 
 interface ItemFormDrawerProps {
@@ -210,9 +223,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       categoryId,
       title: title.trim(),
       description: description.trim(),
-      // Until needs its date; without one the wish falls back to This year
-      priority: priority === 'past' || (priority === 'until' && !targetDate) ? 'this_year' : priority,
-      targetDate: priority === 'until' ? targetDate || undefined : undefined,
+      ...resolveWhen(priority, targetDate),
       // Photos are added on the Now card, so an edit leaves them alone; a shared image becomes the cover
       ...(editingItem ? {} : { photos: draft?.photos ?? [] }),
       linkUrl: linkUrl.trim() || undefined,
@@ -350,13 +361,19 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                   onChange={(e) => handleWhenChange(e.target.value as WhenChoice)}
                   className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
                 >
-                  <option value="urgent">{t('when.urgent')}</option>
+                  {/* Past to future. Only a new plan can be logged as already done or pinned to today or tomorrow */}
+                  {!editingItem && (
+                    <>
+                      <option value="past">{t('when.past')}</option>
+                      <option value="today">{t('when.today')}</option>
+                      <option value="tomorrow">{t('when.tomorrow')}</option>
+                    </>
+                  )}
+                  <option value="this_week">{t('when.thisWeek')}</option>
                   <option value="this_month">{t('when.thisMonth')}</option>
                   <option value="this_year">{t('when.thisYear')}</option>
-                  <option value="someday">{t('when.someday')}</option>
                   <option value="until">{t('when.until')}</option>
-                  {/* Only a new plan can be logged as already done */}
-                  {!editingItem && <option value="past">{t('when.past')}</option>}
+                  <option value="someday">{t('when.someday')}</option>
                 </select>
               </div>
 

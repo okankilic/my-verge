@@ -109,7 +109,9 @@ export const es: Catalog = {
   "time.next6Months": "En seis meses",
   "time.clearLabel": "Mostrar planes de todo el tiempo",
 
-  "when.urgent": "Urgente",
+  "when.today": "Hoy",
+  "when.tomorrow": "Mañana",
+  "when.thisWeek": "Esta semana",
   "when.thisMonth": "Este mes",
   "when.thisYear": "Este año",
   "when.someday": "Algún día",

@@ -172,6 +172,8 @@ export function normalizeItems<T extends BucketItem>(raw: T[]): BucketItem[] {
       }
     }
     if (item.currency !== undefined && !isCurrencyCode(item.currency)) item.currency = undefined;
+    // Urgent was folded into Today and Tomorrow, which save as Until; older urgent plans become This month
+    if ((item.priority as string) === 'urgent') item.priority = 'this_month';
     // A target date now belongs to the Until timeframe, so a wish that has one shows it there
     if (typeof item.targetDate === 'string' && item.targetDate.trim()) item.priority = 'until';
     // Steps from a hand-edited or damaged backup: keep only well-formed ones

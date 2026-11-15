@@ -38,7 +38,7 @@ import { PlanConfirm, PlanConfirmKind } from './InlineConfirm';
 import { MessageKey, formatDate, formatDateTime, formatNumber, t } from '../i18n';
 
 const WHEN_LABELS: Record<PriorityLevel, MessageKey> = {
-  urgent: 'when.urgent',
+  this_week: 'when.thisWeek',
   this_month: 'when.thisMonth',
   this_year: 'when.thisYear',
   someday: 'when.someday',

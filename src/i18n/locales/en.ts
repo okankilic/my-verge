@@ -123,7 +123,9 @@ export const en = {
   "time.clearLabel": "Show plans from all time",
 
   // When (priority)
-  "when.urgent": "Urgent",
+  "when.today": "Today",
+  "when.tomorrow": "Tomorrow",
+  "when.thisWeek": "This week",
   "when.thisMonth": "This month",
   "when.thisYear": "This year",
   "when.someday": "Someday",

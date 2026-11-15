@@ -129,7 +129,7 @@ export const initialItems = (): BucketItem[] => [
     categoryId: 'remember',
     title: s(6, 'title'),
     description: s(6, 'description'),
-    priority: 'urgent',
+    priority: 'this_month',
     photos: [],
     reminder: {
       date: '2026-10-29T09:00',

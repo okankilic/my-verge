@@ -1,4 +1,4 @@
-export type PriorityLevel = 'someday' | 'this_year' | 'this_month' | 'urgent' | 'until';
+export type PriorityLevel = 'someday' | 'this_year' | 'this_month' | 'this_week' | 'until';
 
 export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
 

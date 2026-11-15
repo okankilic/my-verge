@@ -111,7 +111,9 @@ export const tr: Catalog = {
   "time.next6Months": "Altı ay içinde",
   "time.clearLabel": "Tüm zamanlardaki planları göster",
 
-  "when.urgent": "Acil",
+  "when.today": "Bugün",
+  "when.tomorrow": "Yarın",
+  "when.thisWeek": "Bu hafta",
   "when.thisMonth": "Bu ay",
   "when.thisYear": "Bu yıl",
   "when.someday": "Bir gün",
