@@ -2,6 +2,7 @@ import React from 'react';
 import { Smartphone, Monitor, Dices, Film, Settings, Zap } from 'lucide-react';
 import { ViewTab } from '../types';
 import { SearchBar } from './SearchBar';
+import { t } from '../i18n';
 
 // Serendipity roll is parked; flip to bring the dice button back
 const SHOW_SERENDIPITY = false;
@@ -61,7 +62,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                 wishcrumbs
               </span>
               <span className="text-[10px] sm:text-[11px] font-sans tracking-tight text-ink/55 leading-tight mt-0.5">
-                Your life, piece by piece
+                {t('brand.tagline')}
               </span>
             </span>
           </button>
@@ -77,7 +78,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                 : 'border-transparent hover:text-ink'
             }`}
           >
-            Plans
+            {t('nav.plans')}
           </button>
           <button
             onClick={() => onTabChange('reminders')}
@@ -87,7 +88,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                 : 'border-transparent hover:text-ink'
             }`}
           >
-            <span>Horizon</span>
+            <span>{t('nav.horizon')}</span>
             {activeRemindersCount > 0 && (
               <span className="font-mono text-xs px-1.5 py-0.2 bg-[#C05621] text-white rounded-full font-bold">
                 {activeRemindersCount}
@@ -103,7 +104,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             }`}
           >
             <Zap className="w-3.5 h-3.5" />
-            <span>Now</span>
+            <span>{t('nav.now')}</span>
           </button>
           <button
             onClick={() => onTabChange('milestones')}
@@ -114,7 +115,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             }`}
           >
             <Film className="w-3.5 h-3.5" />
-            <span>Moments</span>
+            <span>{t('nav.moments')}</span>
           </button>
           <button
             onClick={() => onTabChange('vault')}
@@ -124,7 +125,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                 : 'border-transparent hover:text-ink'
             }`}
           >
-            Vault
+            {t('nav.vault')}
           </button>
         </nav>
 
@@ -134,8 +135,8 @@ export const TopNav: React.FC<TopNavProps> = ({
           {SHOW_SERENDIPITY && (
             <button
               onClick={onOpenSerendipity}
-              title="Pick a plan for today"
-              aria-label="Pick a plan for today"
+              title={t('serendipity.open')}
+              aria-label={t('serendipity.open')}
               className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-lg bg-card border border-ink/15 text-ink/80 hover:bg-paper hover:border-ink/30 transition-all"
             >
               <Dices className="w-4 h-4 text-accent" />
@@ -146,7 +147,7 @@ export const TopNav: React.FC<TopNavProps> = ({
           {showMobileFrameToggle && (
             <button
               onClick={onToggleMobileFrame}
-              title={isMobileFrame ? 'Desktop view' : 'Phone view'}
+              title={isMobileFrame ? t('nav.desktopView') : t('nav.phoneView')}
               className="hidden lg:flex items-center justify-center min-h-[38px] min-w-[38px] rounded-lg border border-ink/15 text-ink/70 hover:text-ink hover:bg-ink/5 transition-colors"
             >
               {isMobileFrame ? <Monitor className="w-4 h-4" /> : <Smartphone className="w-4 h-4" />}
@@ -157,8 +158,8 @@ export const TopNav: React.FC<TopNavProps> = ({
           <button
             type="button"
             onClick={onToggleSettings}
-            title="Settings"
-            aria-label="Settings"
+            title={t('settings.title')}
+            aria-label={t('settings.title')}
             aria-expanded={isSettingsOpen}
             className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/40 ${
               isSettingsOpen ? 'text-ink bg-ink/10' : 'text-ink/70 hover:text-ink hover:bg-ink/5'

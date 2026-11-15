@@ -9,6 +9,7 @@ import { MediaNoteSheet, MediaNotePreview } from './MediaNoteSheet';
 import { ExpenseSheet } from './ExpenseSheet';
 import { wishCurrency } from '../utils/expenses';
 import { PlanConfirm, PlanConfirmKind } from './InlineConfirm';
+import { t } from '../i18n';
 
 // Phones/tablets get the native camera via <input capture>; desktops use the webcam dialog
 const canUseWebcamDialog = () =>
@@ -35,7 +36,7 @@ interface ItemActionsProps {
   onAddExpense?: (item: BucketItem, amount: number, note?: string) => void;
   // When provided, show an Edit button before Delete
   onEdit?: (item: BucketItem) => void;
-  // Label for the ✓ button ("Mark accomplished" by default)
+  // Label for the ✓ button ("Mark as done" by default)
   doneLabel?: string;
   // Replaces the default edge offsets, for cards with other padding
   className?: string;
@@ -51,7 +52,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
   onAddAttachment,
   onAddExpense,
   onEdit,
-  doneLabel = 'Mark as done',
+  doneLabel = t('actions.markDone'),
   className = '-mx-3 -mb-1.5',
 }) => {
   const isCompleted = item.status === 'completed';
@@ -69,7 +70,7 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
 
   const enqueue = (media: PendingMedia[]) => {
     if (media.length === 0) return;
-    setBatchTotal((t) => t + media.length);
+    setBatchTotal((n) => n + media.length);
     setPending((prev) => [...prev, ...media]);
   };
 
@@ -81,18 +82,18 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
           media.push({ kind: 'image', dataUrl: await fileToResizedDataUrl(file) });
         } else if (file.type.startsWith('video/') || file.type === 'application/pdf') {
           if (file.size > MAX_ATTACHMENT_BYTES) {
-            notify(`"${file.name}" is over 100 MB. Try a smaller file.`, 'error');
+            notify(t('errors.fileTooBig', { name: file.name }), 'error');
           } else if (file.type === 'application/pdf') {
             media.push({ kind: 'pdf', file });
           } else {
             media.push({ kind: 'video', file, previewUrl: URL.createObjectURL(file) });
           }
         } else {
-          notify('Pick a photo, video or PDF instead.', 'error');
+          notify(t('errors.fileType'), 'error');
         }
       } catch (err) {
         console.error('Failed to read file:', err);
-        notify(`Couldn't open "${file.name}". Try again?`, 'error');
+        notify(t('errors.openFile', { name: file.name }), 'error');
       }
     }
     enqueue(media);
@@ -140,8 +141,8 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
               toggleConfirm('start');
             }}
             aria-expanded={confirming === 'start'}
-            title="Start — move to Now"
-            aria-label="Start"
+            title={t('actions.startTitle')}
+            aria-label={t('actions.start')}
             className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${
               confirming === 'start' ? 'text-ink bg-paper' : 'text-ink/60 hover:text-ink hover:bg-paper'
             }`}
@@ -182,8 +183,8 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
                 cameraInputRef.current?.click();
               }
             }}
-            title="Take a photo or video"
-            aria-label="Take a photo or video"
+            title={t('media.camera')}
+            aria-label={t('media.camera')}
             className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/60 hover:text-accent hover:bg-paper transition-colors"
           >
             <Camera className="w-3.5 h-3.5" />
@@ -210,8 +211,8 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
               e.stopPropagation();
               attachInputRef.current?.click();
             }}
-            title="Add photo, video or PDF"
-            aria-label="Add photo, video or PDF"
+            title={t('media.attach')}
+            aria-label={t('media.attach')}
             className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/60 hover:text-accent hover:bg-paper transition-colors"
           >
             <Paperclip className="w-3.5 h-3.5" />
@@ -244,8 +245,8 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
               e.stopPropagation();
               setIsAddingExpense(true);
             }}
-            title="Add expense"
-            aria-label="Add expense"
+            title={t('expense.add')}
+            aria-label={t('expense.add')}
             className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/60 hover:text-positive hover:bg-paper transition-colors"
           >
             <DollarSign className="w-3.5 h-3.5" />
@@ -266,8 +267,8 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
             e.stopPropagation();
             onEdit(item);
           }}
-          title="Edit plan"
-          aria-label="Edit plan"
+          title={t('actions.editPlan')}
+          aria-label={t('actions.editPlan')}
           className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/60 hover:text-ink hover:bg-paper transition-colors"
         >
           <Pencil className="w-3.5 h-3.5" />
@@ -280,8 +281,8 @@ export const ItemActions: React.FC<ItemActionsProps> = ({
           toggleConfirm('delete');
         }}
         aria-expanded={confirming === 'delete'}
-        title="Delete plan"
-        aria-label="Delete plan"
+        title={t('actions.deletePlan')}
+        aria-label={t('actions.deletePlan')}
         className={`ml-auto min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${
           confirming === 'delete' ? 'text-danger bg-red-500/10' : 'text-ink/40 hover:text-danger hover:bg-red-500/10'
         }`}

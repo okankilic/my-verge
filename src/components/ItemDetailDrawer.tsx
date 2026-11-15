@@ -23,7 +23,7 @@ import {
   Share2,
 } from 'lucide-react';
 import { BucketItem, CategoryDefinition, PriorityLevel, StepListKey } from '../types';
-import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
+import { renderCategoryIcon, categoryColor, categoryLabel } from '../utils/categoryIcons';
 import { externalLinkProps } from '../services/platform';
 import { shareItem } from '../services/shareOut';
 import { isReminderDue as isDue, reminderNextAt } from '../services/notifications';
@@ -35,13 +35,14 @@ import { ExpenseList } from './ExpenseList';
 import { expenseTotal, formatMoney, wishCurrency } from '../utils/expenses';
 import { targetDateTime } from '../utils/targetDate';
 import { PlanConfirm, PlanConfirmKind } from './InlineConfirm';
+import { MessageKey, formatDate, formatDateTime, formatNumber, t } from '../i18n';
 
-const WHEN_LABELS: Record<PriorityLevel, string> = {
-  urgent: 'Urgent',
-  this_month: 'This month',
-  this_year: 'This year',
-  someday: 'Someday',
-  until: 'Until',
+const WHEN_LABELS: Record<PriorityLevel, MessageKey> = {
+  urgent: 'when.urgent',
+  this_month: 'when.thisMonth',
+  this_year: 'when.thisYear',
+  someday: 'when.someday',
+  until: 'when.until',
 };
 
 interface ItemDetailDrawerProps {
@@ -90,7 +91,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
   const currency = wishCurrency(item);
 
   const formattedStartedAt = isStarted
-    ? new Date(item.startedAt!).toLocaleDateString(undefined, {
+    ? formatDate(item.startedAt!, {
         weekday: 'long',
         month: 'long',
         day: 'numeric',
@@ -100,7 +101,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
 
   const formattedCompletedAt =
     isCompleted && item.completedAt
-      ? new Date(item.completedAt).toLocaleDateString(undefined, {
+      ? formatDate(item.completedAt, {
           month: 'long',
           day: 'numeric',
           year: 'numeric',
@@ -109,7 +110,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
 
   const targetTime = targetDateTime(item);
   const formattedTargetDate = targetTime !== null
-    ? new Date(targetTime).toLocaleDateString(undefined, {
+    ? formatDate(targetTime, {
         weekday: 'long',
         month: 'long',
         day: 'numeric',
@@ -133,19 +134,19 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               >
                 {renderCategoryIcon(categoryDef?.icon || item.categoryId, 'w-3.5 h-3.5')}
               </span>
-              <span>{categoryDef?.verb || item.categoryId}</span>
+              <span>{categoryLabel(categoryDef, item.categoryId)}</span>
             </span>
             <span aria-hidden="true">·</span>
             <span>
               {item.priority === 'until' && targetTime !== null
-                ? `Until ${new Date(targetTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
-                : WHEN_LABELS[item.priority] ?? item.priority}
+                ? t('drawer.untilShort', { date: formatDate(targetTime, { month: 'short', day: 'numeric' }) })
+                : WHEN_LABELS[item.priority] ? t(WHEN_LABELS[item.priority]) : item.priority}
             </span>
           </div>
 
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t('actions.close')}
             className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-ink/50 hover:text-ink hover:bg-ink/5 transition-colors"
           >
             <X className="w-5 h-5" />
@@ -175,7 +176,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
             {/* Author / Creator info */}
             {item.mediaMeta?.authorOrCreator && (
               <p className="text-sm text-ink/75 italic mt-1 font-medium">
-                by {item.mediaMeta.authorOrCreator}
+                {t('drawer.by', { author: item.mediaMeta.authorOrCreator })}
                 {item.mediaMeta.formatOrEdition && (
                   <span className="font-normal not-italic text-ink/50">
                     {' '}
@@ -238,7 +239,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
           {formattedStartedAt && (
             <div className="flex items-center gap-2 text-xs text-ink/70">
               <Zap className="w-4 h-4 text-positive" />
-              <span>In progress since {formattedStartedAt}</span>
+              <span>{t('drawer.inProgressSince', { date: formattedStartedAt })}</span>
             </div>
           )}
 
@@ -246,7 +247,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
           {formattedTargetDate && (
             <div className="flex items-center gap-2 text-xs text-ink/70">
               <Calendar className="w-4 h-4 text-accent" />
-              <span>Until {formattedTargetDate}</span>
+              <span>{t('drawer.until', { date: formattedTargetDate })}</span>
             </div>
           )}
 
@@ -274,7 +275,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
                 )}
                 className="text-xs text-link hover:underline font-medium shrink-0 flex items-center gap-1"
               >
-                <span>Maps</span>
+                <span>{t('drawer.maps')}</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
@@ -286,7 +287,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               <div className="flex items-center justify-between text-xs font-medium">
                 <div className="flex items-center gap-1.5 text-positive">
                   <DollarSign className="w-4 h-4" />
-                  <span>Budget</span>
+                  <span>{t('form.budget')}</span>
                 </div>
                 <span className="font-mono text-sm font-semibold text-ink">
                   {formatMoney(item.budget.savedAmount, currency)} / {formatMoney(item.budget.estimatedCost, currency)}
@@ -305,13 +306,18 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               </div>
               <div className="flex justify-between text-[11px] text-ink/50 font-mono">
                 <span>
-                  {Math.round((item.budget.savedAmount / item.budget.estimatedCost) * 100)}% saved
+                  {t('drawer.saved', {
+                    percent: formatNumber(item.budget.savedAmount / item.budget.estimatedCost, {
+                      style: 'percent',
+                      maximumFractionDigits: 0,
+                    }),
+                  })}
                 </span>
-                <span>{formatMoney(item.budget.estimatedCost - item.budget.savedAmount, currency)} to go</span>
+                <span>{t('drawer.toGo', { amount: formatMoney(item.budget.estimatedCost - item.budget.savedAmount, currency) })}</span>
               </div>
               {spent > 0 && (
                 <div className="pt-2 border-t border-ink/8 text-[11px] text-ink/70 font-mono">
-                  {formatMoney(spent, currency)} spent of {formatMoney(item.budget.estimatedCost, currency)}
+                  {t('drawer.spentOf', { spent: formatMoney(spent, currency), budget: formatMoney(item.budget.estimatedCost, currency) })}
                 </div>
               )}
             </div>
@@ -323,10 +329,10 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               <span className="text-xs text-ink/60 truncate mr-2">{item.linkUrl}</span>
               <a
                 {...externalLinkProps(item.linkUrl)}
-                aria-label="Open link"
+                aria-label={t('drawer.openLink')}
                 className="text-xs text-link font-semibold hover:underline flex items-center gap-1 shrink-0"
               >
-                <span>Open</span>
+                <span>{t('actions.open')}</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
@@ -346,19 +352,21 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
                   <Bell className="w-4 h-4 text-accent" />
                   <span>
                     {isReminderDue
-                      ? 'Due now'
+                      ? t('horizon.dueNow')
                       : nextReminderAt === null
-                        ? 'Reminder passed'
-                        : `Next reminder ${new Date(nextReminderAt).toLocaleString(undefined, {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: 'numeric',
-                            minute: '2-digit',
-                          })}`}
+                        ? t('drawer.reminderPassed')
+                        : t('drawer.nextReminder', {
+                            date: formatDateTime(nextReminderAt, {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit',
+                            }),
+                          })}
                   </span>
                 </div>
                 {item.reminder.recurrence !== 'none' && (
-                  <span className="text-[11px] opacity-70">Repeats {item.reminder.recurrence}</span>
+                  <span className="text-[11px] opacity-70">{t(`drawer.repeats.${item.reminder.recurrence}` as MessageKey)}</span>
                 )}
               </div>
 
@@ -371,12 +379,12 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               <div className="flex items-center justify-between gap-2 text-xs text-ink/70">
                 <span className="flex items-center gap-2">
                   <Trophy className="w-4 h-4 text-positive" />
-                  <span>{formattedCompletedAt ? `Done on ${formattedCompletedAt}` : 'Done'}</span>
+                  <span>{formattedCompletedAt ? t('drawer.doneOn', { date: formattedCompletedAt }) : t('actions.done')}</span>
                 </span>
                 {(item.completionRating ?? 0) > 0 && (
                   <span
                     className="flex items-center gap-0.5"
-                    aria-label={`Rated ${item.completionRating} of 5`}
+                    aria-label={t('drawer.rated', { rating: item.completionRating! })}
                   >
                     {Array.from({ length: item.completionRating! }, (_, n) => (
                       <Star key={n} className="w-3 h-3 text-accent fill-accent" />
@@ -423,16 +431,16 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
                 onEdit(item);
               }}
               className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg border border-ink/15 bg-card text-ink/80 hover:text-ink hover:bg-paper hover:border-ink/30 transition-colors"
-              title="Edit plan"
-              aria-label="Edit plan"
+              title={t('actions.editPlan')}
+              aria-label={t('actions.editPlan')}
             >
               <Edit3 className="w-4 h-4" />
             </button>
             <button
               onClick={() => shareItem(item, categoryDef)}
               className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg border border-ink/15 bg-card text-ink/80 hover:text-ink hover:bg-paper hover:border-ink/30 transition-colors"
-              title="Share plan"
-              aria-label="Share plan"
+              title={t('actions.sharePlan')}
+              aria-label={t('actions.sharePlan')}
             >
               <Share2 className="w-4 h-4" />
             </button>
@@ -442,8 +450,8 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               className={`min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg transition-colors ${
                 confirming === 'delete' ? 'text-danger bg-red-500/10' : 'text-ink/40 hover:text-danger hover:bg-red-500/10'
               }`}
-              title="Delete plan"
-              aria-label="Delete plan"
+              title={t('actions.deletePlan')}
+              aria-label={t('actions.deletePlan')}
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -455,12 +463,12 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               <button
                 onClick={() => toggleConfirm('start')}
                 aria-expanded={confirming === 'start'}
-                title="Start — move to Now"
-                aria-label="Start"
+                title={t('actions.startTitle')}
+                aria-label={t('actions.start')}
                 className="min-h-[40px] px-3 flex items-center justify-center gap-1.5 rounded-lg border border-ink/15 bg-card text-xs font-semibold text-ink/80 hover:text-ink hover:bg-paper hover:border-ink/30 transition-colors"
               >
                 <Play className="w-3.5 h-3.5" />
-                <span>Start</span>
+                <span>{t('actions.start')}</span>
               </button>
             )}
             {!isCompleted && (
@@ -468,8 +476,8 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
               <button
                 onClick={() => toggleConfirm('done')}
                 aria-expanded={confirming === 'done'}
-                title="Mark as done"
-                aria-label="Mark as done"
+                title={t('actions.markDone')}
+                aria-label={t('actions.markDone')}
                 className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg shadow-2xs transition-all bg-[#4A6B56] hover:bg-[#3d5947] text-white"
               >
                 <CheckCircle2 className="w-4 h-4" />

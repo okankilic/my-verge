@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Bell, Volume2, RefreshCw, X } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { ThemePreference } from '../services/storage';
-import { INITIAL_ITEMS } from '../data/initialData';
+import { initialItems } from '../data/initialData';
 import { DEFAULT_CATEGORIES } from '../data/categories';
 import {
   playChimeSound,
@@ -11,10 +11,11 @@ import {
 } from '../services/notifications';
 import { deleteAttachmentBlobs } from '../services/attachments';
 import { notify } from '../services/dialogs';
-import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
+import { renderCategoryIcon, categoryColor, categoryLabel } from '../utils/categoryIcons';
 import { CURRENCIES } from '../data/currencies';
-import { currencySymbol } from '../utils/expenses';
+import { currencyName, currencySymbol } from '../utils/expenses';
 import { InlineConfirm } from './InlineConfirm';
+import { LOCALES, LOCALE_NAMES, LanguagePreference, t } from '../i18n';
 
 interface SettingsViewProps {
   items: BucketItem[];
@@ -23,16 +24,18 @@ interface SettingsViewProps {
   onCategoriesChange: (categories: CategoryDefinition[]) => void;
   theme: ThemePreference;
   onThemeChange: (theme: ThemePreference) => void;
+  language: LanguagePreference;
+  onLanguageChange: (language: LanguagePreference) => void;
   defaultCurrency: string;
   onDefaultCurrencyChange: (code: string) => void;
   onNotificationsEnabled: () => void;
   onClose: () => void;
 }
 
-const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
-  { value: 'light', label: 'Light' },
-  { value: 'dark', label: 'Dark' },
-  { value: 'system', label: 'System' },
+const THEME_OPTIONS: { value: ThemePreference; label: 'settings.themeLight' | 'settings.themeDark' | 'settings.themeSystem' }[] = [
+  { value: 'light', label: 'settings.themeLight' },
+  { value: 'dark', label: 'settings.themeDark' },
+  { value: 'system', label: 'settings.themeSystem' },
 ];
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -42,6 +45,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onCategoriesChange,
   theme,
   onThemeChange,
+  language,
+  onLanguageChange,
   defaultCurrency,
   onDefaultCurrencyChange,
   onNotificationsEnabled,
@@ -72,23 +77,25 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   const handleResetToSample = () => {
-    deleteOrphanedBlobs(INITIAL_ITEMS);
-    onReloadData(INITIAL_ITEMS, DEFAULT_CATEGORIES);
+    // The samples come back in the app's current language
+    const samples = initialItems();
+    deleteOrphanedBlobs(samples);
+    onReloadData(samples, DEFAULT_CATEGORIES);
     setIsConfirmingReset(false);
-    notify('Fresh start! The samples are back.', 'success');
+    notify(t('settings.resetDone'), 'success');
   };
 
   return (
     <>
       <div className="pl-4 pr-1.5 py-1 border-b border-ink/10 flex items-center justify-between shrink-0">
         <span id="settings-sheet-title" className="font-serif-journal text-base text-ink">
-          Settings
+          {t('settings.title')}
         </span>
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close"
-          title="Close"
+          aria-label={t('actions.close')}
+          title={t('actions.close')}
           className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-ink/70 hover:text-ink hover:bg-ink/5 transition-colors"
         >
           <X className="w-5 h-5" />
@@ -99,8 +106,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         <div className="space-y-4">
           {/* Appearance */}
           <div className="bg-card border border-ink/10 rounded-2xl p-4 flex items-center justify-between gap-3">
-            <h4 className="text-xs font-semibold text-ink">Appearance</h4>
-            <div role="radiogroup" aria-label="Appearance" className="flex items-center gap-1 p-1 bg-paper rounded-xl">
+            <h4 className="text-xs font-semibold text-ink">{t('settings.appearance')}</h4>
+            <div role="radiogroup" aria-label={t('settings.appearance')} className="flex items-center gap-1 p-1 bg-paper rounded-xl">
               {THEME_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
@@ -114,29 +121,47 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       : 'text-ink/70 hover:text-ink'
                   }`}
                 >
-                  {opt.label}
+                  {t(opt.label)}
                 </button>
               ))}
             </div>
           </div>
 
+          {/* Language: System follows the device; each language is named in itself */}
+          <div className="bg-card border border-ink/10 rounded-2xl p-4 flex items-center justify-between gap-3">
+            <h4 className="text-xs font-semibold text-ink">{t('settings.language')}</h4>
+            <select
+              value={language}
+              onChange={(e) => onLanguageChange(e.target.value as LanguagePreference)}
+              aria-label={t('settings.language')}
+              className="shrink-0 min-h-[44px] px-3 text-xs bg-paper border border-ink/15 rounded-xl text-ink focus:outline-none focus:border-ink"
+            >
+              <option value="system">{t('settings.languageSystem')}</option>
+              {LOCALES.map((code) => (
+                <option key={code} value={code} lang={code}>
+                  {LOCALE_NAMES[code]}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Currency: what new wishes start with; each wish can change its own */}
           <div className="bg-card border border-ink/10 rounded-2xl p-4 flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <h4 className="text-xs font-semibold text-ink">Currency</h4>
+              <h4 className="text-xs font-semibold text-ink">{t('form.currency')}</h4>
               <p className="text-[11px] text-ink/60 mt-0.5">
-                New plans start with this. You can change it on each plan.
+                {t('settings.currencyHint')}
               </p>
             </div>
             <select
               value={defaultCurrency}
               onChange={(e) => onDefaultCurrencyChange(e.target.value)}
-              aria-label="Default currency"
+              aria-label={t('settings.currencyLabel')}
               className="shrink-0 min-h-[44px] px-3 text-xs bg-paper border border-ink/15 rounded-xl text-ink focus:outline-none focus:border-ink"
             >
               {CURRENCIES.map((c) => (
                 <option key={c.code} value={c.code}>
-                  {c.code} · {currencySymbol(c.code)} · {c.label}
+                  {c.code} · {currencySymbol(c.code)} · {currencyName(c.code, c.label)}
                 </option>
               ))}
             </select>
@@ -144,9 +169,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
           {/* Vault: which categories' plans show there */}
           <div className="bg-card border border-ink/10 rounded-2xl p-4">
-            <h4 className="text-xs font-semibold text-ink">Show in Vault</h4>
+            <h4 className="text-xs font-semibold text-ink">{t('settings.vault')}</h4>
             <p className="text-[11px] text-ink/60 mt-0.5">
-              Plans from these categories show in your Vault.
+              {t('settings.vaultHint')}
             </p>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {categories.map((cat) => {
@@ -170,7 +195,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     <span style={isOn ? undefined : { color: categoryColor(cat.accentColor) }}>
                       {renderCategoryIcon(cat.icon, 'w-3.5 h-3.5')}
                     </span>
-                    <span>{cat.verb}</span>
+                    <span>{categoryLabel(cat)}</span>
                   </button>
                 );
               })}
@@ -180,15 +205,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {/* Notifications */}
           <div className="bg-card border border-ink/10 rounded-2xl p-4 flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <h4 className="text-xs font-semibold text-ink">Reminder alerts</h4>
+              <h4 className="text-xs font-semibold text-ink">{t('settings.alerts')}</h4>
               <p className="text-[11px] text-ink/60 mt-0.5">
                 {notificationState === 'granted'
-                  ? 'On. Reminders arrive as notifications.'
+                  ? t('settings.alertsOn')
                   : notificationState === 'denied'
-                    ? 'Alerts are off. Turn them on in your system settings.'
+                    ? t('alerts.denied')
                     : notificationState === 'unsupported'
-                      ? "This device can't show notifications."
-                      : 'Get a nudge when a reminder is due.'}
+                      ? t('settings.alertsUnsupported')
+                      : t('settings.alertsHint')}
               </p>
             </div>
             {notificationState === 'default' && (
@@ -197,7 +222,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 className="min-h-[44px] px-3.5 py-1.5 text-xs font-semibold bg-ink text-paper rounded-xl hover:bg-ink/85 transition-colors flex items-center gap-1.5 shrink-0"
               >
                 <Bell className="w-3.5 h-3.5" />
-                <span>Enable</span>
+                <span>{t('actions.enable')}</span>
               </button>
             )}
           </div>
@@ -205,9 +230,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {/* Sound Chime Preview */}
           <div className="bg-card border border-ink/10 rounded-2xl p-4 flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <h4 className="text-xs font-semibold text-ink">Reminder chime</h4>
+              <h4 className="text-xs font-semibold text-ink">{t('settings.chime')}</h4>
               <p className="text-[11px] text-ink/60 mt-0.5">
-                A soft bell that plays with each reminder.
+                {t('settings.chimeHint')}
               </p>
             </div>
             <button
@@ -215,7 +240,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               className="min-h-[44px] px-3.5 py-1.5 text-xs font-medium border border-ink/20 rounded-xl hover:bg-paper flex items-center gap-1.5 shrink-0"
             >
               <Volume2 className="w-3.5 h-3.5 text-accent" />
-              <span>Test</span>
+              <span>{t('actions.test')}</span>
             </button>
           </div>
 
@@ -223,10 +248,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <div className="pt-2">
             {isConfirmingReset ? (
               <div className="bg-card border border-red-500/30 rounded-2xl p-4">
-                <h4 className="text-xs font-semibold text-ink">Reset to sample plans?</h4>
+                <h4 className="text-xs font-semibold text-ink">{t('settings.resetTitle')}</h4>
                 <InlineConfirm
-                  message="This swaps your plans, photos and files for the samples."
-                  confirmLabel="Reset"
+                  message={t('settings.resetMessage')}
+                  confirmLabel={t('actions.reset')}
                   onConfirm={handleResetToSample}
                   onCancel={() => setIsConfirmingReset(false)}
                 />
@@ -237,7 +262,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 className="w-full min-h-[44px] px-4 py-2 text-xs text-danger/80 hover:text-danger border border-red-500/30 rounded-xl hover:bg-red-500/10 flex items-center justify-center gap-1.5 transition-colors"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                <span>Reset</span>
+                <span>{t('actions.reset')}</span>
               </button>
             )}
           </div>

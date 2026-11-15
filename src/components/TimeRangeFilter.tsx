@@ -2,6 +2,7 @@ import React from 'react';
 import { Calendar, Check, ChevronDown } from 'lucide-react';
 import { TimeRange, rangeLabel } from '../utils/timeRange';
 import { Sheet } from './Sheet';
+import { t } from '../i18n';
 
 interface TimeRangeFilterProps {
   range: TimeRange;
@@ -38,10 +39,10 @@ export const TimeRangeFilter: React.FC<TimeRangeFilterProps> = ({
           <button
             type="button"
             onClick={() => onChange('all')}
-            aria-label="Show plans from all time"
+            aria-label={t('time.clearLabel')}
             className="min-h-[44px] px-2 text-xs text-ink/60 hover:text-ink"
           >
-            Clear
+            {t('actions.clear')}
           </button>
         )}
         <button

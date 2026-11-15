@@ -1,7 +1,8 @@
 import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { BucketItem, BudgetInfo, CategoryDefinition, ReminderConfig, WishStep } from '../types';
 import { DEFAULT_CURRENCY, LEGACY_CURRENCY_SYMBOLS, isCurrencyCode } from '../data/currencies';
-import { INITIAL_ITEMS } from '../data/initialData';
+import { initialItems } from '../data/initialData';
+import { LanguagePreference, isLocale } from '../i18n';
 import { LEGACY_PRESET_PATHS } from '../data/presetPhotos';
 import { photoKey } from '../utils/photoKey';
 import { CATEGORY_VERB_ICONS, DEFAULT_CATEGORIES, KEEP_IN_VAULT_VERBS, MERGED_VERBS } from '../data/categories';
@@ -12,6 +13,7 @@ const ITEMS_STORAGE_KEY = 'my_verge_bucket_items_v1';
 const CATEGORIES_STORAGE_KEY = 'my_verge_categories_v1';
 const THEME_STORAGE_KEY = 'my_verge_theme_v1';
 const CURRENCY_STORAGE_KEY = 'my_verge_currency_v1';
+const LANGUAGE_STORAGE_KEY = 'my_verge_language_v1';
 
 // Web: an IndexedDB key/value store. Native: one JSON file per key in the app's data
 // directory, which the OS doesn't evict the way it can evict WebView storage.
@@ -104,7 +106,8 @@ async function loadList<T>(
 }
 
 export function loadBucketItems(): Promise<LoadedList<BucketItem>> {
-  return loadList(ITEMS_STORAGE_KEY, 'bucket items', INITIAL_ITEMS, saveBucketItems, (raw) =>
+  // Samples seed in the language active at load time
+  return loadList(ITEMS_STORAGE_KEY, 'bucket items', initialItems(), saveBucketItems, (raw) =>
     normalizeItems(raw as BucketItem[])
   );
 }
@@ -264,4 +267,18 @@ export async function loadDefaultCurrency(): Promise<string> {
 
 export function saveDefaultCurrency(code: string): void {
   queueWrite(CURRENCY_STORAGE_KEY, code, 'currency');
+}
+
+// 'system' follows the device language; stored as a raw string like the theme
+export async function loadLanguage(): Promise<LanguagePreference> {
+  try {
+    const raw = await readKey(LANGUAGE_STORAGE_KEY);
+    return isLocale(raw) ? raw : 'system';
+  } catch {
+    return 'system';
+  }
+}
+
+export function saveLanguage(language: LanguagePreference): void {
+  queueWrite(LANGUAGE_STORAGE_KEY, language, 'language');
 }

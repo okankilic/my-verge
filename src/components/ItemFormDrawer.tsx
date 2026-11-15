@@ -12,7 +12,7 @@ import {
   RecurrenceType,
   WishStep,
 } from '../types';
-import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
+import { renderCategoryIcon, categoryColor, categoryLabel, categoryPlaceholder } from '../utils/categoryIcons';
 import { Sheet } from './Sheet';
 import { StepList } from './StepList';
 import { newStep, toggleStep } from '../utils/steps';
@@ -22,29 +22,7 @@ import { InlineConfirm } from './InlineConfirm';
 import { ReminderWhenFields, fieldClass, fieldLabelClass } from './ReminderWhenFields';
 import { nextReminderDate, readReminderParts } from '../utils/reminderFields';
 import { reminderTime } from '../services/notifications';
-
-// Title placeholder per category id
-const TITLE_PLACEHOLDERS: Record<string, string> = {
-  go: 'e.g. Hike the coastal trails of Cabo de Gata',
-  visit: "e.g. Grandma's house in Izmir",
-  workout: 'e.g. Run a 10K without stopping',
-  buy: 'e.g. Wood-fired stoneware teapot',
-  pay: 'e.g. Renew the car insurance',
-  remember: 'e.g. Attention is the rarest and purest generosity',
-  read: 'e.g. Invisible Cities by Italo Calvino',
-  watch: 'e.g. Cinema Paradiso in 35mm restoration',
-  listen: 'e.g. Kind of Blue on vinyl, start to finish',
-  cook: "e.g. Grandma's sourdough loaf",
-  taste: 'e.g. Khao soi at a Chiang Mai night market',
-  learn: 'e.g. Hold a simple conversation in Italian',
-  research: 'e.g. Compare heat pumps for the house',
-  see: 'e.g. The northern lights from Tromsø',
-  try: 'e.g. Throw a bowl on a pottery wheel',
-  play: 'e.g. Finish a game of Go with a friend',
-  call: 'e.g. Catch up with an old school friend',
-  give: 'e.g. Plant a tree for a friend',
-  fix: 'e.g. Repair the squeaky bedroom door',
-};
+import { t } from '../i18n';
 
 // What the When field can hold; Past only exists in the form and is saved as a finished plan
 type WhenChoice = PriorityLevel | 'past';
@@ -178,7 +156,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
     setIsConfirmingDiscard(false);
     setPendingCurrency(null);
     // The baseline is taken on the next render, once the fields above hold their new values
-    setBaselineToken((t) => t + 1);
+    setBaselineToken((n) => n + 1);
   }, [editingItem, draft, defaultCategoryId, defaultCurrency, isOpen]);
 
   const snapshot = JSON.stringify({
@@ -294,16 +272,16 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
         <div className="px-5 py-4 border-b border-ink/10 flex items-center justify-between">
           <div>
             <h2 id="item-form-title" className="font-serif-journal text-xl font-medium text-ink">
-              {editingItem ? 'Edit plan' : 'New plan'}
+              {editingItem ? t('actions.editPlan') : t('actions.newPlan')}
             </h2>
             <p className="text-xs text-ink/60 mt-0.5">
-              What's your next plan?
+              {t('form.subtitle')}
             </p>
           </div>
           <button
             type="button"
             onClick={requestClose}
-            aria-label="Close"
+            aria-label={t('actions.close')}
             className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-ink/60 hover:text-ink hover:bg-ink/5"
           >
             <X className="w-5 h-5" />
@@ -315,7 +293,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
           {/* Step 1: Category Selection */}
           <div>
             <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-2">
-              Category
+              {t('form.category')}
             </label>
             <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
               {categories.map((cat) => {
@@ -335,7 +313,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                       {renderCategoryIcon(cat.icon, 'w-3.5 h-3.5')}
                     </span>
                     <span className="text-[11px] leading-tight truncate max-w-full">
-                      {cat.verb}
+                      {categoryLabel(cat)}
                     </span>
                   </button>
                 );
@@ -347,7 +325,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
           <div className="space-y-4">
             <div>
               <label htmlFor="item-title" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
-                Title *
+                {t('form.title')}
               </label>
               <input
                 id="item-title"
@@ -355,7 +333,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder={TITLE_PLACEHOLDERS[categoryId] || "e.g. Something you'd love to do"}
+                placeholder={categoryPlaceholder(categories.find((c) => c.id === categoryId))}
                 className="w-full min-h-[44px] px-3.5 py-2.5 text-sm bg-card border border-ink/20 rounded-xl text-ink placeholder-ink/40 focus:outline-none focus:border-ink"
               />
             </div>
@@ -364,7 +342,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="item-priority" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
-                  When
+                  {t('form.when')}
                 </label>
                 <select
                   id="item-priority"
@@ -372,20 +350,20 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                   onChange={(e) => handleWhenChange(e.target.value as WhenChoice)}
                   className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
                 >
-                  <option value="urgent">Urgent</option>
-                  <option value="this_month">This month</option>
-                  <option value="this_year">This year</option>
-                  <option value="someday">Someday</option>
-                  <option value="until">Until</option>
+                  <option value="urgent">{t('when.urgent')}</option>
+                  <option value="this_month">{t('when.thisMonth')}</option>
+                  <option value="this_year">{t('when.thisYear')}</option>
+                  <option value="someday">{t('when.someday')}</option>
+                  <option value="until">{t('when.until')}</option>
                   {/* Only a new plan can be logged as already done */}
-                  {!editingItem && <option value="past">Past</option>}
+                  {!editingItem && <option value="past">{t('when.past')}</option>}
                 </select>
               </div>
 
               {priority === 'until' && (
               <div>
                 <label htmlFor="item-target-date" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
-                  Target date
+                  {t('form.targetDate')}
                 </label>
                 <input
                   id="item-target-date"
@@ -400,7 +378,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
               {priority === 'past' && (
               <div>
                 <label htmlFor="item-done-on" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
-                  Done on
+                  {t('form.doneOn')}
                 </label>
                 <input
                   id="item-done-on"
@@ -420,27 +398,27 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
               <div className="grid grid-cols-2 gap-3 p-3 bg-card rounded-xl border border-ink/10">
                 <div>
                   <label htmlFor="item-author" className="block text-[11px] uppercase tracking-wider text-ink/60 font-semibold mb-1">
-                    {categoryId === 'read' ? 'Author / Writer' : 'Director / Creator'}
+                    {categoryId === 'read' ? t('form.author') : t('form.director')}
                   </label>
                   <input
                     id="item-author"
                     type="text"
                     value={authorOrCreator}
                     onChange={(e) => setAuthorOrCreator(e.target.value)}
-                    placeholder={categoryId === 'read' ? 'e.g. Italo Calvino' : 'e.g. Denis Villeneuve'}
+                    placeholder={categoryId === 'read' ? t('form.authorPlaceholder') : t('form.directorPlaceholder')}
                     className="w-full min-h-[44px] px-2.5 py-1.5 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
                   />
                 </div>
                 <div>
                   <label htmlFor="item-format" className="block text-[11px] uppercase tracking-wider text-ink/60 font-semibold mb-1">
-                    Format or edition
+                    {t('form.format')}
                   </label>
                   <input
                     id="item-format"
                     type="text"
                     value={formatOrEdition}
                     onChange={(e) => setFormatOrEdition(e.target.value)}
-                    placeholder={categoryId === 'read' ? 'Hardcover, Audiobook' : '35mm, Criterion, Theater'}
+                    placeholder={categoryId === 'read' ? t('form.formatReadPlaceholder') : t('form.formatWatchPlaceholder')}
                     className="w-full min-h-[44px] px-2.5 py-1.5 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
                   />
                 </div>
@@ -449,14 +427,14 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
 
             <div>
               <label htmlFor="item-notes" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
-                Notes
+                {t('form.notes')}
               </label>
               <textarea
                 id="item-notes"
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Why does this matter to you?"
+                placeholder={t('form.notesPlaceholder')}
                 className="w-full px-3.5 py-2.5 text-sm bg-card border border-ink/20 rounded-xl text-ink placeholder-ink/40 focus:outline-none focus:border-ink"
               />
             </div>
@@ -467,8 +445,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 type="url"
                 value={linkUrl}
                 onChange={(e) => setLinkUrl(e.target.value)}
-                placeholder="Link, e.g. a shop or reference page"
-                aria-label="Link"
+                placeholder={t('form.linkPlaceholder')}
+                aria-label={t('form.link')}
                 className="flex-1 min-h-[44px] px-3 py-1.5 text-xs bg-card border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
               />
             </div>
@@ -477,7 +455,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
           {/* Step 4: Where */}
           <div>
             <label htmlFor="item-place" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
-              Where
+              {t('form.where')}
             </label>
             <div className="space-y-2">
               <input
@@ -485,15 +463,15 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 type="text"
                 value={locationName}
                 onChange={(e) => setLocationName(e.target.value)}
-                placeholder="Place or venue name"
+                placeholder={t('form.placePlaceholder')}
                 className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
               />
               <input
                 type="text"
                 value={locationCity}
                 onChange={(e) => setLocationCity(e.target.value)}
-                placeholder="City or country"
-                aria-label="City or country"
+                placeholder={t('form.city')}
+                aria-label={t('form.city')}
                 className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
               />
             </div>
@@ -528,7 +506,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 <span className="flex items-center gap-2">
                   <Bell className="w-4 h-4 text-accent" />
                   <span className="text-xs font-semibold uppercase tracking-wider text-ink">
-                    Reminder
+                    {t('form.reminder')}
                   </span>
                 </span>
                 <input
@@ -544,7 +522,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 <div className="pt-2 space-y-3 border-t border-ink/8">
                   <div>
                     <label htmlFor="item-reminder-repeat" className={fieldLabelClass}>
-                      Repeat
+                      {t('form.repeat')}
                     </label>
                     <select
                       id="item-reminder-repeat"
@@ -552,11 +530,11 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                       onChange={(e) => handleRepeatChange(e.target.value as RecurrenceType)}
                       className={fieldClass}
                     >
-                      <option value="none">Once</option>
-                      <option value="daily">Daily</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="monthly">Monthly</option>
-                      <option value="yearly">Yearly</option>
+                      <option value="none">{t('repeat.none')}</option>
+                      <option value="daily">{t('repeat.daily')}</option>
+                      <option value="weekly">{t('repeat.weekly')}</option>
+                      <option value="monthly">{t('repeat.monthly')}</option>
+                      <option value="yearly">{t('repeat.yearly')}</option>
                     </select>
                   </div>
                   <ReminderWhenFields
@@ -575,7 +553,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             <label htmlFor="enableBudget" className="min-h-[44px] flex items-center justify-between cursor-pointer">
               <span className="flex items-center gap-2">
                 <DollarSign className="w-4 h-4 text-accent" />
-                <span className="text-xs font-semibold uppercase tracking-wider text-ink">Budget</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-ink">{t('form.budget')}</span>
               </span>
               <input
                 type="checkbox"
@@ -594,7 +572,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label htmlFor="item-budget-target" className={fieldLabelClass}>
-                      Target
+                      {t('form.target')}
                     </label>
                     <input
                       id="item-budget-target"
@@ -608,14 +586,14 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                   </div>
                   <div>
                     <label htmlFor="item-budget-currency" className={fieldLabelClass}>
-                      Currency
+                      {t('form.currency')}
                     </label>
                     {/* One currency per wish, for its budget and expenses */}
                     <select
                       id="item-budget-currency"
                       value={pendingCurrency ?? currency}
                       onChange={(e) => handleCurrencyChange(e.target.value)}
-                      title="Currency for this plan's budget and expenses"
+                      title={t('form.currencyTitle')}
                       className={fieldClass}
                     >
                       {CURRENCIES.map((c) => (
@@ -629,7 +607,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                   {editingItem && (
                     <div className="col-span-2">
                       <label htmlFor="item-budget-saved" className={fieldLabelClass}>
-                        Saved
+                        {t('form.saved')}
                       </label>
                       <input
                         id="item-budget-saved"
@@ -646,8 +624,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 {pendingCurrency && (
                   <InlineConfirm
                     tone="positive"
-                    message={`Switch to ${pendingCurrency}? Your amounts keep their numbers.`}
-                    confirmLabel="Switch"
+                    message={t('form.switchCurrency', { code: pendingCurrency })}
+                    confirmLabel={t('actions.switch')}
                     onCancel={() => setPendingCurrency(null)}
                     onConfirm={() => {
                       setCurrency(pendingCurrency);
@@ -655,7 +633,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                     }}
                   />
                 )}
-                <p className="text-[11px] text-ink/50">Set a target to track your savings.</p>
+                <p className="text-[11px] text-ink/50">{t('form.budgetHint')}</p>
               </div>
             )}
           </div>
@@ -666,9 +644,9 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
           {isConfirmingDiscard && (
             <InlineConfirm
               className="mb-3"
-              message="Close without saving your changes?"
-              confirmLabel="Discard"
-              cancelLabel="Keep"
+              message={t('form.discardConfirm')}
+              confirmLabel={t('actions.discard')}
+              cancelLabel={t('actions.keep')}
               onCancel={() => setIsConfirmingDiscard(false)}
               onConfirm={() => {
                 setIsConfirmingDiscard(false);
@@ -682,7 +660,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             onClick={requestClose}
             className="min-h-[44px] px-4 py-2 text-xs font-semibold text-ink/70 hover:text-ink rounded-xl hover:bg-ink/5 transition-colors"
           >
-            Cancel
+            {t('actions.cancel')}
           </button>
           {/* Submits the form, so the browser checks required fields first */}
           <button
@@ -690,7 +668,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             form="item-form"
             className="min-h-[44px] px-6 py-2.5 text-xs font-semibold text-paper bg-ink hover:bg-ink/85 active:scale-98 rounded-xl shadow-md transition-all"
           >
-            Save
+            {t('actions.save')}
           </button>
           </div>
         </div>

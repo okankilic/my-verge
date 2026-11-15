@@ -3,13 +3,29 @@ import { Check, ClipboardList, ListChecks, X } from 'lucide-react';
 import { STEP_TITLE_MAX_LENGTH, WishStep } from '../types';
 import { stepProgress } from '../utils/steps';
 import { InlineConfirm } from './InlineConfirm';
+import { MessageKey, t } from '../i18n';
 
 // 'step': the steps toward a wish. 'prep': what to get ready before starting it.
 type StepKind = 'step' | 'prep';
 
-const KIND_TEXT: Record<StepKind, { heading: string; placeholder: string; noun: string }> = {
-  step: { heading: 'Along the way', placeholder: 'Add something to do', noun: 'step' },
-  prep: { heading: 'Before you start', placeholder: 'Add something to prep', noun: 'prep item' },
+// Catalog keys per kind; each language words them whole rather than around a noun
+const KIND_TEXT: Record<StepKind, Record<'heading' | 'placeholder' | 'remove' | 'removeTitle' | 'new' | 'add', MessageKey>> = {
+  step: {
+    heading: 'steps.step.heading',
+    placeholder: 'steps.step.placeholder',
+    remove: 'steps.step.remove',
+    removeTitle: 'steps.step.removeTitle',
+    new: 'steps.step.new',
+    add: 'steps.step.add',
+  },
+  prep: {
+    heading: 'steps.prep.heading',
+    placeholder: 'steps.prep.placeholder',
+    remove: 'steps.prep.remove',
+    removeTitle: 'steps.prep.removeTitle',
+    new: 'steps.prep.new',
+    add: 'steps.prep.add',
+  },
 };
 
 interface StepListProps {
@@ -60,7 +76,7 @@ export const StepList: React.FC<StepListProps> = ({
         <div className="flex items-center justify-between text-xs">
           <span className="flex items-center gap-1.5 font-semibold uppercase tracking-wider text-ink/60">
             <HeadingIcon className="w-3.5 h-3.5" />
-            <span>{text.heading}</span>
+            <span>{t(text.heading)}</span>
           </span>
           {total > 0 && (
             <span className="font-mono-journal text-[11px] text-ink/55">
@@ -105,8 +121,8 @@ export const StepList: React.FC<StepListProps> = ({
                   type="button"
                   onClick={() => setConfirmingId((prev) => (prev === step.id ? null : step.id))}
                   aria-expanded={confirmingId === step.id}
-                  aria-label={`Remove ${text.noun} "${step.title}"`}
-                  title={`Remove ${text.noun}`}
+                  aria-label={t(text.remove, { title: step.title })}
+                  title={t(text.removeTitle)}
                   className="min-w-[44px] min-h-[44px] shrink-0 flex items-center justify-center rounded-lg text-ink/35 hover:text-ink/70"
                 >
                   <X className="w-4 h-4" />
@@ -116,8 +132,8 @@ export const StepList: React.FC<StepListProps> = ({
               {confirmingId === step.id && onRemove && (
                 <InlineConfirm
                   className="px-3 pb-3"
-                  message={`Remove "${step.title}"?`}
-                  confirmLabel="Remove"
+                  message={t('confirm.remove', { title: step.title })}
+                  confirmLabel={t('actions.remove')}
                   onCancel={() => setConfirmingId(null)}
                   onConfirm={() => {
                     setConfirmingId(null);
@@ -145,18 +161,18 @@ export const StepList: React.FC<StepListProps> = ({
                 submit();
               }
             }}
-            placeholder={text.placeholder}
-            aria-label={`New ${text.noun}`}
+            placeholder={t(text.placeholder)}
+            aria-label={t(text.new)}
             className="flex-1 min-w-0 min-h-[44px] px-3 py-2 text-sm bg-card border border-ink/15 rounded-xl text-ink placeholder-ink/40 focus:outline-none focus:border-ink"
           />
           <button
             type="button"
             onClick={submit}
             disabled={!draft.trim()}
-            aria-label={`Add ${text.noun}`}
+            aria-label={t(text.add)}
             className="min-h-[44px] px-4 text-xs font-semibold rounded-xl border border-ink/15 bg-card text-ink/80 hover:text-ink disabled:opacity-40 transition-colors"
           >
-            Add
+            {t('actions.add')}
           </button>
         </div>
       )}
@@ -173,7 +189,7 @@ export const StepCount: React.FC<{ steps?: WishStep[]; kind?: StepKind }> = ({ s
   return (
     <span
       className="shrink-0 flex items-center gap-1 font-mono-journal text-[11px] text-ink/55"
-      aria-label={kind === 'prep' ? `${done} of ${total} ready before you start` : `${done} of ${total} steps done`}
+      aria-label={kind === 'prep' ? t('steps.prep.count', { done, total }) : t('steps.step.count', { done, total })}
     >
       <Icon aria-hidden className="w-3 h-3" />
       <span aria-hidden>

@@ -1,4 +1,6 @@
 import React from 'react';
+import { CategoryDefinition } from '../types';
+import { hasKey, t } from '../i18n';
 import {
   Compass,
   Sparkles,
@@ -63,3 +65,17 @@ export function renderCategoryIcon(iconName: string, className = 'w-3.5 h-3.5'):
 // toward ink in dark mode (--category-lift) so it stays readable on Forest.
 export const categoryColor = (hex?: string): string =>
   hex ? `color-mix(in oklab, ${hex}, var(--color-ink) var(--category-lift))` : 'var(--color-ink)';
+
+// A category's label in the app's language. Built-in categories are looked up by id;
+// categories created by older builds (custom-*) show what they stored. The stored verb stays English.
+export function categoryLabel(cat: CategoryDefinition | undefined, fallbackId = ''): string {
+  if (!cat) return fallbackId;
+  const key = `category.${cat.id}.verb`;
+  return hasKey(key) ? t(key) : cat.verb;
+}
+
+// The title placeholder in the form, which follows the category
+export function categoryPlaceholder(cat: CategoryDefinition | undefined): string {
+  const key = `category.${cat?.id}.placeholder`;
+  return hasKey(key) ? t(key) : t('form.titlePlaceholder');
+}

@@ -1,3 +1,4 @@
+import { MessageKey, t } from '../i18n';
 // Calendar-aligned time ranges in local time; weeks start on Monday.
 export type TimeRange =
   | 'all'
@@ -34,21 +35,22 @@ export const HORIZON_RANGES: TimeRange[] = [
   'this-year',
 ];
 
-const LABELS: Record<string, string> = {
-  all: 'All time',
-  today: 'Today',
-  'this-week': 'This week',
-  'last-week': 'Last week',
-  'this-month': 'This month',
-  'last-month': 'Last month',
-  'this-year': 'This year',
-  'last-year': 'Last year',
-  'next-3-months': 'In three months',
-  'next-6-months': 'In six months',
+const LABELS: Record<Exclude<TimeRange, `year:${number}`>, MessageKey> = {
+  all: 'time.all',
+  today: 'time.today',
+  'this-week': 'time.thisWeek',
+  'last-week': 'time.lastWeek',
+  'this-month': 'time.thisMonth',
+  'last-month': 'time.lastMonth',
+  'this-year': 'time.thisYear',
+  'last-year': 'time.lastYear',
+  'next-3-months': 'time.next3Months',
+  'next-6-months': 'time.next6Months',
 };
 
+// In the app's language, read at render time so a language change applies at once
 export const rangeLabel = (range: TimeRange) =>
-  range.startsWith('year:') ? range.slice(5) : LABELS[range];
+  range.startsWith('year:') ? range.slice(5) : t(LABELS[range as keyof typeof LABELS]);
 
 const startOfWeek = (d: Date) => {
   const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());

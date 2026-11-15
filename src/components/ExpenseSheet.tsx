@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { EXPENSE_NOTE_MAX_LENGTH } from '../types';
 import { currencySymbol, parseAmount } from '../utils/expenses';
 import { Sheet } from './Sheet';
+import { t } from '../i18n';
 
 interface ExpenseSheetProps {
   isOpen: boolean;
@@ -41,7 +42,7 @@ export const ExpenseSheet: React.FC<ExpenseSheetProps> = ({ isOpen, title, curre
       >
         <div className="px-4 py-3 border-b border-ink/10">
           <span id="expense-sheet-title" className="font-serif-journal text-base text-ink block">
-            Add expense
+            {t('expense.add')}
           </span>
           <span className="text-[11px] text-ink/55 block truncate">{title}</span>
         </div>
@@ -58,7 +59,7 @@ export const ExpenseSheet: React.FC<ExpenseSheetProps> = ({ isOpen, title, curre
               value={amountText}
               onChange={(e) => setAmountText(e.target.value)}
               placeholder="0"
-              aria-label="Amount"
+              aria-label={t('expense.amount')}
               className="flex-1 min-w-0 bg-transparent font-mono-journal text-lg text-ink placeholder-ink/30 focus:outline-none"
             />
           </label>
@@ -67,8 +68,8 @@ export const ExpenseSheet: React.FC<ExpenseSheetProps> = ({ isOpen, title, curre
             value={note}
             maxLength={EXPENSE_NOTE_MAX_LENGTH}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="What was it for? (optional)"
-            aria-label="Note"
+            placeholder={t('expense.notePlaceholder')}
+            aria-label={t('expense.note')}
             className="w-full min-h-[44px] px-3 py-2 text-sm bg-card border border-ink/15 rounded-xl text-ink placeholder-ink/40 focus:outline-none focus:border-ink"
           />
         </div>
@@ -79,14 +80,14 @@ export const ExpenseSheet: React.FC<ExpenseSheetProps> = ({ isOpen, title, curre
             onClick={close}
             className="min-h-[44px] px-4 text-xs font-medium text-ink/70 hover:text-ink rounded-lg hover:bg-ink/5 transition-colors"
           >
-            Cancel
+            {t('actions.cancel')}
           </button>
           <button
             type="submit"
             disabled={amount === null}
             className="min-h-[44px] px-4 text-xs font-semibold bg-ink text-paper rounded-lg hover:bg-ink/85 disabled:opacity-40 transition-colors"
           >
-            Save
+            {t('actions.save')}
           </button>
         </div>
       </form>

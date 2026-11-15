@@ -3,6 +3,7 @@ import { FileText, Video } from 'lucide-react';
 import { AttachmentMeta } from '../types';
 import { openAttachment } from '../services/attachments';
 import { photoKey } from '../utils/photoKey';
+import { t } from '../i18n';
 
 interface ItemMediaStripProps {
   photos: string[];
@@ -46,7 +47,7 @@ export const ItemMediaStrip: React.FC<ItemMediaStripProps> = ({ photos, photoNot
               e.stopPropagation();
               openAttachment(att);
             }}
-            title={att.note ? `${att.name} — ${att.note}` : `Open ${att.name}`}
+            title={att.note ? `${att.name} — ${att.note}` : t('media.openFile', { name: att.name })}
             className="max-w-[14rem] min-h-[44px] px-2.5 py-1.5 flex items-center gap-1.5 text-left text-[11px] text-ink/75 bg-paper border border-ink/10 rounded-md hover:border-ink/25 hover:text-ink transition-colors"
           >
             {att.mimeType === 'application/pdf' ? (

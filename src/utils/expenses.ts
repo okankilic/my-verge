@@ -1,14 +1,16 @@
 import { BucketItem, WishExpense } from '../types';
 import { DEFAULT_CURRENCY } from '../data/currencies';
+import { getLocale } from '../i18n';
 
 const formatters = new Map<string, Intl.NumberFormat>();
 
-// One formatter per currency and whole/fractional style, so lists don't rebuild them
+// One formatter per language, currency and whole/fractional style, so lists don't rebuild them
 function formatterFor(code: string, whole: boolean): Intl.NumberFormat {
-  const key = `${code}:${whole}`;
+  const locale = getLocale();
+  const key = `${locale}:${code}:${whole}`;
   let formatter = formatters.get(key);
   if (!formatter) {
-    formatter = new Intl.NumberFormat(undefined, {
+    formatter = new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: code,
       ...(whole ? { minimumFractionDigits: 0, maximumFractionDigits: 0 } : {}),
@@ -24,7 +26,7 @@ export function formatMoney(amount: number | undefined, code: string = DEFAULT_C
   try {
     return formatterFor(code, Number.isInteger(value)).format(value);
   } catch {
-    return `${code} ${value.toLocaleString()}`;
+    return `${code} ${value.toLocaleString(getLocale())}`;
   }
 }
 
@@ -32,12 +34,21 @@ export function formatMoney(amount: number | undefined, code: string = DEFAULT_C
 export function currencySymbol(code: string = DEFAULT_CURRENCY): string {
   try {
     return (
-      new Intl.NumberFormat(undefined, { style: 'currency', currency: code, currencyDisplay: 'narrowSymbol' })
+      new Intl.NumberFormat(getLocale(), { style: 'currency', currency: code, currencyDisplay: 'narrowSymbol' })
         .formatToParts(0)
         .find((p) => p.type === 'currency')?.value ?? code
     );
   } catch {
     return code;
+  }
+}
+
+// The currency's name in the app's language, e.g. "Euro" or "Türk lirası"
+export function currencyName(code: string, fallback = code): string {
+  try {
+    return new Intl.DisplayNames(getLocale(), { type: 'currency' }).of(code) ?? fallback;
+  } catch {
+    return fallback;
   }
 }
 

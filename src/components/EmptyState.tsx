@@ -1,4 +1,5 @@
 import React from 'react';
+import { t } from '../i18n';
 
 interface EmptyStateProps {
   title: string;
@@ -21,7 +22,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ title, hint, icon, onCle
     <p className="font-serif-journal text-base text-ink/70">{title}</p>
     <p className="text-xs text-ink/50 mt-1 max-w-sm mx-auto">
       {hint}
-      {onClearFilters && ' Or clear the filters to see the rest.'}
+      {onClearFilters && ` ${t('empty.clearHint')}`}
     </p>
     {(onClearFilters || action) && (
       <div className="flex items-center justify-center gap-2 pt-4">
@@ -29,10 +30,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ title, hint, icon, onCle
           <button
             type="button"
             onClick={onClearFilters}
-            aria-label="Clear search and category"
+            aria-label={t('empty.clearLabel')}
             className="min-h-[44px] px-4 bg-card border border-ink/15 text-ink text-xs font-semibold rounded-lg hover:bg-paper transition-all"
           >
-            Clear
+            {t('actions.clear')}
           </button>
         )}
         {action}

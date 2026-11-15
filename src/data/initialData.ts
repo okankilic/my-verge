@@ -1,17 +1,23 @@
 import { BucketItem } from '../types';
 import { PRESET_PHOTO_URLS } from './presetPhotos';
+import { MessageKey, t } from '../i18n';
 
-export const INITIAL_ITEMS: BucketItem[] = [
+type SampleField = 'title' | 'description' | 'completionReflection' | 'name' | 'cityOrCountry' | 'formatOrEdition' | 'progress';
+const s = (n: number, field: SampleField) => t(`sample.${n}.${field}` as MessageKey);
+
+// The sample plans, written in the active language. Ids, dates, photo paths and amounts are the
+// same in every language; only the text is translated (src/i18n/locales, `sample.*`).
+export const initialItems = (): BucketItem[] => [
   {
     id: 'verge-item-1',
     categoryId: 'go',
-    title: 'Wander Arashiyama Bamboo Grove & Saiho-ji Moss Temple',
-    description: 'Walk the moss-covered stone paths in the quiet morning mist of Kyoto. Attend the early sutra transcription chant before exploring the stone gardens.',
+    title: s(1, 'title'),
+    description: s(1, 'description'),
     priority: 'until',
     targetDate: '2026-11-15',
     location: {
-      name: 'Saiho-ji & Arashiyama',
-      cityOrCountry: 'Kyoto, Japan',
+      name: s(1, 'name'),
+      cityOrCountry: s(1, 'cityOrCountry'),
     },
     budget: {
       estimatedCost: 1800,
@@ -32,14 +38,14 @@ export const INITIAL_ITEMS: BucketItem[] = [
   {
     id: 'verge-item-2',
     categoryId: 'read',
-    title: 'Invisible Cities by Italo Calvino',
-    description: 'Reflective dialogues between Marco Polo and Kublai Khan about cities of memory, desire, and signs. Read with a fountain pen in a sunlit corner.',
+    title: s(2, 'title'),
+    description: s(2, 'description'),
     priority: 'until',
     targetDate: '2026-11-05',
     mediaMeta: {
       authorOrCreator: 'Italo Calvino',
-      formatOrEdition: 'Vintage Classics Linen Hardcover',
-      progress: 'Page 48 / 165',
+      formatOrEdition: s(2, 'formatOrEdition'),
+      progress: s(2, 'progress'),
     },
     photos: [PRESET_PHOTO_URLS.libraryDesk],
     linkUrl: 'https://en.wikipedia.org/wiki/Invisible_Cities',
@@ -55,8 +61,8 @@ export const INITIAL_ITEMS: BucketItem[] = [
   {
     id: 'verge-item-3',
     categoryId: 'buy',
-    title: 'Wood-Fired Stoneware Teapot & Ceramic Cups',
-    description: 'An artisanal wood-fired kyusu teapot with natural wood-ash glaze from an independent potter. An everyday ritual instrument for loose-leaf gyokuro.',
+    title: s(3, 'title'),
+    description: s(3, 'description'),
     priority: 'until',
     targetDate: '2026-12-10',
     budget: {
@@ -78,13 +84,13 @@ export const INITIAL_ITEMS: BucketItem[] = [
   {
     id: 'verge-item-4',
     categoryId: 'watch',
-    title: 'Cinema Paradiso & Stalker in 35mm Restoration',
-    description: 'Screen Giuseppe Tornatore’s love letter to moving images at an independent cinema with original auditorium projection acoustics.',
+    title: s(4, 'title'),
+    description: s(4, 'description'),
     priority: 'until',
     targetDate: '2026-11-20',
     mediaMeta: {
       authorOrCreator: 'Giuseppe Tornatore / Andrei Tarkovsky',
-      formatOrEdition: 'Curzon Cinema 35mm Projection',
+      formatOrEdition: s(4, 'formatOrEdition'),
     },
     photos: [PRESET_PHOTO_URLS.cinemaTheater],
     reminder: {
@@ -99,8 +105,8 @@ export const INITIAL_ITEMS: BucketItem[] = [
   {
     id: 'verge-item-5',
     categoryId: 'learn',
-    title: 'Hand-bind a bespoke linen hardcover journal',
-    description: 'Learn Coptic stitch bookbinding, trim 120gsm cold-press rag cotton paper signatures, and case-bind with bookcloth spine.',
+    title: s(5, 'title'),
+    description: s(5, 'description'),
     priority: 'until',
     targetDate: '2026-12-28',
     budget: {
@@ -121,8 +127,8 @@ export const INITIAL_ITEMS: BucketItem[] = [
   {
     id: 'verge-item-6',
     categoryId: 'remember',
-    title: '“Attention is the rarest and purest form of generosity”',
-    description: 'Simone Weil, Gravity and Grace. Remind yourself that being fully present with someone or with a craft is the greatest gift one can offer.',
+    title: s(6, 'title'),
+    description: s(6, 'description'),
     priority: 'urgent',
     photos: [],
     reminder: {
@@ -137,13 +143,13 @@ export const INITIAL_ITEMS: BucketItem[] = [
   {
     id: 'verge-item-7',
     categoryId: 'go',
-    title: 'Hike the Coastal Trails of Cabo de Gata',
-    description: 'Volcanic cliffs, tranquil secluded coves, and quiet Mediterranean sunsets along the protected Andalusian coastline.',
+    title: s(7, 'title'),
+    description: s(7, 'description'),
     priority: 'someday',
     photos: [],
     status: 'completed',
     completedAt: '2026-09-18T17:40:00.000Z',
-    completionReflection: 'The stillness of Playa de los Genoveses at dusk was restorative. The light across the volcanic salt flats stays with me every time life gets frantic.',
+    completionReflection: s(7, 'completionReflection'),
     completionRating: 5,
     createdAt: '2026-08-01T10:00:00.000Z',
     updatedAt: '2026-09-18T17:40:00.000Z',

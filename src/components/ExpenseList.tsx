@@ -4,6 +4,7 @@ import { WishExpense } from '../types';
 import { expenseTotal, formatMoney } from '../utils/expenses';
 import { ExpenseSheet } from './ExpenseSheet';
 import { InlineConfirm } from './InlineConfirm';
+import { formatDate, t } from '../i18n';
 
 interface ExpenseListProps {
   expenses: WishExpense[];
@@ -25,10 +26,10 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, title, curre
       <div className="flex items-center justify-between text-xs">
         <span className="flex items-center gap-1.5 font-semibold uppercase tracking-wider text-ink/60">
           <Receipt className="w-3.5 h-3.5" />
-          <span>Expenses</span>
+          <span>{t('expense.heading')}</span>
         </span>
         {expenses.length > 0 && (
-          <span className="font-mono-journal text-[11px] text-ink/55">{formatMoney(total, currency)} spent</span>
+          <span className="font-mono-journal text-[11px] text-ink/55">{t('money.spent', { amount: formatMoney(total, currency) })}</span>
         )}
       </div>
 
@@ -38,9 +39,9 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, title, curre
             <li key={expense.id}>
               <div className="flex items-center gap-2 pl-3 pr-1 min-h-[44px]">
               <div className="flex-1 min-w-0">
-                <span className="block text-sm text-ink/85 leading-snug truncate">{expense.note || 'Expense'}</span>
+                <span className="block text-sm text-ink/85 leading-snug truncate">{expense.note || t('expense.untitled')}</span>
                 <span className="block font-mono-journal text-[10px] text-ink/45">
-                  {new Date(expense.spentAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                  {formatDate(expense.spentAt, { month: 'short', day: 'numeric' })}
                 </span>
               </div>
               <span className="shrink-0 font-mono-journal text-sm text-ink tabular-nums">
@@ -50,8 +51,12 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, title, curre
                 type="button"
                 onClick={() => setConfirmingId((prev) => (prev === expense.id ? null : expense.id))}
                 aria-expanded={confirmingId === expense.id}
-                aria-label={`Remove expense ${formatMoney(expense.amount, currency)}${expense.note ? ` "${expense.note}"` : ''}`}
-                title="Remove expense"
+                aria-label={
+                  expense.note
+                    ? t('expense.removeNoted', { amount: formatMoney(expense.amount, currency), note: expense.note })
+                    : t('expense.removeLabel', { amount: formatMoney(expense.amount, currency) })
+                }
+                title={t('expense.remove')}
                 className="min-w-[44px] min-h-[44px] shrink-0 flex items-center justify-center rounded-lg text-ink/35 hover:text-ink/70"
               >
                 <X className="w-4 h-4" />
@@ -60,8 +65,8 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, title, curre
               {confirmingId === expense.id && (
                 <InlineConfirm
                   className="px-3 pb-3"
-                  message={`Remove the ${formatMoney(expense.amount, currency)} expense?`}
-                  confirmLabel="Remove"
+                  message={t('confirm.removeExpense', { amount: formatMoney(expense.amount, currency) })}
+                  confirmLabel={t('actions.remove')}
                   onCancel={() => setConfirmingId(null)}
                   onConfirm={() => {
                     setConfirmingId(null);
@@ -79,10 +84,10 @@ export const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, title, curre
           <button
             type="button"
             onClick={() => setIsAdding(true)}
-            aria-label="Add expense"
+            aria-label={t('expense.add')}
             className="w-full min-h-[44px] px-4 text-xs font-semibold rounded-xl border border-dashed border-ink/20 bg-card text-ink/70 hover:text-ink transition-colors"
           >
-            Add
+            {t('actions.add')}
           </button>
           <ExpenseSheet
             isOpen={isAdding}

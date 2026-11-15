@@ -1,6 +1,7 @@
 import React from 'react';
 import { BucketItem } from '../types';
 import { stepProgress } from '../utils/steps';
+import { t } from '../i18n';
 
 type ConfirmTone = 'danger' | 'positive';
 
@@ -19,7 +20,7 @@ export const InlineConfirm: React.FC<{
   confirmLabel,
   onConfirm,
   onCancel,
-  cancelLabel = 'Cancel',
+  cancelLabel = t('actions.cancel'),
   tone = 'danger',
   className = 'mt-3 pt-3 border-t border-ink/10',
 }) => (
@@ -62,13 +63,17 @@ export function planConfirmCopy(
     case 'start': {
       const prep = stepProgress(item.prepSteps);
       const left = prep.total - prep.done;
-      const prepNote = left > 0 ? ` ${left} prep ${left === 1 ? 'item' : 'items'} to go.` : '';
-      return { message: `Start "${item.title}"?${prepNote}`, confirmLabel: 'Start', tone: 'positive' };
+      const question = t('confirm.start', { title: item.title });
+      return {
+        message: left > 0 ? `${question} ${t('prep.left', { count: left })}` : question,
+        confirmLabel: t('actions.start'),
+        tone: 'positive',
+      };
     }
     case 'done':
-      return { message: `Mark "${item.title}" as done?`, confirmLabel: 'Done', tone: 'positive' };
+      return { message: t('confirm.done', { title: item.title }), confirmLabel: t('actions.done'), tone: 'positive' };
     case 'delete':
-      return { message: `Delete "${item.title}" for good?`, confirmLabel: 'Delete', tone: 'danger' };
+      return { message: t('confirm.delete', { title: item.title }), confirmLabel: t('actions.delete'), tone: 'danger' };
   }
 }
 

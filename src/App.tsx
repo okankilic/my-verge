@@ -29,7 +29,10 @@ import {
   ThemePreference,
   loadDefaultCurrency,
   saveDefaultCurrency,
+  loadLanguage,
+  saveLanguage,
 } from './services/storage';
+import { LanguagePreference, getLocale, resolveLocale, setLocale, t } from './i18n';
 import { DEFAULT_CURRENCY } from './data/currencies';
 import {
   playChimeSound,
@@ -111,11 +114,28 @@ export default function App() {
   // The currency new wishes start with; each wish keeps its own once it has one
   const [defaultCurrency, setDefaultCurrency] = useState(DEFAULT_CURRENCY);
 
+  // 'system' follows the device language; the module-level locale in src/i18n is set before each render
+  const [language, setLanguage] = useState<LanguagePreference>('system');
+  const locale = resolveLocale(language);
+  if (getLocale() !== locale) setLocale(locale);
+
   useEffect(() => {
     let cancelled = false;
-    Promise.all([loadBucketItems(), loadCategories(), loadTheme(), loadDefaultCurrency()])
-      .then(([loadedItems, loadedCategories, loadedTheme, loadedCurrency]) => {
+    // The language loads first, so sample plans seed in it
+    loadLanguage()
+      .then((loadedLanguage) => {
+        setLocale(resolveLocale(loadedLanguage));
+        return Promise.all([
+          loadedLanguage,
+          loadBucketItems(),
+          loadCategories(),
+          loadTheme(),
+          loadDefaultCurrency(),
+        ]);
+      })
+      .then(([loadedLanguage, loadedItems, loadedCategories, loadedTheme, loadedCurrency]) => {
         if (cancelled) return;
+        setLanguage(loadedLanguage);
         keptItemsCopyRef.current = Boolean(loadedItems.keptCopyAs);
         setItems(stampCurrency(loadedItems.value, loadedCurrency));
         setCategories(loadedCategories.value);
@@ -139,7 +159,7 @@ export default function App() {
     if (!isHydrated || !keptItemsCopyRef.current) return;
     keptItemsCopyRef.current = false;
     notify(
-      "Your saved plans couldn't be opened, so the samples are here for now. A copy is kept safe on this device.",
+      t('toast.keptCopy'),
       'info',
       { durationMs: 10000 }
     );
@@ -161,6 +181,10 @@ export default function App() {
     if (isHydrated) saveDefaultCurrency(defaultCurrency);
   }, [defaultCurrency, isHydrated]);
 
+  useEffect(() => {
+    if (isHydrated) saveLanguage(language);
+  }, [language, isHydrated]);
+
   // Active Reminder In-App Toast
   const [activeToastItem, setActiveToastItem] = useState<BucketItem | null>(null);
 
@@ -169,7 +193,8 @@ export default function App() {
     if (!isHydrated) return;
     saveBucketItems(items);
     syncNativeReminders(items);
-  }, [items, isHydrated]);
+    // The OS notification text is fixed when scheduled, so a language change re-schedules too
+  }, [items, isHydrated, locale]);
 
   // Tapping a native reminder notification opens that item
   const [tappedItemId, setTappedItemId] = useState<string | null>(null);
@@ -216,7 +241,7 @@ export default function App() {
       playChimeSound();
       sendBrowserNotification(
         firstDue.title,
-        "It's time for this plan!"
+        t('notifications.body')
       );
       const nowIso = new Date().toISOString();
       const freshIds = new Set(fresh.map((i) => i.id));
@@ -262,7 +287,7 @@ export default function App() {
       const newItem: BucketItem = {
         id: `verge-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
         categoryId: itemData.categoryId || 'go',
-        title: itemData.title || 'Untitled plan',
+        title: itemData.title || t('form.untitled'),
         description: itemData.description || '',
         priority: itemData.priority || 'this_year',
         targetDate: itemData.targetDate,
@@ -285,13 +310,13 @@ export default function App() {
       if (newItem.status === 'completed') {
         // A plan logged as already done goes straight to Moments
         if (currentTab !== 'milestones') {
-          notify('Added to your Moments!', 'success', {
-            action: { label: 'Open', onAction: () => setCurrentTab('milestones') },
+          notify(t('toast.addedMoments'), 'success', {
+            action: { label: t('actions.open'), onAction: () => setCurrentTab('milestones') },
           });
         }
       } else if (currentTab !== 'feed') {
-        notify('Added to your Plans!', 'success', {
-          action: { label: 'Open', onAction: () => setCurrentTab('feed') },
+        notify(t('toast.addedPlans'), 'success', {
+          action: { label: t('actions.open'), onAction: () => setCurrentTab('feed') },
         });
       }
     }
@@ -307,7 +332,7 @@ export default function App() {
   // Finished plans can't be reopened, so this only ever completes.
   const handleToggleComplete = (item: BucketItem) => {
     if (item.status === 'completed') return;
-    notify(`You did it: "${item.title}"!`, 'success');
+    notify(t('toast.didIt', { title: item.title }), 'success');
     const nowIso = new Date().toISOString();
 
     try {
@@ -364,8 +389,12 @@ export default function App() {
     // Prep never blocks starting; the toast just mentions what's still left
     const prepLeft = stepProgress(item.prepSteps);
     const leftCount = prepLeft.total - prepLeft.done;
-    const prepNote = leftCount > 0 ? ` ${leftCount} prep ${leftCount === 1 ? 'item' : 'items'} to go.` : '';
-    notify(`"${item.title}" is on Now. Enjoy!${prepNote}`, 'success');
+    notify(
+      leftCount > 0
+        ? `${t('toast.started', { title: item.title })} ${t('prep.left', { count: leftCount })}`
+        : t('toast.started', { title: item.title }),
+      'success'
+    );
     const nowIso = new Date().toISOString();
     const startedAt = nowIso;
 
@@ -419,7 +448,7 @@ export default function App() {
     if (!step) return;
     // StepList confirms the removal first
     updateSteps(item.id, (steps) => steps.filter((s) => s.id !== stepId), list);
-    notify(`Removed "${step.title}".`, 'info');
+    notify(t('toast.stepRemoved', { title: step.title }), 'info');
   };
 
   // Applies a change to an item's expenses, working from the latest copy like updateSteps
@@ -437,7 +466,7 @@ export default function App() {
 
   const handleAddExpense = (item: BucketItem, amount: number, note?: string) => {
     updateExpenses(item.id, (expenses) => [...expenses, newExpense(amount, note)]);
-    notify(`Logged ${formatMoney(amount, wishCurrency(item))} on "${item.title}".`, 'success');
+    notify(t('toast.expenseLogged', { amount: formatMoney(amount, wishCurrency(item)), title: item.title }), 'success');
   };
 
   const handleRemoveExpense = (item: BucketItem, expenseId: string) => {
@@ -445,7 +474,7 @@ export default function App() {
     if (!expense) return;
     // ExpenseList confirms the removal first
     updateExpenses(item.id, (expenses) => expenses.filter((e) => e.id !== expenseId));
-    notify(`Removed ${formatMoney(expense.amount, wishCurrency(item))} expense.`, 'info');
+    notify(t('toast.expenseRemoved', { amount: formatMoney(expense.amount, wishCurrency(item)) }), 'info');
   };
 
   const handleAddPhoto = (item: BucketItem, photoDataUrl: string, note?: string) => {
@@ -484,7 +513,7 @@ export default function App() {
       }
     } catch (err) {
       console.error('Failed to add file:', err);
-      notify(`Couldn't add "${file.name}". Try again?`, 'error');
+      notify(t('errors.addFile', { name: file.name }), 'error');
     }
   };
 
@@ -522,7 +551,7 @@ export default function App() {
       setViewingItem(null);
     }
 
-    notify(`"${target.title}" is gone.`, 'info');
+    notify(t('toast.deleted', { title: target.title }), 'info');
   };
 
   // Closing the global search also clears it, so no hidden filter stays applied
@@ -651,8 +680,8 @@ export default function App() {
     return (
       <div className="min-h-screen bg-page flex items-center justify-center px-4">
         <div className="max-w-xs text-center space-y-3">
-          <h1 className="font-serif-journal text-lg text-ink">Your journal didn't open this time</h1>
-          <p className="text-sm text-ink/60">Your plans are still saved on this device. Try again?</p>
+          <h1 className="font-serif-journal text-lg text-ink">{t('boot.failedTitle')}</h1>
+          <p className="text-sm text-ink/60">{t('boot.failedHint')}</p>
           <button
             type="button"
             onClick={() => {
@@ -661,7 +690,7 @@ export default function App() {
             }}
             className="min-h-[44px] px-5 bg-ink text-paper text-sm font-semibold rounded-lg hover:bg-ink/85 transition-all"
           >
-            Retry
+            {t('actions.retry')}
           </button>
         </div>
       </div>
@@ -715,7 +744,7 @@ export default function App() {
                 <Bell className="w-4 h-4 text-alert shrink-0" />
                 <div className="truncate">
                   <span className="text-[10px] uppercase tracking-wider text-alert font-bold block">
-                    Reminder
+                    {t('banner.reminder')}
                   </span>
                   <span className="text-xs font-semibold text-ink truncate block">
                     {activeToastItem.title}
@@ -726,7 +755,7 @@ export default function App() {
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   onClick={() => setActiveToastItem(null)}
-                  aria-label="Dismiss reminder"
+                  aria-label={t('banner.dismiss')}
                   className="min-h-[44px] min-w-[44px] flex items-center justify-center text-ink/50 hover:text-ink"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -752,8 +781,8 @@ export default function App() {
               {filteredActiveItems.length === 0 ? (
                 <EmptyState
                   icon={<Compass className="w-6 h-6 stroke-[1.5]" />}
-                  title="Ready for your next plan"
-                  hint="Tap New to add one."
+                  title={t('empty.journalTitle')}
+                  hint={t('empty.journalHint')}
                   onClearFilters={clearFilters}
                   action={
                     <button
@@ -765,7 +794,7 @@ export default function App() {
                       className="min-h-[44px] px-4 bg-ink text-paper text-xs font-semibold rounded-lg hover:bg-ink/85 transition-all inline-flex items-center gap-1.5"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>New</span>
+                      <span>{t('actions.new')}</span>
                     </button>
                   }
                 />
@@ -901,6 +930,8 @@ export default function App() {
           onCategoriesChange={setCategories}
           theme={theme}
           onThemeChange={setTheme}
+          language={language}
+          onLanguageChange={setLanguage}
           defaultCurrency={defaultCurrency}
           onDefaultCurrencyChange={setDefaultCurrency}
           onNotificationsEnabled={() => syncNativeReminders(items)}

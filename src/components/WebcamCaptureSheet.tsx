@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { X, Camera, RotateCcw, Check } from 'lucide-react';
 import { videoFrameToResizedDataUrl } from '../utils/imageResize';
 import { Sheet } from './Sheet';
+import { MessageKey, t } from '../i18n';
 
 interface WebcamCaptureSheetProps {
   isOpen: boolean;
@@ -19,7 +20,8 @@ export const WebcamCaptureSheet: React.FC<WebcamCaptureSheetProps> = ({
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [snapshot, setSnapshot] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // A catalog key, so the message follows a language change
+  const [error, setError] = useState<MessageKey | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -45,10 +47,10 @@ export const WebcamCaptureSheet: React.FC<WebcamCaptureSheetProps> = ({
         const name = err instanceof DOMException ? err.name : '';
         setError(
           name === 'NotAllowedError'
-            ? 'Allow camera access in your browser settings, or pick a file instead.'
+            ? 'webcam.denied'
             : name === 'NotFoundError'
-              ? 'No camera here. Pick a file instead.'
-              : "The camera didn't start. Try again?"
+              ? 'webcam.missing'
+              : 'webcam.failed'
         );
       });
 
@@ -71,10 +73,10 @@ export const WebcamCaptureSheet: React.FC<WebcamCaptureSheetProps> = ({
     <Sheet isOpen onClose={onClose} stacked labelledBy="webcam-title">
       <div className="flex-1 overflow-y-auto">
         <div className="px-4 py-3 border-b border-ink/10 flex items-center justify-between">
-          <span id="webcam-title" className="font-serif-journal text-base text-ink">Take a photo</span>
+          <span id="webcam-title" className="font-serif-journal text-base text-ink">{t('webcam.title')}</span>
           <button
             onClick={onClose}
-            aria-label="Close camera"
+            aria-label={t('webcam.close')}
             className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-ink/50 hover:text-ink hover:bg-ink/5 transition-colors"
           >
             <X className="w-4 h-4" />
@@ -84,7 +86,7 @@ export const WebcamCaptureSheet: React.FC<WebcamCaptureSheetProps> = ({
         <div className="bg-black aspect-video relative">
           {error ? (
             <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-white/80">
-              {error}
+              {t(error)}
             </div>
           ) : (
             <>
@@ -95,7 +97,7 @@ export const WebcamCaptureSheet: React.FC<WebcamCaptureSheetProps> = ({
                 muted
                 className={`w-full h-full object-cover ${snapshot ? 'hidden' : ''}`}
               />
-              {snapshot && <img src={snapshot} alt="Captured" className="w-full h-full object-cover" />}
+              {snapshot && <img src={snapshot} alt={t('webcam.captured')} className="w-full h-full object-cover" />}
             </>
           )}
         </div>
@@ -108,7 +110,7 @@ export const WebcamCaptureSheet: React.FC<WebcamCaptureSheetProps> = ({
             }}
             className="min-h-[44px] px-4 text-xs text-ink/60 hover:text-ink rounded-lg hover:bg-ink/5 transition-colors"
           >
-            Browse
+            {t('webcam.browse')}
           </button>
 
           {!error && (
@@ -120,7 +122,7 @@ export const WebcamCaptureSheet: React.FC<WebcamCaptureSheetProps> = ({
                     className="min-h-[44px] px-4 flex items-center gap-1.5 text-xs font-medium bg-card border border-ink/15 rounded-lg text-ink hover:bg-paper-deep transition-colors"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Retake</span>
+                    <span>{t('webcam.retake')}</span>
                   </button>
                   <button
                     onClick={() => {
@@ -130,7 +132,7 @@ export const WebcamCaptureSheet: React.FC<WebcamCaptureSheetProps> = ({
                     className="min-h-[44px] px-4 flex items-center gap-1.5 text-xs font-semibold bg-ink text-paper rounded-lg hover:bg-ink/85 transition-colors"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    <span>Use</span>
+                    <span>{t('webcam.use')}</span>
                   </button>
                 </>
               ) : (
@@ -139,7 +141,7 @@ export const WebcamCaptureSheet: React.FC<WebcamCaptureSheetProps> = ({
                   className="min-h-[44px] px-4 flex items-center gap-1.5 text-xs font-semibold bg-ink text-paper rounded-lg hover:bg-ink/85 transition-colors"
                 >
                   <Camera className="w-3.5 h-3.5" />
-                  <span>Capture</span>
+                  <span>{t('webcam.capture')}</span>
                 </button>
               )}
             </div>

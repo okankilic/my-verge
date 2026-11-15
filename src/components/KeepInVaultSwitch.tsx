@@ -1,5 +1,6 @@
 import React from 'react';
 import { EyeOff, LucideIcon } from 'lucide-react';
+import { t } from '../i18n';
 
 interface SettingSwitchProps {
   checked: boolean;
@@ -57,8 +58,8 @@ export const HideInMemoriesSwitch: React.FC<SwitchProps> = (props) => (
   <SettingSwitch
     {...props}
     icon={EyeOff}
-    label="Hide in Moments"
-    onText="Stays off your Moments timeline."
-    offText="Shows on your Moments timeline."
+    label={t('hide.label')}
+    onText={t('hide.on')}
+    offText={t('hide.off')}
   />
 );

@@ -4,6 +4,7 @@ import { AttachmentMeta } from '../types';
 import { notify } from './dialogs';
 import { withStore } from './idb';
 import { blobToBase64, isNative } from './platform';
+import { t } from '../i18n';
 
 // Binary attachments (videos, PDFs); items only keep AttachmentMeta.
 // Native: attachments/<id>/<name> in the app's data directory, which the OS doesn't evict.
@@ -87,7 +88,7 @@ export async function openAttachment(att: AttachmentMeta): Promise<void> {
       await FileOpener.openFile({ path: uri, mimeType: att.mimeType || undefined });
     } catch (err) {
       console.error('Failed to open attachment:', err);
-      notify("This file isn't on this device anymore.", 'error');
+      notify(t('errors.fileMissing'), 'error');
     }
     return;
   }
@@ -106,6 +107,6 @@ export async function openAttachment(att: AttachmentMeta): Promise<void> {
   } catch (err) {
     win?.close();
     console.error('Failed to open attachment:', err);
-    notify("This file isn't on this device anymore.", 'error');
+    notify(t('errors.fileMissing'), 'error');
   }
 }

@@ -3,14 +3,16 @@ import { Share } from '@capacitor/share';
 import { BucketItem, CategoryDefinition } from '../types';
 import { blobToBase64, isNative } from './platform';
 import { notify } from './dialogs';
+import { categoryLabel } from '../utils/categoryIcons';
+import { t } from '../i18n';
 
 // The words that go with a shared wish: what it is, its note, and for finished ones how it went
 function shareText(item: BucketItem, category?: CategoryDefinition): { title: string; text: string } {
-  const title = category ? `${category.verb} ${item.title}` : item.title;
+  const title = category ? `${categoryLabel(category)} ${item.title}` : item.title;
   const lines: string[] = [];
   if (item.status === 'completed') {
     const stars = (item.completionRating ?? 0) > 0 ? ` ${'★'.repeat(item.completionRating!)}` : '';
-    lines.push(`Done with Wishcrumbs: ${title}${stars}`);
+    lines.push(t('share.done', { title: `${title}${stars}` }));
     if (item.completionReflection) lines.push(`“${item.completionReflection}”`);
   } else {
     lines.push(title);
@@ -69,7 +71,7 @@ async function shareWeb(item: BucketItem, title: string, text: string): Promise<
   const base: ShareData = { title, text, url: item.linkUrl };
   if (!navigator.share) {
     await navigator.clipboard.writeText([text, item.linkUrl].filter(Boolean).join('\n\n'));
-    notify('Copied, ready to paste.', 'success');
+    notify(t('share.copied'), 'success');
     return;
   }
   const blob = await coverBlob(item);
@@ -96,6 +98,6 @@ export async function shareItem(item: BucketItem, category?: CategoryDefinition)
     // Dismissing the share sheet rejects; that's not an error worth showing
     if (isCancel(err)) return;
     console.error('Share failed:', err);
-    notify("Couldn't share this plan. Try again?", 'error');
+    notify(t('errors.share'), 'error');
   }
 }

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { FileText } from 'lucide-react';
 import { MEDIA_NOTE_MAX_LENGTH } from '../types';
 import { Sheet } from './Sheet';
+import { t } from '../i18n';
 
 export type MediaNotePreview =
   | { kind: 'image'; src: string }
@@ -40,10 +41,10 @@ export const MediaNoteSheet: React.FC<MediaNoteSheetProps> = ({
         className="flex-1 overflow-y-auto"
       >
         <div className="px-4 py-3 border-b border-ink/10 flex items-center justify-between">
-          <span id="media-note-title" className="font-serif-journal text-base text-ink">Add a note</span>
+          <span id="media-note-title" className="font-serif-journal text-base text-ink">{t('media.noteTitle')}</span>
           {position && position.total > 1 && (
             <span className="font-mono-journal text-[11px] text-ink/50">
-              {position.index} of {position.total}
+              {t('media.position', { index: position.index, total: position.total })}
             </span>
           )}
         </div>
@@ -70,7 +71,7 @@ export const MediaNoteSheet: React.FC<MediaNoteSheetProps> = ({
             onChange={(e) => setNote(e.target.value.slice(0, MEDIA_NOTE_MAX_LENGTH))}
             maxLength={MEDIA_NOTE_MAX_LENGTH}
             rows={2}
-            placeholder="Add a note (optional)"
+            placeholder={t('media.notePlaceholder')}
             className="w-full px-3 py-2 text-sm bg-card border border-ink/15 rounded-lg text-ink resize-none focus:outline-none focus:border-ink"
           />
           <div className="text-right font-mono-journal text-[11px] text-ink/45">
@@ -84,13 +85,13 @@ export const MediaNoteSheet: React.FC<MediaNoteSheetProps> = ({
             onClick={onSkip}
             className="min-h-[44px] px-4 text-xs font-medium text-ink/70 hover:text-ink rounded-lg hover:bg-ink/5 transition-colors"
           >
-            Skip
+            {t('actions.skip')}
           </button>
           <button
             type="submit"
             className="min-h-[44px] px-4 text-xs font-semibold bg-ink text-paper rounded-lg hover:bg-ink/85 transition-colors"
           >
-            Save
+            {t('actions.save')}
           </button>
         </div>
       </form>

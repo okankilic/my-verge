@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { X, Dices, Sparkles, Compass, ArrowRight, Check } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
-import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
+import { renderCategoryIcon, categoryColor, categoryLabel } from '../utils/categoryIcons';
 import { Sheet } from './Sheet';
+import { t } from '../i18n';
 
 interface SerendipitySheetProps {
   isOpen: boolean;
@@ -55,6 +56,7 @@ export const SerendipitySheet: React.FC<SerendipitySheetProps> = ({
       <div className="relative overflow-y-auto p-6 sm:p-7">
         <button
           onClick={onClose}
+          aria-label={t('actions.close')}
           className="absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center text-ink/50 hover:text-ink rounded-full hover:bg-ink/5"
         >
           <X className="w-5 h-5" />
@@ -69,10 +71,10 @@ export const SerendipitySheet: React.FC<SerendipitySheetProps> = ({
             />
           </div>
           <h2 id="serendipity-title" className="font-serif-journal text-2xl font-semibold text-ink">
-            Serendipity Roll
+            {t('serendipity.title')}
           </h2>
           <p className="text-xs text-ink/65 mt-1">
-            Let fate nudge your focus for today from your active plans.
+            {t('serendipity.hint')}
           </p>
         </div>
 
@@ -87,7 +89,7 @@ export const SerendipitySheet: React.FC<SerendipitySheetProps> = ({
                   >
                     {renderCategoryIcon(catDef?.icon || selectedItem.categoryId, 'w-3.5 h-3.5')}
                   </span>
-                  <span>{catDef?.verb || selectedItem.categoryId}</span>
+                  <span>{categoryLabel(catDef ?? undefined, selectedItem.categoryId)}</span>
                 </span>
               </div>
               <h3 className="font-serif-journal text-lg font-medium text-ink leading-snug">
@@ -95,7 +97,7 @@ export const SerendipitySheet: React.FC<SerendipitySheetProps> = ({
               </h3>
               {selectedItem.mediaMeta?.authorOrCreator && (
                 <p className="text-xs text-ink/70 italic mt-0.5">
-                  by {selectedItem.mediaMeta.authorOrCreator}
+                  {t('drawer.by', { author: selectedItem.mediaMeta.authorOrCreator })}
                 </p>
               )}
               {selectedItem.description && (
@@ -122,7 +124,7 @@ export const SerendipitySheet: React.FC<SerendipitySheetProps> = ({
                 className="flex-1 min-h-[44px] px-4 py-2 text-xs font-semibold text-ink bg-card border border-ink/20 hover:bg-paper rounded-xl transition-colors flex items-center justify-center gap-1.5"
               >
                 <Dices className="w-3.5 h-3.5" />
-                <span>Reroll</span>
+                <span>{t('serendipity.reroll')}</span>
               </button>
               <button
                 onClick={() => {
@@ -131,14 +133,14 @@ export const SerendipitySheet: React.FC<SerendipitySheetProps> = ({
                 }}
                 className="flex-1 min-h-[44px] px-4 py-2 text-xs font-semibold text-paper bg-ink hover:bg-ink/85 rounded-xl shadow-md transition-colors flex items-center justify-center gap-1.5"
               >
-                <span>Open</span>
+                <span>{t('actions.open')}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
         ) : (
           <div className="p-6 text-center text-xs text-ink/60">
-            No active plans yet. Create one to enable Serendipity rolls!
+            {t('serendipity.empty')}
           </div>
         )}
       </div>

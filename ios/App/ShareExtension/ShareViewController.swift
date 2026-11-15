@@ -17,7 +17,7 @@ class ShareViewController: UIViewController {
         super.viewDidAppear(animated)
         Task { @MainActor in
             let saved = await saveShare()
-            showConfirmation(saved ? "Saved! Open Wishcrumbs to finish your plan." : "Sorry, that couldn't be saved.")
+            showConfirmation(saved ? Copy.text("saved") : Copy.text("failed"))
         }
     }
 
@@ -103,7 +103,7 @@ class ShareViewController: UIViewController {
         label.translatesAutoresizingMaskIntoConstraints = false
 
         let done = UIButton(type: .system)
-        done.setTitle("Done", for: .normal)
+        done.setTitle(Copy.text("done"), for: .normal)
         done.titleLabel?.font = .preferredFont(forTextStyle: .headline)
         done.translatesAutoresizingMaskIntoConstraints = false
         done.addTarget(self, action: #selector(finish), for: .touchUpInside)
@@ -130,5 +130,24 @@ class ShareViewController: UIViewController {
         guard !finished else { return }
         finished = true
         extensionContext?.completeRequest(returningItems: nil)
+    }
+}
+
+// The extension's few words in the app's languages (en, de, es, tr), picked from the device's
+// preferred languages. Kept inline so the target needs no .lproj resources.
+private enum Copy {
+    private static let table: [String: [String: String]] = [
+        "en": ["saved": "Saved! Open Wishcrumbs to finish your plan.", "failed": "Couldn't save this one. Try sharing again?", "done": "Done"],
+        "de": ["saved": "Gespeichert! Öffne Wishcrumbs, um deinen Plan fertigzustellen.", "failed": "Das ließ sich nicht speichern. Nochmal teilen?", "done": "Fertig"],
+        "es": ["saved": "¡Guardado! Abre Wishcrumbs para terminar tu plan.", "failed": "No se pudo guardar. ¿Lo compartes de nuevo?", "done": "Hecho"],
+        "tr": ["saved": "Kaydedildi! Planını tamamlamak için Wishcrumbs'ı aç.", "failed": "Bu kaydedilemedi. Tekrar paylaşmayı dener misin?", "done": "Tamam"],
+    ]
+
+    static func text(_ key: String) -> String {
+        for language in Locale.preferredLanguages {
+            let code = String(language.prefix(2)).lowercased()
+            if let value = table[code]?[key] { return value }
+        }
+        return table["en"]![key]!
     }
 }

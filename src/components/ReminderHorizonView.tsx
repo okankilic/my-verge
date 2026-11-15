@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Bell, BellOff, AlertTriangle, Sunrise } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { EmptyState } from './EmptyState';
-import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
+import { renderCategoryIcon, categoryColor, categoryLabel } from '../utils/categoryIcons';
 import {
   getNotificationPermission,
   requestNotificationPermission,
@@ -14,6 +14,7 @@ import { ItemActions } from './ItemActions';
 import { targetDateTime } from '../utils/targetDate';
 import { HORIZON_RANGES, TimeRange, rangeLabel } from '../utils/timeRange';
 import { TimeRangeFilter } from './TimeRangeFilter';
+import { MessageKey, formatDate, formatDateTime, formatTime, t } from '../i18n';
 
 interface ReminderHorizonViewProps {
   items: BucketItem[];
@@ -97,7 +98,7 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
     const target = targetDateTime(item);
     return target === null
       ? null
-      : new Date(target).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      : formatDate(target, { month: 'short', day: 'numeric' });
   };
 
   // Sort upcoming chronologically
@@ -106,7 +107,7 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
   const reminderDate = (item: BucketItem) => new Date(alertTimes.get(item.id)!);
 
   const formatReminderDate = (item: BucketItem) =>
-    reminderDate(item).toLocaleString(undefined, {
+    formatDateTime(reminderDate(item), {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
@@ -132,10 +133,10 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
     }
     const label =
       key === todayKey
-        ? 'Today'
+        ? t('time.today')
         : key === tomorrowKey
-          ? 'Tomorrow'
-          : date.toLocaleDateString(undefined, {
+          ? t('time.tomorrow')
+          : formatDate(date, {
               weekday: 'short',
               month: 'short',
               day: 'numeric',
@@ -182,7 +183,7 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
             </span>
             <div className="flex-1 flex items-baseline gap-1.5 min-w-0">
               <span className="shrink-0 text-[11px] uppercase tracking-wider text-ink/60 font-semibold leading-tight">
-                {cat?.verb || item.categoryId}
+                {categoryLabel(cat, item.categoryId)}
               </span>
             </div>
           </div>
@@ -211,8 +212,8 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
         isOpen={isRangeOpen}
         onOpen={onOpenRange}
         onClose={onCloseRange}
-        ariaLabel="Filter the Horizon by time"
-        sheetTitle="Show plans for"
+        ariaLabel={t('horizon.filterLabel')}
+        sheetTitle={t('horizon.filterTitle')}
       />
 
       {/* Enable-alerts prompt (only while the browser hasn't been asked yet) */}
@@ -220,20 +221,20 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
         <div className="bg-warm border border-alert/30 rounded-lg px-4 py-2.5 flex items-center justify-between gap-3">
           <span className="flex items-center gap-2 text-xs text-ink/75 min-w-0">
             <Bell className="w-3.5 h-3.5 shrink-0 text-alert" />
-            <span>Turn on alerts to get a nudge when a reminder is due.</span>
+            <span>{t('alerts.prompt')}</span>
           </span>
           <button
             onClick={handleEnableNotifications}
             className="shrink-0 min-h-[44px] px-3 text-xs font-semibold rounded-md bg-ink text-paper hover:bg-ink/85 transition-colors"
           >
-            Enable
+            {t('actions.enable')}
           </button>
         </div>
       )}
       {notificationState === 'denied' && (
         <p className="flex items-center gap-2 px-1 text-[11px] text-ink/55">
           <BellOff className="w-3.5 h-3.5 shrink-0" />
-          <span>Alerts are off. Turn them on in your system settings.</span>
+          <span>{t('alerts.denied')}</span>
         </p>
       )}
 
@@ -252,7 +253,7 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
                     className="absolute -left-[23.5px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#C05621] ring-4 ring-page"
                   />
                   <AlertTriangle className="w-4 h-4" />
-                  <span>Due</span>
+                  <span>{t('horizon.due')}</span>
                   <span className="font-mono text-[11px] font-normal text-alert/70">{dueItems.length}</span>
                 </div>
 
@@ -262,9 +263,9 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
                     'due',
                     <>
                       <span className="font-mono font-medium text-accent">{formatReminderDate(item)}</span>
-                      <span className="font-semibold text-alert"> · Due now</span>
+                      <span className="font-semibold text-alert"> · {t('horizon.dueNow')}</span>
                       {formatTargetDay(item) && (
-                        <span className="text-ink/40"> · until {formatTargetDay(item)}</span>
+                        <span className="text-ink/40"> · {t('horizon.until', { date: formatTargetDay(item)! })}</span>
                       )}
                     </>
                   )
@@ -290,20 +291,17 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
                     item,
                     'scheduled',
                     targetOnly.has(item.id) ? (
-                      <span className="font-mono font-medium text-accent">Until</span>
+                      <span className="font-mono font-medium text-accent">{t('horizon.untilLabel')}</span>
                     ) : (
                       <>
                         <span className="font-mono font-medium text-accent">
-                          {reminderDate(item).toLocaleTimeString(undefined, {
-                            hour: 'numeric',
-                            minute: '2-digit',
-                          })}
+                          {formatTime(reminderDate(item))}
                         </span>
                         {item.reminder?.recurrence && item.reminder.recurrence !== 'none' && (
-                          <span className="text-ink/40"> · {item.reminder.recurrence}</span>
+                          <span className="text-ink/40"> · {t(`horizon.recurrence.${item.reminder.recurrence}` as MessageKey)}</span>
                         )}
                         {formatTargetDay(item) && (
-                          <span className="text-ink/40"> · until {formatTargetDay(item)}</span>
+                          <span className="text-ink/40"> · {t('horizon.until', { date: formatTargetDay(item)! })}</span>
                         )}
                       </>
                     )
@@ -319,12 +317,8 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
       {dueItems.length === 0 && upcomingItems.length === 0 && (
         <EmptyState
           icon={<Sunrise className="w-6 h-6 stroke-[1.5]" />}
-          title={range === 'all' ? 'All clear for now' : `${rangeLabel(range)} is all clear`}
-          hint={
-            range === 'all'
-              ? 'Add a reminder or an Until date to a plan and it shows up here.'
-              : 'Try another time range to see more.'
-          }
+          title={range === 'all' ? t('empty.horizonTitle') : t('empty.horizonRangeTitle', { range: rangeLabel(range) })}
+          hint={range === 'all' ? t('empty.horizonHint') : t('empty.horizonRangeHint')}
           onClearFilters={onClearFilters}
         />
       )}

@@ -1,12 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import { Zap, MapPin, Play } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
-import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
+import { renderCategoryIcon, categoryColor, categoryLabel } from '../utils/categoryIcons';
 import { expenseTotal, formatMoney, wishCurrency } from '../utils/expenses';
 import { ItemActions } from './ItemActions';
 import { ItemMediaStrip } from './ItemMediaStrip';
 import { StepList } from './StepList';
 import { EmptyState } from './EmptyState';
+import { formatDate, t } from '../i18n';
+import { tRich } from '../i18n/rich';
 
 interface InProgressViewProps {
   items: BucketItem[];
@@ -62,13 +64,15 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
     return (
       <EmptyState
         icon={<Zap className="w-6 h-6 stroke-[1.5]" />}
-        title="Ready when you are"
-        hint={
-          <>
-            Tap <Play aria-hidden className="inline w-3 h-3 -mt-0.5 mx-0.5" />
-            <span className="sr-only">Start</span> on any of your Plans to start it.
-          </>
-        }
+        title={t('empty.nowTitle')}
+        hint={tRich('empty.nowHint', {
+          icon: (
+            <>
+              <Play aria-hidden className="inline w-3 h-3 -mt-0.5 mx-0.5" />
+              <span className="sr-only">{t('actions.start')}</span>
+            </>
+          ),
+        })}
         onClearFilters={onClearFilters}
       />
     );
@@ -81,7 +85,7 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
         const started = item.startedAt ? new Date(item.startedAt) : null;
         const days = started ? Math.max(0, Math.floor((Date.now() - started.getTime()) / DAY_MS)) : 0;
         const sinceStr = started
-          ? started.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+          ? formatDate(started, { month: 'short', day: 'numeric', year: 'numeric' })
           : null;
         const spent = expenseTotal(item.expenses);
 
@@ -109,7 +113,7 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
               </span>
               <div className="flex-1 flex items-baseline gap-1.5 min-w-0">
                 <span className="shrink-0 text-[11px] uppercase tracking-wider text-ink/60 font-semibold leading-tight">
-                  {cat?.verb || item.categoryId}
+                  {categoryLabel(cat, item.categoryId)}
                 </span>
               </div>
             </div>
@@ -123,12 +127,12 @@ export const InProgressView: React.FC<InProgressViewProps> = ({
               <div className="flex items-center gap-2 text-[11px] text-ink/55 min-w-0">
                 {sinceStr && (
                   <span className="font-mono-journal shrink-0">
-                    Since {sinceStr} · {days} {days === 1 ? 'day' : 'days'}
+                    {t('now.since', { date: sinceStr })} · {t('now.days', { count: days })}
                   </span>
                 )}
                 {spent > 0 && (
                   <span className="font-mono-journal shrink-0 text-positive">
-                    {formatMoney(spent, wishCurrency(item))} spent
+                    {t('money.spent', { amount: formatMoney(spent, wishCurrency(item)) })}
                   </span>
                 )}
                 {item.location?.name && (

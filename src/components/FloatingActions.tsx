@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus, Search, X } from 'lucide-react';
+import { t } from '../i18n';
 
 interface FloatingActionsProps {
   onOpenCreate: () => void;
@@ -20,8 +21,8 @@ export const FloatingActions: React.FC<FloatingActionsProps> = ({
     <button
       type="button"
       onClick={onToggleSearch}
-      title={isSearchOpen ? 'Close search' : 'Search'}
-      aria-label={isSearchOpen ? 'Close search' : 'Search'}
+      title={isSearchOpen ? t('search.close') : t('search.open')}
+      aria-label={isSearchOpen ? t('search.close') : t('search.open')}
       aria-pressed={isSearchOpen}
       className={`w-12 h-12 rounded-full flex items-center justify-center border shadow-md transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/40 ${
         isSearchOpen ? 'bg-paper border-ink/40 text-ink' : 'bg-card border-ink/15 text-ink'
@@ -33,8 +34,8 @@ export const FloatingActions: React.FC<FloatingActionsProps> = ({
     <button
       type="button"
       onClick={onOpenCreate}
-      title="New plan"
-      aria-label="New plan"
+      title={t('actions.newPlan')}
+      aria-label={t('actions.newPlan')}
       className="w-14 h-14 rounded-full flex items-center justify-center bg-ink text-paper shadow-lg shadow-black/20 transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/40"
     >
       <Plus className="w-6 h-6 stroke-[2.5]" />

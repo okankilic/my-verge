@@ -1,6 +1,7 @@
 import React from 'react';
 import { RecurrenceType } from '../types';
 import { maxDaysInMonth, nextReminderDate, readReminderParts, ReminderParts } from '../utils/reminderFields';
+import { formatDate, t } from '../i18n';
 
 interface ReminderWhenFieldsProps {
   recurrence: RecurrenceType;
@@ -12,15 +13,17 @@ export const fieldClass =
   'w-full min-h-[44px] px-3 py-1.5 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink';
 export const fieldLabelClass = 'block text-[11px] text-ink/60 font-medium mb-1';
 
-// January 1, 2024 was a Monday, so the list runs Monday first
-const WEEKDAYS = Array.from({ length: 7 }, (_, i) => {
-  const d = new Date(2024, 0, 1 + i);
-  return { value: d.getDay(), label: d.toLocaleDateString(undefined, { weekday: 'long' }) };
-});
-const MONTHS = Array.from({ length: 12 }, (_, i) => ({
-  value: i,
-  label: new Date(2024, i, 1).toLocaleDateString(undefined, { month: 'long' }),
-}));
+// January 1, 2024 was a Monday, so the list runs Monday first. Built per render, in the app's language.
+const weekdays = () =>
+  Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(2024, 0, 1 + i);
+    return { value: d.getDay(), label: formatDate(d, { weekday: 'long' }) };
+  });
+const months = () =>
+  Array.from({ length: 12 }, (_, i) => ({
+    value: i,
+    label: formatDate(new Date(2024, i, 1), { month: 'long' }),
+  }));
 const dayOptions = (count: number) =>
   Array.from({ length: count }, (_, i) => (
     <option key={i + 1} value={i + 1}>
@@ -34,7 +37,7 @@ export const ReminderWhenFields: React.FC<ReminderWhenFieldsProps> = ({ recurren
     return (
       <div>
         <label htmlFor="item-reminder-date" className={fieldLabelClass}>
-          Date & time
+          {t('reminder.dateTime')}
         </label>
         <input
           id="item-reminder-date"
@@ -85,33 +88,33 @@ export const ReminderWhenFields: React.FC<ReminderWhenFieldsProps> = ({ recurren
       {recurrence === 'weekly' &&
         select(
           'item-reminder-weekday',
-          'Day',
+          t('reminder.weekday'),
           parts.weekday,
           'weekday',
-          WEEKDAYS.map((d) => (
+          weekdays().map((d) => (
             <option key={d.value} value={d.value}>
               {d.label}
             </option>
           ))
         )}
-      {recurrence === 'monthly' && select('item-reminder-day', 'Day of month', parts.day, 'day', dayOptions(31))}
+      {recurrence === 'monthly' && select('item-reminder-day', t('reminder.dayOfMonth'), parts.day, 'day', dayOptions(31))}
       {recurrence === 'yearly' &&
         select(
           'item-reminder-month',
-          'Month',
+          t('reminder.month'),
           parts.month,
           'month',
-          MONTHS.map((m) => (
+          months().map((m) => (
             <option key={m.value} value={m.value}>
               {m.label}
             </option>
           ))
         )}
       {recurrence === 'yearly' &&
-        select('item-reminder-day', 'Day', parts.day, 'day', dayOptions(maxDaysInMonth(parts.month)))}
+        select('item-reminder-day', t('reminder.day'), parts.day, 'day', dayOptions(maxDaysInMonth(parts.month)))}
       <div className={recurrence === 'yearly' ? 'col-span-2 sm:col-span-1' : undefined}>
         <label htmlFor="item-reminder-time" className={fieldLabelClass}>
-          Time
+          {t('reminder.time')}
         </label>
         <input
           id="item-reminder-time"

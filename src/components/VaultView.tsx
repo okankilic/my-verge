@@ -1,12 +1,13 @@
 import React from 'react';
 import { BookMarked, ChevronRight } from 'lucide-react';
-import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
+import { renderCategoryIcon, categoryColor, categoryLabel } from '../utils/categoryIcons';
 import { PlanStatus, planStatus, summarizeByCategory } from '../utils/vaultSummary';
 import { expenseTotal, formatMoney, wishCurrency } from '../utils/expenses';
 import { VAULT_RANGES, TimeRange, rangeLabel } from '../utils/timeRange';
 import { BucketItem, CategoryDefinition } from '../types';
 import { TimeRangeFilter } from './TimeRangeFilter';
 import { EmptyState } from './EmptyState';
+import { MessageKey, formatDate, t } from '../i18n';
 
 interface VaultViewProps {
   items: BucketItem[];
@@ -38,10 +39,10 @@ export const isInVault = (i: BucketItem, keptIds: Set<string>) =>
 export const vaultDate = (i: BucketItem) =>
   (i.status === 'completed' && i.completedAt) || i.createdAt;
 
-const STATUS_GROUPS: { status: PlanStatus; label: string }[] = [
-  { status: 'completed', label: 'Done' },
-  { status: 'inProgress', label: 'In progress' },
-  { status: 'awaiting', label: 'Awaiting' },
+const STATUS_GROUPS: { status: PlanStatus; label: MessageKey }[] = [
+  { status: 'completed', label: 'vault.done' },
+  { status: 'inProgress', label: 'vault.inProgress' },
+  { status: 'awaiting', label: 'vault.awaiting' },
 ];
 
 // Finished and started plans newest first; awaiting ones keep the Journal order
@@ -52,18 +53,18 @@ const sortForStatus = (items: BucketItem[], status: PlanStatus) => {
 };
 
 const shortDate = (iso: string) =>
-  new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  formatDate(iso, { month: 'short', day: 'numeric', year: 'numeric' });
 
 // The mono line under a listed plan: when it was finished or started, or its budget, plus what was spent
 const planMeta = (item: BucketItem, status: PlanStatus) => {
   const code = wishCurrency(item);
   const parts: string[] = [];
   if (status === 'completed' && item.completedAt) parts.push(shortDate(item.completedAt));
-  if (status === 'inProgress' && item.startedAt) parts.push(`Since ${shortDate(item.startedAt)}`);
+  if (status === 'inProgress' && item.startedAt) parts.push(t('now.since', { date: shortDate(item.startedAt) }));
   if (status === 'awaiting' && (item.budget?.estimatedCost ?? 0) > 0)
-    parts.push(`Budget ${formatMoney(item.budget!.estimatedCost, code)}`);
+    parts.push(t('vault.budget', { amount: formatMoney(item.budget!.estimatedCost, code) }));
   const spent = expenseTotal(item.expenses);
-  if (spent > 0) parts.push(`Spent ${formatMoney(spent, code)}`);
+  if (spent > 0) parts.push(t('vault.spent', { amount: formatMoney(spent, code) }));
   return parts.join(' · ');
 };
 
@@ -95,7 +96,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
       ? []
       : STATUS_GROUPS.map(({ status, label }) => ({
           status,
-          label,
+          label: t(label),
           items: sortForStatus(
             vaultPlans.filter((i) => i.categoryId === selectedCategoryId && planStatus(i) === status),
             status
@@ -112,23 +113,23 @@ export const VaultView: React.FC<VaultViewProps> = ({
         isOpen={isRangeOpen}
         onOpen={onOpenRange}
         onClose={onCloseRange}
-        ariaLabel="Filter the Vault by time"
-        sheetTitle="Show plans from"
+        ariaLabel={t('vault.filterLabel')}
+        sheetTitle={t('vault.filterTitle')}
       />
 
       {isEmpty &&
         (range === 'all' ? (
           <EmptyState
             icon={<BookMarked className="w-6 h-6 stroke-[1.5]" />}
-            title="Your Vault is ready to fill"
-            hint="Plans from the categories you pick in Settings show up here."
+            title={t('empty.vaultTitle')}
+            hint={t('empty.vaultHint')}
             onClearFilters={onClearFilters}
           />
         ) : (
           <EmptyState
             icon={<BookMarked className="w-6 h-6 stroke-[1.5]" />}
-            title={`${rangeLabel(range)} is ready to fill`}
-            hint="Try another time range to see more."
+            title={t('empty.vaultRangeTitle', { range: rangeLabel(range) })}
+            hint={t('empty.horizonRangeHint')}
             onClearFilters={onClearFilters}
           />
         ))}
@@ -136,14 +137,14 @@ export const VaultView: React.FC<VaultViewProps> = ({
       {/* Summary per category */}
       {summaries.length > 0 && (
         <section className="space-y-4">
-          <h3 className="font-serif-journal text-lg font-medium text-ink">Summary</h3>
+          <h3 className="font-serif-journal text-lg font-medium text-ink">{t('vault.summary')}</h3>
           <ul className="bg-card border border-ink/10 rounded-2xl divide-y divide-ink/8">
             {summaries.map((s) => {
               const cat = categories.find((c) => c.id === s.categoryId);
               const counts = [
-                s.completed > 0 && `${s.completed} done`,
-                s.inProgress > 0 && `${s.inProgress} in progress`,
-                s.awaiting > 0 && `${s.awaiting} awaiting`,
+                s.completed > 0 && t('vault.countDone', { count: s.completed }),
+                s.inProgress > 0 && t('vault.countInProgress', { count: s.inProgress }),
+                s.awaiting > 0 && t('vault.countAwaiting', { count: s.awaiting }),
               ].filter(Boolean);
               const codes = [...new Set([...s.spent.keys(), ...s.budgeted.keys()])];
               return (
@@ -151,7 +152,7 @@ export const VaultView: React.FC<VaultViewProps> = ({
                   <button
                     type="button"
                     onClick={() => onSelectCategory(s.categoryId)}
-                    aria-label={`Show ${cat?.verb || s.categoryId} plans`}
+                    aria-label={t('vault.showCategory', { category: categoryLabel(cat, s.categoryId) })}
                     aria-pressed={selectedCategoryId === s.categoryId}
                     className="w-full min-h-[44px] px-4 py-3 flex items-start gap-2.5 text-left"
                   >
@@ -159,15 +160,15 @@ export const VaultView: React.FC<VaultViewProps> = ({
                     {renderCategoryIcon(cat?.icon || s.categoryId, 'w-4 h-4')}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-ink">{cat?.verb || s.categoryId}</div>
+                    <div className="text-sm font-medium text-ink">{categoryLabel(cat, s.categoryId)}</div>
                     <div className="mt-0.5 text-[11px] font-mono text-ink/60">{counts.join(' · ')}</div>
                     {codes.map((code) => (
                       <div key={code} className="mt-0.5 flex flex-wrap gap-x-3 text-[11px] font-mono">
                         {s.spent.has(code) && (
-                          <span className="text-positive">Spent {formatMoney(s.spent.get(code), code)}</span>
+                          <span className="text-positive">{t('vault.spent', { amount: formatMoney(s.spent.get(code), code) })}</span>
                         )}
                         {s.budgeted.has(code) && (
-                          <span className="text-ink/60">Budget {formatMoney(s.budgeted.get(code), code)}</span>
+                          <span className="text-ink/60">{t('vault.budget', { amount: formatMoney(s.budgeted.get(code), code) })}</span>
                         )}
                       </div>
                     ))}

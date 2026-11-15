@@ -1,6 +1,7 @@
 import React from 'react';
 import { Compass, Sunrise, Zap, BookMarked, Film } from 'lucide-react';
 import { ViewTab } from '../types';
+import { t } from '../i18n';
 
 interface BottomTabBarProps {
   currentTab: ViewTab;
@@ -16,11 +17,11 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
   activeRemindersCount,
 }) => {
   const tabs = [
-    { id: 'feed' as ViewTab, label: 'Plans', icon: Compass },
-    { id: 'reminders' as ViewTab, label: 'Horizon', icon: Sunrise, badge: activeRemindersCount },
-    { id: 'inprogress' as ViewTab, label: 'Now', icon: Zap },
-    { id: 'milestones' as ViewTab, label: 'Moments', icon: Film },
-    { id: 'vault' as ViewTab, label: 'Vault', icon: BookMarked },
+    { id: 'feed' as ViewTab, label: t('nav.plans'), icon: Compass },
+    { id: 'reminders' as ViewTab, label: t('nav.horizon'), icon: Sunrise, badge: activeRemindersCount },
+    { id: 'inprogress' as ViewTab, label: t('nav.now'), icon: Zap },
+    { id: 'milestones' as ViewTab, label: t('nav.moments'), icon: Film },
+    { id: 'vault' as ViewTab, label: t('nav.vault'), icon: BookMarked },
   ];
 
   return (

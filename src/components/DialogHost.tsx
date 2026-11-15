@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { X, AlertCircle, CheckCircle2, Info } from 'lucide-react';
 import { NoticeOptions, NoticeTone, registerDialogHost } from '../services/dialogs';
 import { useAnySheetOpen } from './Sheet';
+import { t } from '../i18n';
 
 interface Notice {
   id: number;
@@ -76,7 +77,7 @@ export const DialogHost: React.FC = () => {
           <button
             type="button"
             onClick={() => dismiss(n.id)}
-            aria-label="Dismiss"
+            aria-label={t('actions.dismiss')}
             className="min-h-[44px] min-w-[44px] shrink-0 flex items-center justify-center text-ink/50 active:text-ink"
           >
             <X className="w-4 h-4" />

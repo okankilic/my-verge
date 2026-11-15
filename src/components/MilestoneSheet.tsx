@@ -5,6 +5,7 @@ import { Sheet } from './Sheet';
 import { HideInMemoriesSwitch } from './KeepInVaultSwitch';
 import { ExpenseList } from './ExpenseList';
 import { wishCurrency } from '../utils/expenses';
+import { t } from '../i18n';
 
 interface MilestoneSheetProps {
   item: BucketItem | null;
@@ -49,10 +50,10 @@ export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
             <Trophy className="w-6 h-6 stroke-[2]" />
           </div>
           <h2 id="milestone-title" className="font-serif-journal text-2xl font-semibold text-ink">
-            Plan done!
+            {t('milestone.title')}
           </h2>
           <p className="text-xs text-ink/70 mt-1 max-w-xs mx-auto">
-            Look what you did:
+            {t('milestone.subtitle')}
           </p>
           <p className="font-serif-journal text-base font-medium text-ink mt-1.5 px-4">
             “{item.title}”
@@ -64,7 +65,7 @@ export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
           {/* Milestone Star Rating */}
           <div className="text-center">
             <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-2">
-              How did it feel?
+              {t('milestone.rating')}
             </label>
             <div className="flex items-center justify-center gap-1.5">
               {[1, 2, 3, 4, 5].map((star) => (
@@ -72,7 +73,7 @@ export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
                   type="button"
                   key={star}
                   onClick={() => setRating(star)}
-                  aria-label={`${star} star${star === 1 ? '' : 's'}`}
+                  aria-label={t('milestone.stars', { count: star })}
                   className="min-w-[44px] min-h-[44px] flex items-center justify-center text-ink/20 hover:text-accent transition-colors"
                 >
                   <Star
@@ -88,13 +89,13 @@ export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
           {/* Reflection Journal Note */}
           <div>
             <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
-              A note for future you
+              {t('milestone.note')}
             </label>
             <textarea
               rows={3}
               value={reflection}
               onChange={(e) => setReflection(e.target.value)}
-              placeholder="What made it special? Jot down anything you'd love to remember."
+              placeholder={t('milestone.notePlaceholder')}
               className="w-full px-3.5 py-2.5 text-sm bg-card border border-ink/15 rounded-xl text-ink placeholder-ink/40 focus:outline-none focus:border-ink"
             />
           </div>
@@ -117,7 +118,7 @@ export const MilestoneSheet: React.FC<MilestoneSheetProps> = ({
               onClick={handleClose}
               className="min-h-[44px] px-6 py-2.5 text-xs font-semibold text-white bg-[#4A6B56] hover:bg-[#3d5a47] rounded-xl shadow-md transition-all"
             >
-              Close
+              {t('actions.close')}
             </button>
           </div>
         </div>

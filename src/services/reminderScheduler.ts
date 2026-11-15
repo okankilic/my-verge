@@ -2,6 +2,7 @@ import { LocalNotifications, LocalNotificationSchema, Schedule } from '@capacito
 import { BucketItem } from '../types';
 import { isNative, stableIntId } from './platform';
 import { reminderTime, upcomingOccurrences } from './notifications';
+import { t } from '../i18n';
 
 // Native only: reminders are handed to the OS so they fire while the app is closed.
 // On the web, App.tsx's 30-second poll + browser Notification covers it instead.
@@ -51,7 +52,7 @@ function planFor(item: BucketItem, now: number): Planned[] {
     notification: {
       id: stableIntId(index === 0 ? item.id : `${item.id}#${index}`),
       title: item.title,
-      body: "It's time for this plan!",
+      body: t('notifications.body'),
       schedule,
       extra: { itemId: item.id },
     },

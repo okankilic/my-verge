@@ -1,6 +1,6 @@
 import React from 'react';
 import { BucketItem, CategoryDefinition } from '../types';
-import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
+import { renderCategoryIcon, categoryColor, categoryLabel } from '../utils/categoryIcons';
 import { ItemActions } from './ItemActions';
 import { StepCount } from './StepList';
 
@@ -22,7 +22,7 @@ export const ItemRow: React.FC<ItemRowProps> = ({
   onSelect,
 }) => {
   const isCompleted = item.status === 'completed';
-  const categoryName = categoryDef?.verb || item.categoryId;
+  const categoryName = categoryLabel(categoryDef, item.categoryId);
 
   return (
     <article

@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Star, Quote, Check, EyeOff, ChevronRight, Film } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
-import { renderCategoryIcon, categoryColor } from '../utils/categoryIcons';
+import { renderCategoryIcon, categoryColor, categoryLabel } from '../utils/categoryIcons';
 import { StepCount } from './StepList';
 import { ItemActions } from './ItemActions';
 import { ItemMediaStrip } from './ItemMediaStrip';
 import { EmptyState } from './EmptyState';
+import { formatDate, t } from '../i18n';
+import { tRich } from '../i18n/rich';
 
 interface MilestonesArchiveViewProps {
   items: BucketItem[];
@@ -49,8 +51,8 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
   const monthGroups: { label: string; items: BucketItem[] }[] = [];
   accomplishedItems.forEach((item) => {
     const label = item.completedAt
-      ? new Date(item.completedAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
-      : 'Undated';
+      ? formatDate(item.completedAt, { month: 'long', year: 'numeric' })
+      : t('moments.undated');
     const last = monthGroups[monthGroups.length - 1];
     if (last && last.label === label) {
       last.items.push(item);
@@ -64,16 +66,18 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
       {accomplishedItems.length === 0 ? (
         <EmptyState
           icon={<Film className="w-6 h-6 stroke-[1.5]" />}
-          title={hiddenItems.length > 0 ? 'Your moments are tucked away' : 'Your moments start here'}
+          title={hiddenItems.length > 0 ? t('empty.momentsHiddenTitle') : t('empty.momentsTitle')}
           hint={
-            hiddenItems.length > 0 ? (
-              "They're all hidden. Open one below and switch off Hide in Moments to bring it back."
-            ) : (
-              <>
-                Tap <Check aria-hidden className="inline w-3 h-3 -mt-0.5 mx-0.5 stroke-[2.5]" />
-                <span className="sr-only">Done</span> on a plan when it's done to keep the moment.
-              </>
-            )
+            hiddenItems.length > 0
+              ? t('empty.momentsHiddenHint')
+              : tRich('empty.momentsHint', {
+                  icon: (
+                    <>
+                      <Check aria-hidden className="inline w-3 h-3 -mt-0.5 mx-0.5 stroke-[2.5]" />
+                      <span className="sr-only">{t('actions.done')}</span>
+                    </>
+                  ),
+                })
           }
           onClearFilters={onClearFilters}
         />
@@ -98,7 +102,7 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
                 {group.items.map((item) => {
                   const cat = categories.find((c) => c.id === item.categoryId);
                   const dateStr = item.completedAt
-                    ? new Date(item.completedAt).toLocaleDateString(undefined, {
+                    ? formatDate(item.completedAt, {
                         weekday: 'short',
                         month: 'short',
                         day: 'numeric',
@@ -129,7 +133,7 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
                                 style={{ color: categoryColor(cat?.accentColor || '#4A6B56') }}
                               >
                                 {renderCategoryIcon(cat?.icon || item.categoryId, 'w-3.5 h-3.5')}
-                                <span>{cat?.verb || item.categoryId}</span>
+                                <span>{categoryLabel(cat, item.categoryId)}</span>
                               </span>
                               <StepCount steps={item.steps} />
                             </div>
@@ -209,17 +213,17 @@ export const MilestonesArchiveView: React.FC<MilestonesArchiveViewProps> = ({
           <div className="flex items-center justify-between gap-3 pl-4 pr-2">
             <span className="flex items-center gap-2 text-xs text-ink/60">
               <EyeOff className="w-3.5 h-3.5" />
-              <span>Hidden</span>
+              <span>{t('moments.hidden')}</span>
               <span className="font-mono text-[11px] text-ink/50">{hiddenItems.length}</span>
             </span>
             <button
               type="button"
               onClick={() => setShowHidden((v) => !v)}
               aria-expanded={showHidden}
-              aria-label={showHidden ? 'Collapse hidden plans' : 'Show hidden plans'}
+              aria-label={showHidden ? t('moments.collapseHidden') : t('moments.showHidden')}
               className="min-h-[44px] px-3 text-xs font-medium text-ink/70 hover:text-ink"
             >
-              {showHidden ? 'Close' : 'Show'}
+              {showHidden ? t('actions.close') : t('actions.show')}
             </button>
           </div>
           {showHidden && (
