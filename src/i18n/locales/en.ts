@@ -41,6 +41,7 @@ export const en = {
   "actions.start": "Start",
   "actions.switch": "Switch",
   "actions.test": "Test",
+  "actions.samples": "Samples",
   "actions.startTitle": "Start — move to Now",
   "actions.markDone": "Mark as done",
   "actions.newPlan": "New plan",
@@ -57,7 +58,9 @@ export const en = {
   "prep.left": { one: "{count} prep item to go.", other: "{count} prep items to go." },
 
   // Toasts
-  "toast.keptCopy": "Your saved plans couldn't be opened, so the samples are here for now. A copy is kept safe on this device.",
+  "toast.keptCopy": "Your saved plans couldn't be opened, so you're starting fresh for now. A copy is kept safe on this device.",
+  "toast.samplesAdded": "Sample plans added. Have a look around!",
+  "toast.samplesAlready": "The sample plans are already here.",
   "toast.addedPlans": "Added to your Plans!",
   "toast.addedMoments": "Added to your Moments!",
   "toast.didIt": "You did it: \"{title}\"!",
@@ -94,6 +97,8 @@ export const en = {
   "empty.clearLabel": "Clear search and category",
   "empty.journalTitle": "Ready for your next plan",
   "empty.journalHint": "Tap New to add one.",
+  "empty.journalHintFirst": "Tap New to add one, or try the samples to look around.",
+  "empty.samplesLabel": "Add sample plans",
   "empty.nowTitle": "Ready when you are",
   "empty.nowHint": "Tap {icon} on any of your Plans to start it.",
   "empty.horizonTitle": "All clear for now",
@@ -313,9 +318,11 @@ export const en = {
   "settings.alertsHint": "Get a nudge when a reminder is due.",
   "settings.chime": "Reminder chime",
   "settings.chimeHint": "A soft bell that plays with each reminder.",
-  "settings.resetTitle": "Reset to sample plans?",
-  "settings.resetMessage": "This swaps your plans, photos and files for the samples.",
-  "settings.resetDone": "Fresh start! The samples are back.",
+  "settings.samplesTitle": "Sample plans",
+  "settings.samplesHint": "Add a few example plans to explore the app.",
+  "settings.resetTitle": "Start over?",
+  "settings.resetMessage": "This clears your plans, photos and files.",
+  "settings.resetDone": "Fresh start! Ready when you are.",
   "settings.version": "Version {version}",
 
   // Sharing
@@ -370,7 +377,7 @@ export const en = {
   "category.fix.verb": "Fix",
   "category.fix.placeholder": "e.g. Repair the squeaky bedroom door",
 
-  // Sample plans (src/data/initialData.ts), seeded in the active language
+  // Sample plans (src/data/initialData.ts), written in the active language when added
   "sample.1.title": "Wander Arashiyama Bamboo Grove & Saiho-ji Moss Temple",
   "sample.1.description": "Walk the moss-covered stone paths in the quiet morning mist of Kyoto. Attend the early sutra transcription chant before exploring the stone gardens.",
   "sample.1.name": "Saiho-ji & Arashiyama",

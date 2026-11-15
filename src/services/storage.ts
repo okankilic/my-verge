@@ -1,7 +1,6 @@
 import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { BucketItem, BudgetInfo, CategoryDefinition, ReminderConfig, WishStep } from '../types';
 import { DEFAULT_CURRENCY, LEGACY_CURRENCY_SYMBOLS, isCurrencyCode } from '../data/currencies';
-import { initialItems } from '../data/initialData';
 import { LanguagePreference, isLocale } from '../i18n';
 import { LEGACY_PRESET_PATHS } from '../data/presetPhotos';
 import { photoKey } from '../utils/photoKey';
@@ -69,13 +68,14 @@ function queueWrite(key: string, value: string, label: string): void {
 
 export interface LoadedList<T> {
   value: T[];
-  // Set when the stored value couldn't be understood: it was copied to this key before the samples took over
+  // Set when the stored value couldn't be understood: it was copied to this key before the seed took over
   keptCopyAs?: string;
 }
 
-// Loads a list key. Nothing saved (or an empty list) seeds the samples. A read error throws, so App
-// can offer a retry instead of saving samples over data it just couldn't reach. A value that reads
-// fine but can't be parsed is copied to `<key>_unreadable_<ms>` first, then replaced by the samples.
+// Loads a list key. Nothing saved (or an empty list) gives the seed (saved at once unless it's empty).
+// A read error throws, so App can offer a retry instead of saving over data it just couldn't reach.
+// A value that reads fine but can't be parsed is copied to `<key>_unreadable_<ms>` first, then
+// replaced by the seed.
 async function loadList<T>(
   key: string,
   label: string,
@@ -85,13 +85,13 @@ async function loadList<T>(
 ): Promise<LoadedList<T>> {
   const raw = await readKey(key);
   if (!raw) {
-    save(seed);
+    if (seed.length > 0) save(seed);
     return { value: seed };
   }
   try {
     const parsed: unknown = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length === 0) {
-      save(seed);
+      if (seed.length > 0) save(seed);
       return { value: seed };
     }
     if (!Array.isArray(parsed)) throw new Error(`Stored ${label} isn't a list`);
@@ -106,8 +106,8 @@ async function loadList<T>(
 }
 
 export function loadBucketItems(): Promise<LoadedList<BucketItem>> {
-  // Samples seed in the language active at load time
-  return loadList(ITEMS_STORAGE_KEY, 'bucket items', initialItems(), saveBucketItems, (raw) =>
+  // A new journal starts empty; the sample plans are added only on request (Plans tab, Settings)
+  return loadList<BucketItem>(ITEMS_STORAGE_KEY, 'bucket items', [], saveBucketItems, (raw) =>
     normalizeItems(raw as BucketItem[])
   );
 }

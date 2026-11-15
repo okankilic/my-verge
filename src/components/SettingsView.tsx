@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, Volume2, RefreshCw, X } from 'lucide-react';
+import { Bell, Volume2, RefreshCw, Sparkles, X } from 'lucide-react';
 import { BucketItem, CategoryDefinition } from '../types';
 import { ThemePreference } from '../services/storage';
-import { initialItems } from '../data/initialData';
 import { DEFAULT_CATEGORIES } from '../data/categories';
 import {
   playChimeSound,
@@ -21,6 +20,7 @@ interface SettingsViewProps {
   items: BucketItem[];
   categories: CategoryDefinition[];
   onReloadData: (items: BucketItem[], categories: CategoryDefinition[]) => void;
+  onAddSamples: () => void;
   onCategoriesChange: (categories: CategoryDefinition[]) => void;
   theme: ThemePreference;
   onThemeChange: (theme: ThemePreference) => void;
@@ -42,6 +42,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   items,
   categories,
   onReloadData,
+  onAddSamples,
   onCategoriesChange,
   theme,
   onThemeChange,
@@ -76,11 +77,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     );
   };
 
-  const handleResetToSample = () => {
-    // The samples come back in the app's current language
-    const samples = initialItems();
-    deleteOrphanedBlobs(samples);
-    onReloadData(samples, DEFAULT_CATEGORIES);
+  // Clears every plan (and its files) and restores the default categories
+  const handleReset = () => {
+    deleteOrphanedBlobs([]);
+    onReloadData([], DEFAULT_CATEGORIES);
     setIsConfirmingReset(false);
     notify(t('settings.resetDone'), 'success');
   };
@@ -244,7 +244,25 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </button>
           </div>
 
-          {/* Reset to sample data */}
+          {/* Sample plans */}
+          <div className="bg-card border border-ink/10 rounded-2xl p-4 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h4 className="text-xs font-semibold text-ink">{t('settings.samplesTitle')}</h4>
+              <p className="text-[11px] text-ink/60 mt-0.5">
+                {t('settings.samplesHint')}
+              </p>
+            </div>
+            <button
+              onClick={onAddSamples}
+              aria-label={t('empty.samplesLabel')}
+              className="min-h-[44px] px-3.5 py-1.5 text-xs font-medium border border-ink/20 rounded-xl hover:bg-paper flex items-center gap-1.5 shrink-0"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-accent" />
+              <span>{t('actions.samples')}</span>
+            </button>
+          </div>
+
+          {/* Reset: start over with no plans */}
           <div className="pt-2">
             {isConfirmingReset ? (
               <div className="bg-card border border-red-500/30 rounded-2xl p-4">
@@ -252,7 +270,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <InlineConfirm
                   message={t('settings.resetMessage')}
                   confirmLabel={t('actions.reset')}
-                  onConfirm={handleResetToSample}
+                  onConfirm={handleReset}
                   onCancel={() => setIsConfirmingReset(false)}
                 />
               </div>
