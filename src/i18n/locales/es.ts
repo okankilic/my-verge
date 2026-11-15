@@ -345,6 +345,8 @@ export const es: Catalog = {
   "category.play.placeholder": "p. ej. Terminar una partida de go con un amigo",
   "category.call.verb": "Llamar",
   "category.call.placeholder": "p. ej. Ponerte al día con una vieja amiga del colegio",
+  "category.send.verb": "Enviar",
+  "category.send.placeholder": "p. ej. Mandarle una postal a la abuela",
   "category.give.verb": "Dar",
   "category.give.placeholder": "p. ej. Plantar un árbol por un amigo",
   "category.fix.verb": "Arreglar",

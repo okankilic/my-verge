@@ -38,6 +38,7 @@ import {
   Wrench,
   Receipt,
   Microscope,
+  Send,
 } from 'lucide-react';
 
 type IconComponent = React.ComponentType<{ className?: string }>;
@@ -49,7 +50,7 @@ const CATEGORY_ICONS: Record<string, IconComponent> = {
   Heart, Music, Camera, Palette, Globe, Target, Mountain, Utensils,
   Lightbulb, Coffee, Plane, TreePine, Dumbbell, Star,
   ChefHat, GraduationCap, Headphones, Gamepad2, FlaskConical, MapPin,
-  PenLine, Hammer, Sprout, Gem, Gift, Phone, Eye, Wrench, Receipt, Microscope,
+  PenLine, Hammer, Sprout, Gem, Gift, Phone, Eye, Wrench, Receipt, Microscope, Send,
 };
 
 const ICONS_BY_LOWER_NAME = new Map(

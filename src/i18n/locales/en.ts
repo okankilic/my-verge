@@ -375,6 +375,8 @@ export const en = {
   "category.play.placeholder": "e.g. Finish a game of Go with a friend",
   "category.call.verb": "Call",
   "category.call.placeholder": "e.g. Catch up with an old school friend",
+  "category.send.verb": "Send",
+  "category.send.placeholder": "e.g. Mail a postcard to grandma",
   "category.give.verb": "Give",
   "category.give.placeholder": "e.g. Plant a tree for a friend",
   "category.fix.verb": "Fix",

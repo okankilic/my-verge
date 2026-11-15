@@ -347,6 +347,8 @@ export const tr: Catalog = {
   "category.play.placeholder": "örn. Bir arkadaşınla bir Go oyununu bitir",
   "category.call.verb": "Ara",
   "category.call.placeholder": "örn. Eski bir okul arkadaşınla hasret gider",
+  "category.send.verb": "Gönder",
+  "category.send.placeholder": "örn. Anneanneye bir kartpostal gönder",
   "category.give.verb": "Ver",
   "category.give.placeholder": "örn. Bir arkadaşın için ağaç dik",
   "category.fix.verb": "Onar",

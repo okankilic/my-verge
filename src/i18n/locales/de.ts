@@ -345,6 +345,8 @@ export const de: Catalog = {
   "category.play.placeholder": "z. B. Eine Partie Go mit einem Freund beenden",
   "category.call.verb": "Anrufen",
   "category.call.placeholder": "z. B. Mit einer alten Schulfreundin plaudern",
+  "category.send.verb": "Senden",
+  "category.send.placeholder": "z. B. Oma eine Postkarte schicken",
   "category.give.verb": "Schenken",
   "category.give.placeholder": "z. B. Einen Baum für einen Freund pflanzen",
   "category.fix.verb": "Reparieren",

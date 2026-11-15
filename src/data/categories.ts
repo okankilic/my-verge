@@ -31,6 +31,7 @@ export const DEFAULT_CATEGORIES: CategoryDefinition[] = [
   category('Try', 'FlaskConical', 'New hobbies, experiences & first times', '#A21CAF'), // fuchsia
   category('Play', 'Gamepad2', 'Games, sports & playful pursuits', '#DB2777'), // pink
   category('Call', 'Phone', 'People to reach out to & catch up with', '#2563EB'), // blue
+  category('Send', 'Send', 'Letters, parcels & things to post', '#CA8A04'), // mustard
   category('Give', 'Gift', 'Gifts, kindness & ways to give back', '#E11D48'), // rose
   category('Fix', 'Wrench', 'Repairs, chores & loose ends', '#57534E'), // stone
 ];
@@ -70,6 +71,7 @@ export const FORM_FIELDS: Record<string, FormField[]> = {
   try: ['when', 'where', 'prep', 'budget', 'notes'],
   play: ['when', 'where', 'reminder', 'notes'],
   call: ['when', 'reminder', 'notes'],
+  send: ['when', 'prep', 'reminder', 'notes'],
   give: ['when', 'budget', 'reminder', 'notes', 'link'],
   fix: ['when', 'prep', 'steps', 'budget', 'notes'],
 };

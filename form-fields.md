@@ -23,6 +23,7 @@ Category and Title always come first. Each verb then shows only the fields liste
 | Try | When, Where, Before you start, Budget, Notes |
 | Play | When, Where, Reminder, Notes |
 | Call | When, Reminder, Notes |
+| Send | When, Before you start, Reminder, Notes |
 | Give | When, Budget, Reminder, Notes, Link |
 | Fix | When, Before you start, Along the way, Budget, Notes |
 | `custom-*` / unknown | When, Author + format, Notes, Link, Where, Before you start, Along the way, Reminder, Budget |
