@@ -22,7 +22,15 @@ import { InlineConfirm } from './InlineConfirm';
 import { ReminderWhenFields, fieldClass, fieldLabelClass } from './ReminderWhenFields';
 import { nextReminderDate, readReminderParts } from '../utils/reminderFields';
 import { reminderTime } from '../services/notifications';
-import { t } from '../i18n';
+import { MessageKey, t } from '../i18n';
+import { ALL_FORM_FIELDS, FormField, REMINDER_DEFAULTS, formFieldsFor } from '../data/categories';
+
+// The author/creator labels for each verb that shows them; others use the Watch wording
+const MEDIA_LABELS: Record<string, { creator: MessageKey; creatorPlaceholder: MessageKey; formatPlaceholder: MessageKey }> = {
+  read: { creator: 'form.author', creatorPlaceholder: 'form.authorPlaceholder', formatPlaceholder: 'form.formatReadPlaceholder' },
+  watch: { creator: 'form.director', creatorPlaceholder: 'form.directorPlaceholder', formatPlaceholder: 'form.formatWatchPlaceholder' },
+  listen: { creator: 'form.artist', creatorPlaceholder: 'form.artistPlaceholder', formatPlaceholder: 'form.formatListenPlaceholder' },
+};
 
 // What the When field can hold. Past, Today and Tomorrow only exist in the form, on new plans:
 // Past is saved as a finished plan, Today and Tomorrow as Until with that day's date
@@ -37,8 +45,14 @@ const localDate = (offsetDays = 0) => {
 };
 const todayLocal = () => localDate(0);
 
-// The stored timeframe and target date for a When choice; Until without a date falls back to This year
-const resolveWhen = (choice: WhenChoice, targetDate: string): Pick<BucketItem, 'priority' | 'targetDate'> => {
+// The stored timeframe and target date for a When choice; Until without a date falls back to This year.
+// A new plan whose verb doesn't ask When (Pay, Remember) is Someday; an edit keeps what it has
+const resolveWhen = (
+  choice: WhenChoice,
+  targetDate: string,
+  isNewWithoutWhen = false
+): Pick<BucketItem, 'priority' | 'targetDate'> => {
+  if (isNewWithoutWhen) return { priority: 'someday', targetDate: undefined };
   if (choice === 'today') return { priority: 'until', targetDate: localDate(0) };
   if (choice === 'tomorrow') return { priority: 'until', targetDate: localDate(1) };
   if (choice === 'until' && targetDate) return { priority: 'until', targetDate };
@@ -105,12 +119,17 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   const [isConfirmingDiscard, setIsConfirmingDiscard] = useState(false);
   const [pendingCurrency, setPendingCurrency] = useState<string | null>(null);
   const baselineRef = useRef<string | null>(null);
+  // Fields the verb hides but that held a value when the form opened or the verb changed; they stay shown
+  const [revealed, setRevealed] = useState<FormField[]>([]);
+  // The reminder a verb default turned on, so switching verbs can take it back if it wasn't touched
+  const autoReminderRef = useRef<string | null>(null);
   const [baselineToken, setBaselineToken] = useState(0);
 
   // Populate form if editing
   useEffect(() => {
     if (editingItem) {
       setCategoryId(editingItem.categoryId);
+      autoReminderRef.current = null;
       setTitle(editingItem.title);
       setDescription(editingItem.description || '');
       setPriority(editingItem.priority || 'this_year');
@@ -149,9 +168,12 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       setPriority('this_year');
       setTargetDate('');
       setDoneOn('');
-      setEnableReminder(false);
-      setReminderDate('');
-      setReminderRecurrence('none');
+      const reminderDefault = REMINDER_DEFAULTS[initialCat];
+      const defaultDate = reminderDefault ? nextReminderDate(reminderDefault, readReminderParts('')) : '';
+      setEnableReminder(Boolean(reminderDefault));
+      setReminderDate(defaultDate);
+      setReminderRecurrence(reminderDefault ?? 'none');
+      autoReminderRef.current = reminderDefault ? `${reminderDefault}|${defaultDate}` : null;
       setAuthorOrCreator('');
       setFormatOrEdition('');
       setLocationName('');
@@ -179,6 +201,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   });
   useEffect(() => {
     baselineRef.current = snapshot;
+    setRevealed(hiddenWithValues(categoryId));
   }, [baselineToken]);
 
   // Backdrop, Escape, X and Cancel all come through here
@@ -194,6 +217,59 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
     if (code === currency) return;
     if (hasAmounts) setPendingCurrency(code);
     else setCurrency(code);
+  };
+
+  // Whether a field holds something worth keeping on screen. When counts only when it's more than a default
+  const hasValue = (field: FormField): boolean => {
+    switch (field) {
+      case 'when': return !['this_year', 'someday'].includes(priority);
+      case 'media': return Boolean(authorOrCreator.trim() || formatOrEdition.trim());
+      case 'notes': return Boolean(description.trim());
+      case 'link': return Boolean(linkUrl.trim());
+      case 'where': return Boolean(locationName.trim() || locationCity.trim());
+      case 'prep': return prepSteps.length > 0 || Boolean(prepDraft.trim());
+      case 'steps': return steps.length > 0 || Boolean(stepDraft.trim());
+      case 'reminder': return enableReminder;
+      case 'budget': return enableBudget;
+    }
+  };
+  const hiddenWithValues = (catId: string) => {
+    const listed = formFieldsFor(catId);
+    return ALL_FORM_FIELDS.filter((f) => !listed.includes(f) && hasValue(f));
+  };
+
+  // The verb's own fields in its order, then any hidden field that holds a value, so nothing saved is out of sight
+  const listedFields = formFieldsFor(categoryId);
+  const visibleFields = [
+    ...listedFields,
+    ...ALL_FORM_FIELDS.filter((f) => !listedFields.includes(f) && (revealed.includes(f) || hasValue(f))),
+  ];
+  const mediaLabels = MEDIA_LABELS[categoryId] ?? MEDIA_LABELS.watch;
+
+  // A new plan takes the verb's reminder default; one a previous default turned on, untouched, is taken back
+  const handleCategoryChange = (next: string) => {
+    if (next === categoryId) return;
+    setCategoryId(next);
+    let reminderOn = enableReminder;
+    if (!editingItem) {
+      if (autoReminderRef.current && autoReminderRef.current === `${reminderRecurrence}|${reminderDate}` && enableReminder) {
+        setEnableReminder(false);
+        setReminderDate('');
+        setReminderRecurrence('none');
+        reminderOn = false;
+      }
+      autoReminderRef.current = null;
+      const reminderDefault = REMINDER_DEFAULTS[next];
+      if (reminderDefault && !reminderOn) {
+        const date = nextReminderDate(reminderDefault, readReminderParts(''));
+        setEnableReminder(true);
+        setReminderRecurrence(reminderDefault);
+        setReminderDate(date);
+        autoReminderRef.current = `${reminderDefault}|${date}`;
+        reminderOn = true;
+      }
+    }
+    setRevealed(hiddenWithValues(next).filter((f) => f !== 'reminder' || reminderOn));
   };
 
   const handleWhenChange = (next: WhenChoice) => {
@@ -223,7 +299,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       categoryId,
       title: title.trim(),
       description: description.trim(),
-      ...resolveWhen(priority, targetDate),
+      ...resolveWhen(priority, targetDate, !editingItem && !visibleFields.includes('when')),
       // Photos are added on the Now card, so an edit leaves them alone; a shared image becomes the cover
       ...(editingItem ? {} : { photos: draft?.photos ?? [] }),
       linkUrl: linkUrl.trim() || undefined,
@@ -275,80 +351,10 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
     onClose();
   };
 
-  if (!isOpen) return null;
-
-  return (
-    <Sheet isOpen onClose={requestClose} width="xl" labelledBy="item-form-title">
-        {/* Header */}
-        <div className="px-5 py-4 border-b border-ink/10 flex items-center justify-between">
-          <div>
-            <h2 id="item-form-title" className="font-serif-journal text-xl font-medium text-ink">
-              {editingItem ? t('actions.editPlan') : t('actions.newPlan')}
-            </h2>
-            <p className="text-xs text-ink/60 mt-0.5">
-              {t('form.subtitle')}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={requestClose}
-            aria-label={t('actions.close')}
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-ink/60 hover:text-ink hover:bg-ink/5"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Scrollable Form Body */}
-        <form id="item-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-6">
-          {/* Step 1: Category Selection */}
-          <div>
-            <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-2">
-              {t('form.category')}
-            </label>
-            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-              {categories.map((cat) => {
-                const isSelected = categoryId === cat.id;
-                return (
-                  <button
-                    type="button"
-                    key={cat.id}
-                    onClick={() => setCategoryId(cat.id)}
-                    className={`min-h-[48px] p-2 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-1 ${
-                      isSelected
-                        ? 'border-ink bg-ink text-paper font-semibold shadow-xs'
-                        : 'border-ink/15 bg-card text-ink/80 hover:border-ink/30'
-                    }`}
-                  >
-                    <span style={{ color: isSelected ? 'var(--color-paper)' : categoryColor(cat.accentColor) }}>
-                      {renderCategoryIcon(cat.icon, 'w-3.5 h-3.5')}
-                    </span>
-                    <span className="text-[11px] leading-tight truncate max-w-full">
-                      {categoryLabel(cat)}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Step 2: Title & Description */}
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="item-title" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
-                {t('form.title')}
-              </label>
-              <input
-                id="item-title"
-                type="text"
-                required
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder={categoryPlaceholder(categories.find((c) => c.id === categoryId))}
-                className="w-full min-h-[44px] px-3.5 py-2.5 text-sm bg-card border border-ink/20 rounded-xl text-ink placeholder-ink/40 focus:outline-none focus:border-ink"
-              />
-            </div>
-
+  // Each field's block, rendered in the order the verb lists them (src/data/categories.ts, form-fields.md)
+  const sections: Record<FormField, () => React.ReactNode> = {
+    when: () => (
+      <>
             {/* When, plus its date for Until or Past */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -409,20 +415,22 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
               </div>
               )}
             </div>
-
+      </>
+    ),
+    media: () => (
+      <>
             {/* Read & Watch specialized author/creator metadata */}
-            {(categoryId === 'read' || categoryId === 'watch') && (
               <div className="grid grid-cols-2 gap-3 p-3 bg-card rounded-xl border border-ink/10">
                 <div>
                   <label htmlFor="item-author" className="block text-[11px] uppercase tracking-wider text-ink/60 font-semibold mb-1">
-                    {categoryId === 'read' ? t('form.author') : t('form.director')}
+                    {t(mediaLabels.creator)}
                   </label>
                   <input
                     id="item-author"
                     type="text"
                     value={authorOrCreator}
                     onChange={(e) => setAuthorOrCreator(e.target.value)}
-                    placeholder={categoryId === 'read' ? t('form.authorPlaceholder') : t('form.directorPlaceholder')}
+                    placeholder={t(mediaLabels.creatorPlaceholder)}
                     className="w-full min-h-[44px] px-2.5 py-1.5 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
                   />
                 </div>
@@ -435,13 +443,15 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                     type="text"
                     value={formatOrEdition}
                     onChange={(e) => setFormatOrEdition(e.target.value)}
-                    placeholder={categoryId === 'read' ? t('form.formatReadPlaceholder') : t('form.formatWatchPlaceholder')}
+                    placeholder={t(mediaLabels.formatPlaceholder)}
                     className="w-full min-h-[44px] px-2.5 py-1.5 text-xs bg-paper border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
                   />
                 </div>
               </div>
-            )}
-
+      </>
+    ),
+    notes: () => (
+      <>
             <div>
               <label htmlFor="item-notes" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
                 {t('form.notes')}
@@ -455,7 +465,10 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 className="w-full px-3.5 py-2.5 text-sm bg-card border border-ink/20 rounded-xl text-ink placeholder-ink/40 focus:outline-none focus:border-ink"
               />
             </div>
-
+      </>
+    ),
+    link: () => (
+      <>
             <div className="flex items-center gap-2">
               <LinkIcon className="w-4 h-4 text-ink/50 shrink-0" />
               <input
@@ -467,8 +480,10 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 className="flex-1 min-h-[44px] px-3 py-1.5 text-xs bg-card border border-ink/15 rounded-lg text-ink focus:outline-none focus:border-ink"
               />
             </div>
-          </div>
-
+      </>
+    ),
+    where: () => (
+      <>
           {/* Step 4: Where */}
           <div>
             <label htmlFor="item-place" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
@@ -493,7 +508,10 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
               />
             </div>
           </div>
-
+      </>
+    ),
+    prep: () => (
+      <>
           {priority !== 'past' && (
             <StepList
               kind="prep"
@@ -505,7 +523,10 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
               onDraftChange={setPrepDraft}
             />
           )}
-
+      </>
+    ),
+    steps: () => (
+      <>
           <StepList
             steps={steps}
             onToggle={(stepId) => setSteps((prev) => toggleStep(prev, stepId))}
@@ -514,7 +535,10 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
             draft={stepDraft}
             onDraftChange={setStepDraft}
           />
-
+      </>
+    ),
+    reminder: () => (
+      <>
           {/* Step 5: Scheduled Reminders Engine */}
           {priority !== 'past' && (
             <div className="p-4 rounded-2xl bg-card border border-ink/10 space-y-3">
@@ -563,7 +587,10 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
               )}
             </div>
           )}
-
+      </>
+    ),
+    budget: () => (
+      <>
           {/* Step 6: Budget, laid out like the Reminder card above */}
           <div className="p-4 rounded-2xl bg-card border border-ink/10 space-y-3">
             {/* The whole row toggles, so the tap target is the full width */}
@@ -654,6 +681,85 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
               </div>
             )}
           </div>
+      </>
+    ),
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <Sheet isOpen onClose={requestClose} width="xl" labelledBy="item-form-title">
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-ink/10 flex items-center justify-between">
+          <div>
+            <h2 id="item-form-title" className="font-serif-journal text-xl font-medium text-ink">
+              {editingItem ? t('actions.editPlan') : t('actions.newPlan')}
+            </h2>
+            <p className="text-xs text-ink/60 mt-0.5">
+              {t('form.subtitle')}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={requestClose}
+            aria-label={t('actions.close')}
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-ink/60 hover:text-ink hover:bg-ink/5"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Scrollable Form Body */}
+        <form id="item-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-6">
+          {/* Step 1: Category Selection */}
+          <div>
+            <label className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-2">
+              {t('form.category')}
+            </label>
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+              {categories.map((cat) => {
+                const isSelected = categoryId === cat.id;
+                return (
+                  <button
+                    type="button"
+                    key={cat.id}
+                    onClick={() => handleCategoryChange(cat.id)}
+                    className={`min-h-[48px] p-2 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-1 ${
+                      isSelected
+                        ? 'border-ink bg-ink text-paper font-semibold shadow-xs'
+                        : 'border-ink/15 bg-card text-ink/80 hover:border-ink/30'
+                    }`}
+                  >
+                    <span style={{ color: isSelected ? 'var(--color-paper)' : categoryColor(cat.accentColor) }}>
+                      {renderCategoryIcon(cat.icon, 'w-3.5 h-3.5')}
+                    </span>
+                    <span className="text-[11px] leading-tight truncate max-w-full">
+                      {categoryLabel(cat)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+            <div>
+              <label htmlFor="item-title" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
+                {t('form.title')}
+              </label>
+              <input
+                id="item-title"
+                type="text"
+                required
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={categoryPlaceholder(categories.find((c) => c.id === categoryId))}
+                className="w-full min-h-[44px] px-3.5 py-2.5 text-sm bg-card border border-ink/20 rounded-xl text-ink placeholder-ink/40 focus:outline-none focus:border-ink"
+              />
+            </div>
+
+          {visibleFields.map((field) => (
+            <React.Fragment key={field}>{sections[field]()}</React.Fragment>
+          ))}
         </form>
 
         {/* Fixed Sticky Confirmation Bottom Bar */}

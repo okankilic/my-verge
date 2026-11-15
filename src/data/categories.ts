@@ -1,4 +1,4 @@
-import { CategoryDefinition } from '../types';
+import { CategoryDefinition, RecurrenceType } from '../types';
 
 // Verbs whose finished wishes are kept in the Vault unless the user changes it in Settings
 export const KEEP_IN_VAULT_VERBS = new Set(['Read', 'Watch', 'Buy']);
@@ -43,4 +43,41 @@ export const CATEGORY_VERB_ICONS: Record<string, string> = Object.fromEntries(
 export const MERGED_VERBS: Record<string, string> = {
   Explore: 'Go', Grow: 'Go', Do: 'Go',
   Practice: 'Learn', Make: 'Learn', Build: 'Learn', Write: 'Learn', Collect: 'Buy',
+};
+
+// The plan form's fields after Category and Title. form-fields.md describes these; keep the two in sync
+export type FormField = 'when' | 'media' | 'notes' | 'link' | 'where' | 'prep' | 'steps' | 'reminder' | 'budget';
+
+// The full order, used for categories without their own list (custom-* ones from older builds)
+export const ALL_FORM_FIELDS: FormField[] = ['when', 'media', 'notes', 'link', 'where', 'prep', 'steps', 'reminder', 'budget'];
+
+// Which fields each verb's form shows, in order; the rest are hidden unless they already hold a value
+export const FORM_FIELDS: Record<string, FormField[]> = {
+  go: ['where', 'when', 'prep', 'steps', 'budget', 'reminder', 'notes', 'link'],
+  visit: ['where', 'when', 'reminder', 'notes'],
+  workout: ['when', 'steps', 'reminder', 'notes'],
+  buy: ['when', 'link', 'budget', 'notes'],
+  pay: ['reminder', 'budget', 'link', 'notes'],
+  remember: ['reminder', 'notes'],
+  read: ['when', 'media', 'link', 'notes'],
+  watch: ['when', 'media', 'link', 'notes'],
+  listen: ['when', 'media', 'link', 'notes'],
+  cook: ['when', 'prep', 'steps', 'link', 'notes'],
+  taste: ['when', 'where', 'link', 'budget', 'notes'],
+  learn: ['when', 'steps', 'link', 'budget', 'reminder', 'notes'],
+  research: ['when', 'steps', 'link', 'notes'],
+  see: ['when', 'where', 'link', 'reminder', 'notes'],
+  try: ['when', 'where', 'prep', 'budget', 'notes'],
+  play: ['when', 'where', 'reminder', 'notes'],
+  call: ['when', 'reminder', 'notes'],
+  give: ['when', 'budget', 'reminder', 'notes', 'link'],
+  fix: ['when', 'prep', 'steps', 'budget', 'notes'],
+};
+
+export const formFieldsFor = (categoryId: string): FormField[] => FORM_FIELDS[categoryId] ?? ALL_FORM_FIELDS;
+
+// Verbs whose new plans start with the reminder on, repeating like this
+export const REMINDER_DEFAULTS: Record<string, Exclude<RecurrenceType, 'none'>> = {
+  pay: 'monthly',
+  remember: 'yearly',
 };
