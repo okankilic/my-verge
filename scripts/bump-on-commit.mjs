@@ -27,7 +27,7 @@ if (parents === 0) skip('first commit.');
 if (parents > 1) skip('merge commit.');
 
 const pkgDiff = git('diff', 'HEAD~1', 'HEAD', '--', 'package.json');
-if (/^[-+]\s*"version"\s*:/m.test(pkgDiff)) skip();
+if (/^[-+]\s*"version"\s*:\s*"\d+\.\d+\.\d+"/m.test(pkgDiff)) skip();
 
 if (git('status', '--porcelain', '--', ...FILES)) {
   skip(`${FILES.join(' or ')} has uncommitted changes. Run "bun run version patch|minor" by hand.`);
