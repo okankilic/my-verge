@@ -289,6 +289,7 @@ export const tr: Catalog = {
   "settings.resetTitle": "Örnek planlara dönülsün mü?",
   "settings.resetMessage": "Planların, fotoğrafların ve dosyaların örneklerle değiştirilir.",
   "settings.resetDone": "Yeni bir başlangıç! Örnekler geri geldi.",
+  "settings.version": "Sürüm {version}",
 
   "share.done": "Wishcrumbs ile bitti: {title}",
   "share.copied": "Kopyalandı, yapıştırmaya hazır.",

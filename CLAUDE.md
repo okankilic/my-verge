@@ -155,7 +155,7 @@ Run on load, never on the seeded samples. Both drop entries that aren't objects 
 Tapping a Journal row, Horizon or Now card, banner, or hidden Memories row opens `ItemDetailDrawer` with `viewingItem`. Top to bottom: cover, title and author, description, media strip, prep, steps, expenses, "In progress since", target date, place (Maps), budget progress, link, reminder status, and for finished wishes the memory card plus the Hide in Moments switch. The footer has Edit, Share (`shareItem`), Delete, Start (only before a wish is started) and ✓ (hidden when finished).
 
 ### Settings
-The gear in `TopNav` toggles a `Sheet` holding `SettingsView` over the current tab (`isSettingsOpen`, in memory only). It closes with its X, the backdrop or Escape, and a tap on the gear on phones lands on the backdrop. In order: theme (Light, Dark, System); language (System, then each language named in itself; applies at once); default currency; "Show in Vault" toggles per category (`onCategoriesChange`), the only place the Vault's contents are managed; reminder alerts status and Enable; chime Test; Reset.
+The gear in `TopNav` toggles a `Sheet` holding `SettingsView` over the current tab (`isSettingsOpen`, in memory only). It closes with its X, the backdrop or Escape, and a tap on the gear on phones lands on the backdrop. In order: theme (Light, Dark, System); language (System, then each language named in itself; applies at once); default currency; "Show in Vault" toggles per category (`onCategoriesChange`), the only place the Vault's contents are managed; reminder alerts status and Enable; chime Test; Reset; and the app version (`__APP_VERSION__`, injected from `package.json` by `define` in `vite.config.ts` and declared in `src/globals.d.ts`).
 - **Reset:** an inline confirm, then `deleteOrphanedBlobs` (attachment blobs the current items reference but the samples don't) and `onReloadData` with `initialItems()` (in the current language) and `DEFAULT_CATEGORIES` (which also resets the keep defaults); `onReloadData` stamps the currency, replaces items and categories, and clears the category picks, the Vault and Horizon time ranges and the banner.
 
 ### Sharing out
@@ -167,8 +167,9 @@ The gear in `TopNav` toggles a `Sheet` holding `SettingsView` over the current t
 
 ### Building and releasing
 - **Web changes to native:** `bun run cap:sync` (`vite build`, then `cap sync`).
-- **Android:** `bun run cap:android`, then build in Android Studio. The version (`versionCode 1`) is set by hand in `android/app/build.gradle`.
-- **iOS (Codemagic `ios-testflight`, started by hand):** install Bun and dependencies, `bun run build`, `npx cap sync ios`, `xcode-project use-profiles`, set the build number to the latest TestFlight build plus 1 (needs `APP_STORE_APPLE_ID`, still a placeholder), `xcode-project build-ipa`, then publish to TestFlight.
+- **Version:** `package.json` `version` (semver) is the only place it's set. `bun run version patch|minor|major|x.y.z` bumps it and copies it to iOS `MARKETING_VERSION` in `project.pbxproj` (`scripts/version.mjs`; with no argument it only syncs iOS; it doesn't commit or tag). Minor and patch stay below 100.
+- **Android:** `bun run cap:android`, then build in Android Studio. `android/app/build.gradle` reads `package.json`: `versionName` is the version and `versionCode` is `major*10000 + minor*100 + patch`.
+- **iOS (Codemagic `ios-testflight`, started by hand):** install Bun and dependencies, `bun run build`, `npx cap sync ios`, `xcode-project use-profiles`, set the build number to the latest TestFlight build plus 1 (needs `APP_STORE_APPLE_ID`, still a placeholder), sync the marketing version from `package.json` (`node scripts/version.mjs`), `xcode-project build-ipa`, then publish to TestFlight.
 
 ## Conventions
 

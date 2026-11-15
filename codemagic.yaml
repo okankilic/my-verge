@@ -33,6 +33,8 @@ workflows:
         script: |
           LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 0)
           cd ios/App && agvtool new-version -all $((LATEST + 1))
+      - name: Sync marketing version from package.json
+        script: node scripts/version.mjs
       - name: Build IPA
         script: xcode-project build-ipa --project "$XCODE_PROJECT" --scheme "$XCODE_SCHEME"
     artifacts:

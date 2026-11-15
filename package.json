@@ -10,7 +10,8 @@
     "clean": "rm -rf dist",
     "cap:sync": "vite build && cap sync",
     "cap:android": "cap open android",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "version": "node scripts/version.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.6.0",

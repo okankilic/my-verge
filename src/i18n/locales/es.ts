@@ -287,6 +287,7 @@ export const es: Catalog = {
   "settings.resetTitle": "¿Volver a los planes de ejemplo?",
   "settings.resetMessage": "Tus planes, fotos y archivos se cambian por los ejemplos.",
   "settings.resetDone": "¡Nuevo comienzo! Los ejemplos han vuelto.",
+  "settings.version": "Versión {version}",
 
   "share.done": "Hecho con Wishcrumbs: {title}",
   "share.copied": "Copiado, listo para pegar.",

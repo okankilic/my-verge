@@ -1,5 +1,9 @@
 apply plugin: 'com.android.application'
 
+// The app version is set in package.json (bun run version <patch|minor|major|x.y.z>).
+def appVersion = new groovy.json.JsonSlurper().parse(rootProject.file('../package.json')).version
+def (verMajor, verMinor, verPatch) = appVersion.tokenize('.-')[0..2]*.toInteger()
+
 android {
     namespace = "com.okankilic.myverge"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +11,8 @@ android {
         applicationId "com.okankilic.myverge"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode verMajor * 10000 + verMinor * 100 + verPatch
+        versionName appVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

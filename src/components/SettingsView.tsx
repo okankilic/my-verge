@@ -266,6 +266,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </button>
             )}
           </div>
+
+          <p className="pt-2 text-center font-mono-journal text-[11px] text-ink/50">
+            {t('settings.version', { version: __APP_VERSION__ })}
+          </p>
         </div>
       </div>
     </>

@@ -314,6 +314,7 @@ export const en = {
   "settings.resetTitle": "Reset to sample plans?",
   "settings.resetMessage": "This swaps your plans, photos and files for the samples.",
   "settings.resetDone": "Fresh start! The samples are back.",
+  "settings.version": "Version {version}",
 
   // Sharing
   "share.done": "Done with Wishcrumbs: {title}",

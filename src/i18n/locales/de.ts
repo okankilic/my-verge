@@ -287,6 +287,7 @@ export const de: Catalog = {
   "settings.resetTitle": "Auf die Beispielpläne zurücksetzen?",
   "settings.resetMessage": "Deine Pläne, Fotos und Dateien werden durch die Beispiele ersetzt.",
   "settings.resetDone": "Neustart! Die Beispiele sind zurück.",
+  "settings.version": "Version {version}",
 
   "share.done": "Erledigt mit Wishcrumbs: {title}",
   "share.copied": "Kopiert, bereit zum Einfügen.",
