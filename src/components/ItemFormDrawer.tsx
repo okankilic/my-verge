@@ -12,7 +12,7 @@ import {
   RecurrenceType,
   WishStep,
 } from '../types';
-import { renderCategoryIcon, categoryColor, categoryLabel, categoryPlaceholder } from '../utils/categoryIcons';
+import { renderCategoryIcon, categoryColor, categoryLabel, categoryPlaceholder, categoryHint } from '../utils/categoryIcons';
 import { Sheet } from './Sheet';
 import { StepList } from './StepList';
 import { newStep, toggleStep } from '../utils/steps';
@@ -245,6 +245,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
     ...ALL_FORM_FIELDS.filter((f) => !listedFields.includes(f) && (revealed.includes(f) || hasValue(f))),
   ];
   const mediaLabels = MEDIA_LABELS[categoryId] ?? MEDIA_LABELS.watch;
+  const selectedCategory = categories.find((c) => c.id === categoryId);
+  const selectedHint = categoryHint(selectedCategory);
 
   // A new plan takes the verb's reminder default; one a previous default turned on, untouched, is taken back
   const handleCategoryChange = (next: string) => {
@@ -740,6 +742,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 );
               })}
             </div>
+            {selectedHint && <p className="mt-2 text-xs text-ink/60">{selectedHint}</p>}
           </div>
 
             <div>
@@ -752,7 +755,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder={categoryPlaceholder(categories.find((c) => c.id === categoryId))}
+                placeholder={categoryPlaceholder(selectedCategory)}
                 className="w-full min-h-[44px] px-3.5 py-2.5 text-sm bg-card border border-ink/20 rounded-xl text-ink placeholder-ink/40 focus:outline-none focus:border-ink"
               />
             </div>

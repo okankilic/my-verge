@@ -214,9 +214,10 @@ export function saveBucketItems(items: BucketItem[]): void {
 // Categories created by older builds are kept as they are, so their items keep pointing at them.
 export function normalizeCategories(raw: unknown[]): CategoryDefinition[] {
   const stored = raw.filter(isRecord).map((entry) => {
-    const { name, defaultSubCategories: _subCategories, ...cat } = entry as CategoryDefinition & {
+    const { name, defaultSubCategories: _subCategories, tagline: _tagline, ...cat } = entry as CategoryDefinition & {
       name?: string;
       defaultSubCategories?: string[];
+      tagline?: string;
     };
     const label = (cat.verb || name || '').replace(/^want to\s+/i, '').trim();
     const verb = label.charAt(0).toUpperCase() + label.slice(1);

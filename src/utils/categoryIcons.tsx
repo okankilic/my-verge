@@ -39,6 +39,8 @@ import {
   Receipt,
   Microscope,
   Send,
+  Layers,
+  ListChecks,
 } from 'lucide-react';
 
 type IconComponent = React.ComponentType<{ className?: string }>;
@@ -51,6 +53,7 @@ const CATEGORY_ICONS: Record<string, IconComponent> = {
   Lightbulb, Coffee, Plane, TreePine, Dumbbell, Star,
   ChefHat, GraduationCap, Headphones, Gamepad2, FlaskConical, MapPin,
   PenLine, Hammer, Sprout, Gem, Gift, Phone, Eye, Wrench, Receipt, Microscope, Send,
+  Layers, ListChecks,
 };
 
 const ICONS_BY_LOWER_NAME = new Map(
@@ -79,4 +82,10 @@ export function categoryLabel(cat: CategoryDefinition | undefined, fallbackId = 
 export function categoryPlaceholder(cat: CategoryDefinition | undefined): string {
   const key = `category.${cat?.id}.placeholder`;
   return hasKey(key) ? t(key) : t('form.titlePlaceholder');
+}
+
+// A short, friendly line about what the category is for; nothing for categories from older builds (custom-*)
+export function categoryHint(cat: CategoryDefinition | undefined): string | undefined {
+  const key = `category.${cat?.id}.hint`;
+  return hasKey(key) ? t(key) : undefined;
 }

@@ -6,7 +6,6 @@ export interface CategoryDefinition {
   id: string; // The lowercase verb for built-in categories; categories saved by older builds may have other ids
   verb: string; // Action verb used as the category label, e.g. "Go", "Read", "Buy" (see DEFAULT_CATEGORIES)
   icon: string; // Lucide icon identifier
-  tagline: string;
   accentColor: string;
   keepInVault?: boolean; // Whether this category's plans show in the Vault (set in Settings)
 }
