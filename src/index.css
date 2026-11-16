@@ -123,3 +123,19 @@
 @media (pointer: coarse) {
   input, select, textarea { font-size: 16px; }
 }
+
+/* iOS gives date and time fields an intrinsic width that ignores w-full and
+   pushes past the form edge. Dropping the native look lets them fit their box. */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"] {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.5em; /* keeps an empty field from collapsing on iOS */
+}

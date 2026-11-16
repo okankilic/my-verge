@@ -359,7 +359,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       <>
             {/* When, plus its date for Until or Past */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
+              <div className="min-w-0">
                 <label htmlFor="item-priority" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
                   {t('form.when')}
                 </label>
@@ -386,7 +386,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
               </div>
 
               {priority === 'until' && (
-              <div>
+              <div className="min-w-0">
                 <label htmlFor="item-target-date" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
                   {t('form.targetDate')}
                 </label>
@@ -401,7 +401,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
               )}
 
               {priority === 'past' && (
-              <div>
+              <div className="min-w-0">
                 <label htmlFor="item-done-on" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
                   {t('form.doneOn')}
                 </label>

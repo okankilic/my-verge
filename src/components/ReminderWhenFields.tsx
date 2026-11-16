@@ -61,7 +61,7 @@ export const ReminderWhenFields: React.FC<ReminderWhenFieldsProps> = ({ recurren
     key: 'weekday' | 'day' | 'month',
     options: React.ReactNode
   ) => (
-    <div>
+    <div className="min-w-0">
       <label htmlFor={id} className={fieldLabelClass}>
         {label}
       </label>
@@ -112,7 +112,7 @@ export const ReminderWhenFields: React.FC<ReminderWhenFieldsProps> = ({ recurren
         )}
       {recurrence === 'yearly' &&
         select('item-reminder-day', t('reminder.day'), parts.day, 'day', dayOptions(maxDaysInMonth(parts.month)))}
-      <div className={recurrence === 'yearly' ? 'col-span-2 sm:col-span-1' : undefined}>
+      <div className={recurrence === 'yearly' ? 'min-w-0 col-span-2 sm:col-span-1' : 'min-w-0'}>
         <label htmlFor="item-reminder-time" className={fieldLabelClass}>
           {t('reminder.time')}
         </label>
