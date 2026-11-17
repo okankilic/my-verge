@@ -8,8 +8,7 @@ interface ReminderWhenFieldsProps {
   value: string;
   onChange: (value: string) => void;
   min?: string; // earliest one-off date-time, for new plans
-  error?: string; // a short hint under the one-off date-time
-  onTooEarly?: () => void; // the one-off date-time is before min; replaces the browser's bubble
+  clamp?: (value: string) => string; // pulls a typed one-off date-time before min up to now, with no hint
 }
 
 export const fieldClass =
@@ -35,7 +34,7 @@ const dayOptions = (count: number) =>
   ));
 
 // The reminder's when, shaped by Repeat. Every view edits the same reminder date string.
-export const ReminderWhenFields: React.FC<ReminderWhenFieldsProps> = ({ recurrence, value, onChange, min, error, onTooEarly }) => {
+export const ReminderWhenFields: React.FC<ReminderWhenFieldsProps> = ({ recurrence, value, onChange, min, clamp }) => {
   if (recurrence === 'none') {
     return (
       <div>
@@ -48,19 +47,19 @@ export const ReminderWhenFields: React.FC<ReminderWhenFieldsProps> = ({ recurren
           value={value}
           onChange={(e) => onChange(e.target.value)}
           min={min}
+          onBlur={() => {
+            const clamped = clamp ? clamp(value) : value;
+            if (clamped !== value) onChange(clamped);
+          }}
+          // Replaces the browser's bubble when Save is pressed without leaving the field
           onInvalid={(e) => {
-            if (!onTooEarly || !e.currentTarget.validity.rangeUnderflow) return;
+            if (!min || !e.currentTarget.validity.rangeUnderflow) return;
             e.preventDefault();
-            onTooEarly();
+            onChange(min);
           }}
           required
           className={fieldClass}
         />
-        {error && (
-          <p role="alert" className="mt-1.5 text-[11px] text-ink/70">
-            {error}
-          </p>
-        )}
       </div>
     );
   }

@@ -98,13 +98,6 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
     somedayItems.push(item);
   });
 
-  const formatTargetDay = (item: BucketItem) => {
-    const target = targetDateTime(item);
-    return target === null
-      ? null
-      : formatDate(target, { month: 'short', day: 'numeric' });
-  };
-
   // Sort upcoming chronologically
   upcomingItems.sort((a, b) => alertTimes.get(a.id)! - alertTimes.get(b.id)!);
 
@@ -168,7 +161,7 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
             backgroundColor: tone === 'due' ? '#C05621' : categoryColor(cat?.accentColor),
           }}
         />
-        <div className="text-[11px] leading-5 mb-1.5 truncate">{schedule}</div>
+        {schedule && <div className="text-[11px] leading-5 mb-1.5 truncate">{schedule}</div>}
         <article
           onClick={() => onSelect(item)}
           className={`border rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3 space-y-1 cursor-pointer shadow-[var(--item-shadow)] transition-all duration-150 ${
@@ -268,9 +261,6 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
                     <>
                       <span className="font-mono font-medium text-accent">{formatReminderDate(item)}</span>
                       <span className="font-semibold text-alert"> · {t('horizon.dueNow')}</span>
-                      {formatTargetDay(item) && (
-                        <span className="text-ink/40"> · {t('horizon.until', { date: formatTargetDay(item)! })}</span>
-                      )}
                     </>
                   )
                 )}
@@ -294,18 +284,13 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
                   renderEntry(
                     item,
                     'scheduled',
-                    targetOnly.has(item.id) ? (
-                      <span className="font-mono font-medium text-accent">{t('horizon.untilLabel')}</span>
-                    ) : (
+                    targetOnly.has(item.id) ? null : (
                       <>
                         <span className="font-mono font-medium text-accent">
                           {formatTime(reminderDate(item))}
                         </span>
                         {item.reminder?.recurrence && item.reminder.recurrence !== 'none' && (
                           <span className="text-ink/40"> · {t(`horizon.recurrence.${item.reminder.recurrence}` as MessageKey)}</span>
-                        )}
-                        {formatTargetDay(item) && (
-                          <span className="text-ink/40"> · {t('horizon.until', { date: formatTargetDay(item)! })}</span>
                         )}
                       </>
                     )
