@@ -1,4 +1,5 @@
-export type PriorityLevel = 'someday' | 'this_year' | 'this_month' | 'this_week' | 'until';
+// A plan either has an Until date or is Someday
+export type PriorityLevel = 'someday' | 'until';
 
 export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
 

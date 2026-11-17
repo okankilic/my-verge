@@ -62,7 +62,6 @@ export const en = {
   "toast.samplesAdded": "Sample plans added. Have a look around!",
   "toast.samplesAlready": "The sample plans are already here.",
   "toast.addedPlans": "Added to your Plans!",
-  "toast.addedMoments": "Added to your Moments!",
   "toast.didIt": "You did it: \"{title}\"!",
   "toast.started": "\"{title}\" is on Now. Enjoy!",
   "toast.stepRemoved": "Removed \"{title}\".",
@@ -102,7 +101,7 @@ export const en = {
   "empty.nowTitle": "Ready when you are",
   "empty.nowHint": "Tap {icon} on any of your Plans to start it.",
   "empty.horizonTitle": "All clear for now",
-  "empty.horizonHint": "Add a reminder or an Until date to a plan and it shows up here.",
+  "empty.horizonHint": "Add a plan and it shows up here, dated ones first.",
   "empty.horizonRangeTitle": "{range} is all clear",
   "empty.horizonRangeHint": "Try another time range to see more.",
   "empty.momentsTitle": "Your moments start here",
@@ -127,15 +126,18 @@ export const en = {
   "time.next6Months": "In six months",
   "time.clearLabel": "Show plans from all time",
 
-  // When (priority)
+  // Until presets (priority)
   "when.today": "Today",
   "when.tomorrow": "Tomorrow",
   "when.thisWeek": "This week",
   "when.thisMonth": "This month",
   "when.thisYear": "This year",
+  "when.in1Year": "In a year",
+  "when.in5Years": "In five years",
+  "when.in10Years": "In ten years",
   "when.someday": "Someday",
   "when.until": "Until",
-  "when.past": "Past",
+  "when.pickDate": "Pick a date",
 
   // Repeat
   "repeat.none": "Once",
@@ -208,9 +210,8 @@ export const en = {
   "form.category": "Category",
   "form.title": "Title *",
   "form.titlePlaceholder": "e.g. Something you'd love to do",
-  "form.when": "When",
+  "form.until": "Horizon",
   "form.targetDate": "Target date",
-  "form.doneOn": "Done on",
   "form.author": "Author / Writer",
   "form.director": "Director / Creator",
   "form.authorPlaceholder": "e.g. Italo Calvino",

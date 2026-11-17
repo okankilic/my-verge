@@ -8,7 +8,6 @@ import {
 import {
   BucketItem,
   CategoryDefinition,
-  PriorityLevel,
   RecurrenceType,
   WishStep,
 } from '../types';
@@ -24,6 +23,7 @@ import { nextReminderDate, readReminderParts } from '../utils/reminderFields';
 import { reminderTime } from '../services/notifications';
 import { MessageKey, t } from '../i18n';
 import { ALL_FORM_FIELDS, FormField, REMINDER_DEFAULTS, formFieldsFor } from '../data/categories';
+import { rangeBounds } from '../utils/timeRange';
 
 // The author/creator labels for each verb that shows them; others use the Watch wording
 const MEDIA_LABELS: Record<string, { creator: MessageKey; creatorPlaceholder: MessageKey; formatPlaceholder: MessageKey }> = {
@@ -32,33 +32,79 @@ const MEDIA_LABELS: Record<string, { creator: MessageKey; creatorPlaceholder: Me
   listen: { creator: 'form.artist', creatorPlaceholder: 'form.artistPlaceholder', formatPlaceholder: 'form.formatListenPlaceholder' },
 };
 
-// What the When field can hold. Past, Today and Tomorrow only exist in the form, on new plans:
-// Past is saved as a finished plan, Today and Tomorrow as Until with that day's date
-type WhenChoice = PriorityLevel | 'past' | 'today' | 'tomorrow';
+// What the Until field can hold. The presets only exist in the form: each fills in a fixed date,
+// and Date is a date picked by hand. Every choice but Someday saves as Until with that date
+type UntilChoice =
+  | 'today'
+  | 'tomorrow'
+  | 'this_week'
+  | 'this_month'
+  | 'this_year'
+  | 'in_1_year'
+  | 'in_5_years'
+  | 'in_10_years'
+  | 'date'
+  | 'someday';
 
-// A local YYYY-MM-DD date, offsetDays from today
-const localDate = (offsetDays = 0) => {
-  const d = new Date();
-  d.setDate(d.getDate() + offsetDays);
+const UNTIL_OPTIONS: { value: UntilChoice; label: MessageKey }[] = [
+  { value: 'today', label: 'when.today' },
+  { value: 'tomorrow', label: 'when.tomorrow' },
+  { value: 'this_week', label: 'when.thisWeek' },
+  { value: 'this_month', label: 'when.thisMonth' },
+  { value: 'this_year', label: 'when.thisYear' },
+  { value: 'in_1_year', label: 'when.in1Year' },
+  { value: 'in_5_years', label: 'when.in5Years' },
+  { value: 'in_10_years', label: 'when.in10Years' },
+  { value: 'date', label: 'when.pickDate' },
+  { value: 'someday', label: 'when.someday' },
+];
+
+// A local date as YYYY-MM-DD
+const toLocalDate = (d: Date) => {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
-const todayLocal = () => localDate(0);
 
-// The stored timeframe and target date for a When choice; Until without a date falls back to This year.
-// A new plan whose verb doesn't ask When (Pay, Remember) is Someday; an edit keeps what it has
-const resolveWhen = (
-  choice: WhenChoice,
-  targetDate: string,
-  isNewWithoutWhen = false
-): Pick<BucketItem, 'priority' | 'targetDate'> => {
-  if (isNewWithoutWhen) return { priority: 'someday', targetDate: undefined };
-  if (choice === 'today') return { priority: 'until', targetDate: localDate(0) };
-  if (choice === 'tomorrow') return { priority: 'until', targetDate: localDate(1) };
-  if (choice === 'until' && targetDate) return { priority: 'until', targetDate };
-  if (choice === 'past' || choice === 'until') return { priority: 'this_year', targetDate: undefined };
-  return { priority: choice, targetDate: undefined };
+// The last day of a calendar range (weeks start on Monday), from the end of its bounds
+const lastDayOf = (range: 'this-week' | 'this-month' | 'this-year') => {
+  const end = rangeBounds(range)![1];
+  return toLocalDate(new Date(end.getFullYear(), end.getMonth(), end.getDate() - 1));
 };
+
+// The same day some years from today, clamped to the month's end (Feb 29 becomes Feb 28)
+const yearsFromToday = (years: number) => {
+  const now = new Date();
+  const year = now.getFullYear() + years;
+  const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
+  return toLocalDate(new Date(year, now.getMonth(), Math.min(now.getDate(), lastDay)));
+};
+
+// The date a preset stands for, or null for Date and Someday
+const presetDate = (choice: UntilChoice): string | null => {
+  const now = new Date();
+  switch (choice) {
+    case 'today': return toLocalDate(now);
+    case 'tomorrow': return toLocalDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
+    case 'this_week': return lastDayOf('this-week');
+    case 'this_month': return lastDayOf('this-month');
+    case 'this_year': return lastDayOf('this-year');
+    case 'in_1_year': return yearsFromToday(1);
+    case 'in_5_years': return yearsFromToday(5);
+    case 'in_10_years': return yearsFromToday(10);
+    default: return null;
+  }
+};
+
+// The stored timeframe and target date: Until with a date, otherwise Someday.
+// A new plan whose verb doesn't ask Until (Pay, Remember) is Someday; an edit keeps what it has
+const resolveUntil = (
+  choice: UntilChoice,
+  targetDate: string,
+  isNewWithoutUntil = false
+): Pick<BucketItem, 'priority' | 'targetDate'> =>
+  !isNewWithoutUntil && choice !== 'someday' && targetDate
+    ? { priority: 'until', targetDate }
+    : { priority: 'someday', targetDate: undefined };
 
 interface ItemFormDrawerProps {
   isOpen: boolean;
@@ -85,9 +131,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   const [categoryId, setCategoryId] = useState<string>('go');
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
-  const [priority, setPriority] = useState<WhenChoice>('this_year');
+  const [untilChoice, setUntilChoice] = useState<UntilChoice>('someday');
   const [targetDate, setTargetDate] = useState<string>('');
-  const [doneOn, setDoneOn] = useState<string>('');
   
   // Reminder state
   const [enableReminder, setEnableReminder] = useState<boolean>(false);
@@ -132,14 +177,20 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       autoReminderRef.current = null;
       setTitle(editingItem.title);
       setDescription(editingItem.description || '');
-      setPriority(editingItem.priority || 'this_year');
-      setTargetDate(editingItem.targetDate || '');
-      setDoneOn('');
+      const storedDate = editingItem.priority === 'until' ? editingItem.targetDate?.trim() || '' : '';
+      setUntilChoice(storedDate ? 'date' : 'someday');
+      setTargetDate(storedDate);
       
+      const requiredDefault = REMINDER_DEFAULTS[editingItem.categoryId];
       if (editingItem.reminder?.date) {
         setEnableReminder(true);
         setReminderDate(editingItem.reminder.date);
         setReminderRecurrence(editingItem.reminder.recurrence || 'none');
+      } else if (requiredDefault) {
+        // Pay and Remember always have a reminder; an older one without gets the verb's default
+        setEnableReminder(true);
+        setReminderDate(nextReminderDate(requiredDefault, readReminderParts('')));
+        setReminderRecurrence(requiredDefault);
       } else {
         setEnableReminder(false);
         setReminderDate('');
@@ -165,9 +216,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       setCategoryId(initialCat);
       setTitle(draft?.title || '');
       setDescription(draft?.description || '');
-      setPriority('this_year');
+      setUntilChoice('someday');
       setTargetDate('');
-      setDoneOn('');
       const reminderDefault = REMINDER_DEFAULTS[initialCat];
       const defaultDate = reminderDefault ? nextReminderDate(reminderDefault, readReminderParts('')) : '';
       setEnableReminder(Boolean(reminderDefault));
@@ -195,7 +245,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   }, [editingItem, draft, defaultCategoryId, defaultCurrency, isOpen]);
 
   const snapshot = JSON.stringify({
-    categoryId, title, description, priority, targetDate, doneOn, enableReminder, reminderDate, reminderRecurrence,
+    categoryId, title, description, untilChoice, targetDate, enableReminder, reminderDate, reminderRecurrence,
     authorOrCreator, formatOrEdition, locationName, locationCity, enableBudget, estimatedCost, savedAmount, currency,
     linkUrl, steps, stepDraft, prepSteps, prepDraft,
   });
@@ -219,10 +269,10 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
     else setCurrency(code);
   };
 
-  // Whether a field holds something worth keeping on screen. When counts only when it's more than a default
+  // Whether a field holds something worth keeping on screen. Until counts only when it's more than Someday
   const hasValue = (field: FormField): boolean => {
     switch (field) {
-      case 'when': return !['this_year', 'someday'].includes(priority);
+      case 'until': return untilChoice !== 'someday';
       case 'media': return Boolean(authorOrCreator.trim() || formatOrEdition.trim());
       case 'notes': return Boolean(description.trim());
       case 'link': return Boolean(linkUrl.trim());
@@ -247,8 +297,11 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   const mediaLabels = MEDIA_LABELS[categoryId] ?? MEDIA_LABELS.watch;
   const selectedCategory = categories.find((c) => c.id === categoryId);
   const selectedHint = categoryHint(selectedCategory);
+  // Pay and Remember are about a date, so their reminder can't be switched off
+  const reminderRequired = Boolean(REMINDER_DEFAULTS[categoryId]);
 
-  // A new plan takes the verb's reminder default; one a previous default turned on, untouched, is taken back
+  // A verb with a reminder default (Pay, Remember) requires the reminder, so switching to one turns it on.
+  // On a new plan, one a previous default turned on, untouched, is taken back when leaving
   const handleCategoryChange = (next: string) => {
     if (next === categoryId) return;
     setCategoryId(next);
@@ -261,22 +314,29 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
         reminderOn = false;
       }
       autoReminderRef.current = null;
-      const reminderDefault = REMINDER_DEFAULTS[next];
-      if (reminderDefault && !reminderOn) {
-        const date = nextReminderDate(reminderDefault, readReminderParts(''));
-        setEnableReminder(true);
-        setReminderRecurrence(reminderDefault);
-        setReminderDate(date);
-        autoReminderRef.current = `${reminderDefault}|${date}`;
-        reminderOn = true;
-      }
+    }
+    const reminderDefault = REMINDER_DEFAULTS[next];
+    if (reminderDefault && !reminderOn) {
+      const date = nextReminderDate(reminderDefault, readReminderParts(''));
+      setEnableReminder(true);
+      setReminderRecurrence(reminderDefault);
+      setReminderDate(date);
+      if (!editingItem) autoReminderRef.current = `${reminderDefault}|${date}`;
+      reminderOn = true;
     }
     setRevealed(hiddenWithValues(next).filter((f) => f !== 'reminder' || reminderOn));
   };
 
-  const handleWhenChange = (next: WhenChoice) => {
-    setPriority(next);
-    if (next === 'past' && !doneOn) setDoneOn(todayLocal());
+  // A preset fills in its date, which stays editable; Someday clears it, Date keeps what's there
+  const handleUntilChange = (next: UntilChoice) => {
+    setUntilChoice(next);
+    if (next === 'someday') setTargetDate('');
+    else setTargetDate(presetDate(next) ?? targetDate);
+  };
+  // A date changed by hand is no longer the preset; clearing it goes back to Someday
+  const handleTargetDateChange = (value: string) => {
+    setTargetDate(value);
+    setUntilChoice(value ? 'date' : 'someday');
   };
 
   // A repeating reminder needs a date ahead of it; one already in the future stays as picked
@@ -290,6 +350,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
+    if (reminderRequired && !reminderDate) return;
 
     // A step typed but not yet added still counts
     const pendingStep = stepDraft.trim();
@@ -301,20 +362,13 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
       categoryId,
       title: title.trim(),
       description: description.trim(),
-      ...resolveWhen(priority, targetDate, !editingItem && !visibleFields.includes('when')),
+      ...resolveUntil(untilChoice, targetDate, !editingItem && !visibleFields.includes('until')),
       // Photos are added on the Now card, so an edit leaves them alone; a shared image becomes the cover
       ...(editingItem ? {} : { photos: draft?.photos ?? [] }),
       linkUrl: linkUrl.trim() || undefined,
-      prepSteps: priority !== 'past' && allPrep.length > 0 ? allPrep : undefined,
+      prepSteps: allPrep.length > 0 ? allPrep : undefined,
       steps: allSteps.length > 0 ? allSteps : undefined,
       currency,
-      // Already done: straight to Moments. Today is stamped now; an earlier day at local noon, clear of time zone shifts
-      ...(priority === 'past'
-        ? {
-            status: 'completed' as const,
-            completedAt: (doneOn === todayLocal() ? new Date() : new Date(`${doneOn}T12:00`)).toISOString(),
-          }
-        : {}),
     };
 
     // Blank fields are set to undefined (not left out) so an edit clears them; App merges itemData over the item
@@ -336,7 +390,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
     itemData.budget =
       enableBudget && target > 0 ? { estimatedCost: target, savedAmount: parseFloat(savedAmount) || 0 } : undefined;
 
-    if (priority !== 'past' && enableReminder && reminderDate) {
+    if (enableReminder && reminderDate) {
       // Keep alert state unless the schedule itself changed, so unrelated edits don't re-chime
       const prev = editingItem?.reminder;
       const unchanged = prev?.date === reminderDate && prev?.recurrence === reminderRecurrence;
@@ -355,37 +409,27 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
 
   // Each field's block, rendered in the order the verb lists them (src/data/categories.ts, form-fields.md)
   const sections: Record<FormField, () => React.ReactNode> = {
-    when: () => (
+    until: () => (
       <>
-            {/* When, plus its date for Until or Past */}
+            {/* Until: a preset or a picked date, shown in the date field so it can be adjusted; or Someday */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="min-w-0">
-                <label htmlFor="item-priority" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
-                  {t('form.when')}
+                <label htmlFor="item-until" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
+                  {t('form.until')}
                 </label>
                 <select
-                  id="item-priority"
-                  value={priority}
-                  onChange={(e) => handleWhenChange(e.target.value as WhenChoice)}
+                  id="item-until"
+                  value={untilChoice}
+                  onChange={(e) => handleUntilChange(e.target.value as UntilChoice)}
                   className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
                 >
-                  {/* Past to future. Only a new plan can be logged as already done or pinned to today or tomorrow */}
-                  {!editingItem && (
-                    <>
-                      <option value="past">{t('when.past')}</option>
-                      <option value="today">{t('when.today')}</option>
-                      <option value="tomorrow">{t('when.tomorrow')}</option>
-                    </>
-                  )}
-                  <option value="this_week">{t('when.thisWeek')}</option>
-                  <option value="this_month">{t('when.thisMonth')}</option>
-                  <option value="this_year">{t('when.thisYear')}</option>
-                  <option value="until">{t('when.until')}</option>
-                  <option value="someday">{t('when.someday')}</option>
+                  {UNTIL_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{t(o.label)}</option>
+                  ))}
                 </select>
               </div>
 
-              {priority === 'until' && (
+              {untilChoice !== 'someday' && (
               <div className="min-w-0">
                 <label htmlFor="item-target-date" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
                   {t('form.targetDate')}
@@ -394,24 +438,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                   id="item-target-date"
                   type="date"
                   value={targetDate}
-                  onChange={(e) => setTargetDate(e.target.value)}
-                  className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
-                />
-              </div>
-              )}
-
-              {priority === 'past' && (
-              <div className="min-w-0">
-                <label htmlFor="item-done-on" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
-                  {t('form.doneOn')}
-                </label>
-                <input
-                  id="item-done-on"
-                  type="date"
-                  required
-                  max={todayLocal()}
-                  value={doneOn}
-                  onChange={(e) => setDoneOn(e.target.value)}
+                  onChange={(e) => handleTargetDateChange(e.target.value)}
                   className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
                 />
               </div>
@@ -514,7 +541,6 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
     ),
     prep: () => (
       <>
-          {priority !== 'past' && (
             <StepList
               kind="prep"
               steps={prepSteps}
@@ -524,7 +550,6 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
               draft={prepDraft}
               onDraftChange={setPrepDraft}
             />
-          )}
       </>
     ),
     steps: () => (
@@ -542,23 +567,27 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
     reminder: () => (
       <>
           {/* Step 5: Scheduled Reminders Engine */}
-          {priority !== 'past' && (
             <div className="p-4 rounded-2xl bg-card border border-ink/10 space-y-3">
-              {/* The whole row toggles, so the tap target is the full width */}
-              <label htmlFor="enableReminder" className="min-h-[44px] flex items-center justify-between cursor-pointer">
+              {/* The whole row toggles, so the tap target is the full width; a required reminder has no switch */}
+              <label
+                htmlFor={reminderRequired ? undefined : 'enableReminder'}
+                className={`min-h-[44px] flex items-center justify-between ${reminderRequired ? '' : 'cursor-pointer'}`}
+              >
                 <span className="flex items-center gap-2">
                   <Bell className="w-4 h-4 text-accent" />
                   <span className="text-xs font-semibold uppercase tracking-wider text-ink">
                     {t('form.reminder')}
                   </span>
                 </span>
-                <input
-                  type="checkbox"
-                  id="enableReminder"
-                  checked={enableReminder}
-                  onChange={(e) => setEnableReminder(e.target.checked)}
-                  className="w-5 h-5 rounded text-ink border-ink/20 focus:ring-0 cursor-pointer"
-                />
+                {!reminderRequired && (
+                  <input
+                    type="checkbox"
+                    id="enableReminder"
+                    checked={enableReminder}
+                    onChange={(e) => setEnableReminder(e.target.checked)}
+                    className="w-5 h-5 rounded text-ink border-ink/20 focus:ring-0 cursor-pointer"
+                  />
+                )}
               </label>
 
               {enableReminder && (
@@ -588,7 +617,6 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 </div>
               )}
             </div>
-          )}
       </>
     ),
     budget: () => (

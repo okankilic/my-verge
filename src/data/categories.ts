@@ -45,19 +45,19 @@ export const MERGED_VERBS: Record<string, string> = {
 };
 
 // The plan form's fields after Category and Title. form-fields.md describes these; keep the two in sync
-export type FormField = 'when' | 'media' | 'notes' | 'link' | 'where' | 'prep' | 'steps' | 'reminder' | 'budget';
+export type FormField = 'until' | 'media' | 'notes' | 'link' | 'where' | 'prep' | 'steps' | 'reminder' | 'budget';
 
 // The full order, used for categories without their own shape (custom-* ones from older builds)
-export const ALL_FORM_FIELDS: FormField[] = ['when', 'media', 'notes', 'link', 'where', 'prep', 'steps', 'reminder', 'budget'];
+export const ALL_FORM_FIELDS: FormField[] = ['until', 'media', 'notes', 'link', 'where', 'prep', 'steps', 'reminder', 'budget'];
 
 // The few form layouts the verbs share; Notes always comes last
 export type FieldShape = 'place' | 'media' | 'project' | 'errand' | 'date';
 
 export const FIELD_SHAPES: Record<FieldShape, FormField[]> = {
-  place: ['where', 'when', 'prep', 'steps', 'budget', 'reminder', 'link', 'notes'],
-  media: ['when', 'media', 'link', 'notes'],
-  project: ['when', 'prep', 'steps', 'budget', 'reminder', 'link', 'notes'],
-  errand: ['when', 'reminder', 'budget', 'link', 'notes'],
+  place: ['where', 'until', 'prep', 'steps', 'budget', 'reminder', 'link', 'notes'],
+  media: ['until', 'media', 'link', 'notes'],
+  project: ['until', 'prep', 'steps', 'budget', 'reminder', 'link', 'notes'],
+  errand: ['until', 'reminder', 'budget', 'link', 'notes'],
   date: ['reminder', 'budget', 'link', 'notes'],
 };
 

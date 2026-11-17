@@ -64,14 +64,16 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
   const now = Date.now();
 
   // Sort and classify: due (with the time it came due) vs upcoming (with its next alert time).
-  // A wish with only an Until date (or a reminder that can't be read) is placed on its target day.
+  // A wish with only an Until date (or a reminder that can't be read) is placed on its target day,
+  // and one with no date at all goes to Someday, in Journal order
   const dueItems: BucketItem[] = [];
   const upcomingItems: BucketItem[] = [];
+  const somedayItems: BucketItem[] = [];
   const alertTimes = new Map<string, number>();
   const targetOnly = new Set<string>();
 
   items.forEach((item) => {
-    if (item.status !== 'active') return;
+    if (item.status !== 'active' || item.startedAt) return;
     const reminder = item.reminder?.date ? item.reminder : undefined;
     if (reminder) {
       if (isReminderDue(reminder, now)) {
@@ -91,7 +93,9 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
       upcomingItems.push(item);
       alertTimes.set(item.id, target);
       targetOnly.add(item.id);
+      return;
     }
+    somedayItems.push(item);
   });
 
   const formatTargetDay = (item: BucketItem) => {
@@ -238,8 +242,8 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
         </p>
       )}
 
-      {/* Reminders timeline: Due first, then upcoming grouped by day */}
-      {(dueItems.length > 0 || upcomingGroups.length > 0) && (
+      {/* Timeline: Due first, then upcoming grouped by day, then Someday */}
+      {(dueItems.length > 0 || upcomingGroups.length > 0 || somedayItems.length > 0) && (
         <div className="relative pl-8">
           {/* Timeline rail */}
           <div aria-hidden className="absolute left-3 top-2 bottom-2 w-px bg-ink/15" />
@@ -309,12 +313,35 @@ export const ReminderHorizonView: React.FC<ReminderHorizonViewProps> = ({
                 )}
               </section>
             ))}
+
+            {somedayItems.length > 0 && (
+              <section className="space-y-4">
+                <div className="relative flex items-baseline gap-2">
+                  <span
+                    aria-hidden
+                    className="absolute -left-[23.5px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-ink/40 ring-4 ring-page"
+                  />
+                  <h3 className="text-xs uppercase tracking-wider font-semibold text-ink/70">
+                    {t('when.someday')}
+                  </h3>
+                  <span className="font-mono text-[11px] text-ink/50">{somedayItems.length}</span>
+                </div>
+
+                {somedayItems.map((item) =>
+                  renderEntry(
+                    item,
+                    'scheduled',
+                    <span className="font-mono font-medium text-ink/50">{t('when.someday')}</span>
+                  )
+                )}
+              </section>
+            )}
           </div>
         </div>
       )}
 
-      {/* Empty state: nothing due and nothing scheduled */}
-      {dueItems.length === 0 && upcomingItems.length === 0 && (
+      {/* Empty state: no upcoming plans at all */}
+      {dueItems.length === 0 && upcomingItems.length === 0 && somedayItems.length === 0 && (
         <EmptyState
           icon={<Sunrise className="w-6 h-6 stroke-[1.5]" />}
           title={range === 'all' ? t('empty.horizonTitle') : t('empty.horizonRangeTitle', { range: rangeLabel(range) })}

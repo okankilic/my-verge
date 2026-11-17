@@ -60,7 +60,7 @@ import { ItemDetailDrawer } from './components/ItemDetailDrawer';
 import { ItemFormDrawer } from './components/ItemFormDrawer';
 import { MilestoneSheet } from './components/MilestoneSheet';
 import { ReminderHorizonView } from './components/ReminderHorizonView';
-import { horizonTime, targetDateTime } from './utils/targetDate';
+import { horizonTime } from './utils/targetDate';
 import { VaultView, isInVault, keptCategoryIds, vaultDate } from './components/VaultView';
 import { TimeRange, earlierYears, isInRange, isTimeInRange } from './utils/timeRange';
 import { MilestonesArchiveView } from './components/MilestonesArchiveView';
@@ -290,7 +290,7 @@ export default function App() {
         categoryId: itemData.categoryId || 'go',
         title: itemData.title || t('form.untitled'),
         description: itemData.description || '',
-        priority: itemData.priority || 'this_year',
+        priority: itemData.priority || 'someday',
         targetDate: itemData.targetDate,
         location: itemData.location,
         budget: itemData.budget,
@@ -301,21 +301,13 @@ export default function App() {
         prepSteps: itemData.prepSteps,
         steps: itemData.steps,
         reminder: itemData.reminder,
-        status: itemData.status ?? 'active',
-        completedAt: itemData.completedAt,
+        status: 'active',
         createdAt: nowIso,
         updatedAt: nowIso,
       };
       setItems((prev) => [newItem, ...prev]);
       // New wishes land at the top of the Journal; say so when it isn't the tab on screen
-      if (newItem.status === 'completed') {
-        // A plan logged as already done goes straight to Moments
-        if (currentTab !== 'milestones') {
-          notify(t('toast.addedMoments'), 'success', {
-            action: { label: t('actions.open'), onAction: () => setCurrentTab('milestones') },
-          });
-        }
-      } else if (currentTab !== 'feed') {
+      if (currentTab !== 'feed') {
         notify(t('toast.addedPlans'), 'success', {
           action: { label: t('actions.open'), onAction: () => setCurrentTab('feed') },
         });
@@ -592,17 +584,20 @@ export default function App() {
   // Categories whose done plans the Vault keeps (set in Settings)
   const keptIds = useMemo(() => keptCategoryIds(categories), [categories]);
 
+  // A plan still ahead: not started (Now) and not done (Moments)
+  const isUpcoming = (item: BucketItem) => item.status === 'active' && !item.startedAt;
+
   // Items each tab lists, so the category ribbon counts match what the tab shows
   const inTabScope = (item: BucketItem) => {
     switch (currentTab) {
       case 'feed':
-        return item.status === 'active' && !item.startedAt;
+        return isUpcoming(item);
       case 'inprogress':
         return item.status === 'active' && Boolean(item.startedAt);
       case 'reminders':
+        // Every upcoming plan (active, not started); undated ones only under All time
         return (
-          item.status === 'active' &&
-          (Boolean(item.reminder?.date) || targetDateTime(item) !== null) &&
+          isUpcoming(item) &&
           (horizonRange === 'all' || isTimeInRange(horizonTime(item), horizonRange))
         );
       case 'vault':
@@ -637,12 +632,13 @@ export default function App() {
     () => filteredItems.filter((item) => isInRange(vaultDate(item), vaultRange)),
     [filteredItems, vaultRange]
   );
-  // Horizon plans within the picked time (a due reminder counts as now)
+  // Upcoming plans within the picked time (a due reminder counts as now)
   const horizonItems = useMemo(
     () =>
-      horizonRange === 'all'
-        ? filteredItems
-        : filteredItems.filter((item) => isTimeInRange(horizonTime(item), horizonRange)),
+      filteredItems.filter(
+        (item) =>
+          isUpcoming(item) && (horizonRange === 'all' || isTimeInRange(horizonTime(item), horizonRange))
+      ),
     [filteredItems, horizonRange]
   );
   const vaultYearRanges = useMemo(

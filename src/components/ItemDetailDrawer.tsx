@@ -38,9 +38,6 @@ import { PlanConfirm, PlanConfirmKind } from './InlineConfirm';
 import { MessageKey, formatDate, formatDateTime, formatNumber, t } from '../i18n';
 
 const WHEN_LABELS: Record<PriorityLevel, MessageKey> = {
-  this_week: 'when.thisWeek',
-  this_month: 'when.thisMonth',
-  this_year: 'when.thisYear',
   someday: 'when.someday',
   until: 'when.until',
 };
@@ -140,7 +137,7 @@ export const ItemDetailDrawer: React.FC<ItemDetailDrawerProps> = ({
             <span>
               {item.priority === 'until' && targetTime !== null
                 ? t('drawer.untilShort', { date: formatDate(targetTime, { month: 'short', day: 'numeric' }) })
-                : WHEN_LABELS[item.priority] ? t(WHEN_LABELS[item.priority]) : item.priority}
+                : t(WHEN_LABELS.someday)}
             </span>
           </div>
 
