@@ -1,12 +1,33 @@
 // Run by .githooks/post-commit: bumps the version after each commit and amends it into that commit.
 // A feat: subject bumps minor, anything else bumps patch. Set SKIP_VERSION_BUMP=1 to skip once.
+// It also adds the new version, with the subject, at the top of CHANGELOG.md.
 import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const FILES = ['package.json', 'ios/App/App.xcodeproj/project.pbxproj'];
+const FILES = ['package.json', 'ios/App/App.xcodeproj/project.pbxproj', 'CHANGELOG.md'];
+const CHANGELOG_HEADER =
+  '# Changelog\n\nEvery commit bumps the version (see "Version per commit" in CLAUDE.md), and the commit hook adds its entry here.\n\n';
+
+// Puts "## <version> — <date>" and the subject (without its feat:/fix: prefix) above the newest entry
+const addChangelogEntry = (subject) => {
+  const { version } = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+  const text = subject.replace(/^\w+(\([^)]*\))?!?:\s*/, '');
+  const line = text.charAt(0).toUpperCase() + text.slice(1);
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+  const file = join(root, 'CHANGELOG.md');
+  const current = existsSync(file) ? readFileSync(file, 'utf8') : CHANGELOG_HEADER;
+  const eol = current.includes('\r\n') ? '\r\n' : '\n';
+  const entry = `## ${version} — ${date}\n- ${line}\n\n`.replace(/\n/g, eol);
+  const first = current.search(/^## /m);
+  const next = first === -1 ? `${current.replace(/\s*$/, '')}${eol}${eol}${entry}` : current.slice(0, first) + entry + current.slice(first);
+  writeFileSync(file, next);
+};
 
 const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
 const skip = (why) => {
@@ -42,6 +63,7 @@ try {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   }).trim();
+  addChangelogEntry(subject);
   git('add', '--', ...FILES);
   execFileSync('git', ['commit', '--amend', '--no-edit', '--no-verify', '--quiet'], {
     cwd: root,
