@@ -65,6 +65,10 @@ const toLocalDate = (d: Date) => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
+// A local date and time to the minute, as datetime-local inputs take it
+const toLocalDateTime = (d: Date) =>
+  `${toLocalDate(d)}T${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
 // The last day of a calendar range (weeks start on Monday), from the end of its bounds
 const lastDayOf = (range: 'this-week' | 'this-month' | 'this-year') => {
   const end = rangeBounds(range)![1];
@@ -169,6 +173,9 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   // The reminder a verb default turned on, so switching verbs can take it back if it wasn't touched
   const autoReminderRef = useRef<string | null>(null);
   const [baselineToken, setBaselineToken] = useState(0);
+  // A new plan can't look back: the field whose date is behind us gets a short hint on Save
+  const [pastField, setPastField] = useState<'until' | 'reminder' | null>(null);
+  const isNew = !editingItem;
 
   // Populate form if editing
   useEffect(() => {
@@ -240,6 +247,7 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
     }
     setIsConfirmingDiscard(false);
     setPendingCurrency(null);
+    setPastField(null);
     // The baseline is taken on the next render, once the fields above hold their new values
     setBaselineToken((n) => n + 1);
   }, [editingItem, draft, defaultCategoryId, defaultCurrency, isOpen]);
@@ -330,18 +338,21 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
   // A preset fills in its date, which stays editable; Someday clears it, Date keeps what's there
   const handleUntilChange = (next: UntilChoice) => {
     setUntilChoice(next);
+    setPastField(null);
     if (next === 'someday') setTargetDate('');
     else setTargetDate(presetDate(next) ?? targetDate);
   };
   // A date changed by hand is no longer the preset; clearing it goes back to Someday
   const handleTargetDateChange = (value: string) => {
     setTargetDate(value);
+    setPastField(null);
     setUntilChoice(value ? 'date' : 'someday');
   };
 
   // A repeating reminder needs a date ahead of it; one already in the future stays as picked
   const handleRepeatChange = (next: RecurrenceType) => {
     setReminderRecurrence(next);
+    setPastField(null);
     if (next === 'none') return;
     const current = reminderDate ? reminderTime(reminderDate).getTime() : NaN;
     if (!(current > Date.now())) setReminderDate(nextReminderDate(next, readReminderParts(reminderDate)));
@@ -351,6 +362,20 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
     e.preventDefault();
     if (!title.trim()) return;
     if (reminderRequired && !reminderDate) return;
+
+    // A new plan looks ahead: no Until date before today, no one-off reminder before now.
+    // min on the inputs covers most pickers; this catches typed dates and pickers that ignore it
+    if (isNew) {
+      const until = resolveUntil(untilChoice, targetDate, !visibleFields.includes('until'));
+      if (until.targetDate && until.targetDate < toLocalDate(new Date())) {
+        setPastField('until');
+        return;
+      }
+      if (enableReminder && reminderDate && reminderRecurrence === 'none' && reminderTime(reminderDate).getTime() < Date.now() - 60_000) {
+        setPastField('reminder');
+        return;
+      }
+    }
 
     // A step typed but not yet added still counts
     const pendingStep = stepDraft.trim();
@@ -429,7 +454,8 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                 </select>
               </div>
 
-              {untilChoice !== 'someday' && (
+              {/* Presets fill the date out of sight; the field shows only when picking a date by hand */}
+              {untilChoice === 'date' && (
               <div className="min-w-0">
                 <label htmlFor="item-target-date" className="block text-xs uppercase tracking-wider text-ink/60 font-semibold mb-1.5">
                   {t('form.targetDate')}
@@ -438,9 +464,19 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                   id="item-target-date"
                   type="date"
                   value={targetDate}
+                  min={isNew ? toLocalDate(new Date()) : undefined}
                   onChange={(e) => handleTargetDateChange(e.target.value)}
+                  // Show the hint below instead of the browser's own bubble
+                  onInvalid={(e) => {
+                    if (!e.currentTarget.validity.rangeUnderflow) return;
+                    e.preventDefault();
+                    setPastField('until');
+                  }}
                   className="w-full min-h-[44px] px-3 py-2 text-xs bg-card border border-ink/20 rounded-xl text-ink focus:outline-none focus:border-ink"
                 />
+                {pastField === 'until' && (
+                  <p role="alert" className="mt-1.5 text-[11px] text-ink/70">{t('form.dateAhead')}</p>
+                )}
               </div>
               )}
             </div>
@@ -612,7 +648,13 @@ export const ItemFormDrawer: React.FC<ItemFormDrawerProps> = ({
                   <ReminderWhenFields
                     recurrence={reminderRecurrence}
                     value={reminderDate}
-                    onChange={setReminderDate}
+                    onChange={(value) => {
+                      setReminderDate(value);
+                      setPastField(null);
+                    }}
+                    min={isNew ? toLocalDateTime(new Date()) : undefined}
+                    onTooEarly={() => setPastField('reminder')}
+                    error={pastField === 'reminder' ? t('form.timeAhead') : undefined}
                   />
                 </div>
               )}

@@ -106,7 +106,7 @@ async function loadList<T>(
 }
 
 export function loadBucketItems(): Promise<LoadedList<BucketItem>> {
-  // A new journal starts empty; the sample plans are added only on request (Plans tab, Settings)
+  // A new journal starts empty
   return loadList<BucketItem>(ITEMS_STORAGE_KEY, 'bucket items', [], saveBucketItems, (raw) =>
     normalizeItems(raw as BucketItem[])
   );

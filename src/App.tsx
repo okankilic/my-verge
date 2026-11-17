@@ -3,7 +3,6 @@ import confetti from 'canvas-confetti';
 import {
   Plus,
   Bell,
-  Sparkles,
   Compass,
   CheckCircle2,
   Calendar,
@@ -34,7 +33,6 @@ import {
 } from './services/storage';
 import { LanguagePreference, getLocale, resolveLocale, setLocale, t } from './i18n';
 import { DEFAULT_CURRENCY } from './data/currencies';
-import { initialItems } from './data/initialData';
 import {
   playChimeSound,
   sendBrowserNotification,
@@ -525,18 +523,6 @@ export default function App() {
     );
   };
 
-  // Adds the sample plans in the current language. Their ids are fixed, so ones already here are skipped
-  const handleAddSamples = () => {
-    const have = new Set(items.map((i) => i.id));
-    const fresh = initialItems().filter((s) => !have.has(s.id));
-    if (fresh.length === 0) {
-      notify(t('toast.samplesAlready'), 'info');
-      return;
-    }
-    setItems((prev) => [...stampCurrency(fresh, defaultCurrency), ...prev]);
-    notify(t('toast.samplesAdded'), 'success');
-  };
-
   const handleDeleteItem = (id: string) => {
     const index = items.findIndex((i) => i.id === id);
     if (index === -1) return;
@@ -791,34 +777,20 @@ export default function App() {
                 <EmptyState
                   icon={<Compass className="w-6 h-6 stroke-[1.5]" />}
                   title={t('empty.journalTitle')}
-                  hint={items.length === 0 ? t('empty.journalHintFirst') : t('empty.journalHint')}
+                  hint={t('empty.journalHint')}
                   onClearFilters={clearFilters}
                   action={
-                    <div className="flex flex-wrap items-center justify-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingItem(null);
-                          setIsFormOpen(true);
-                        }}
-                        className="min-h-[44px] px-4 bg-ink text-paper text-xs font-semibold rounded-lg hover:bg-ink/85 transition-all inline-flex items-center gap-1.5"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>{t('actions.new')}</span>
-                      </button>
-                      {items.length === 0 && (
-                        <button
-                          type="button"
-                          onClick={handleAddSamples}
-                          aria-label={t('empty.samplesLabel')}
-                          title={t('empty.samplesLabel')}
-                          className="min-h-[44px] px-4 border border-ink/20 text-ink text-xs font-semibold rounded-lg hover:bg-paper transition-all inline-flex items-center gap-1.5"
-                        >
-                          <Sparkles className="w-3.5 h-3.5 text-accent" />
-                          <span>{t('actions.samples')}</span>
-                        </button>
-                      )}
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingItem(null);
+                        setIsFormOpen(true);
+                      }}
+                      className="min-h-[44px] px-4 bg-ink text-paper text-xs font-semibold rounded-lg hover:bg-ink/85 transition-all inline-flex items-center gap-1.5"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>{t('actions.new')}</span>
+                    </button>
                   }
                 />
               ) : (
@@ -950,7 +922,6 @@ export default function App() {
             setHorizonRange('all');
             setActiveToastItem(null);
           }}
-          onAddSamples={handleAddSamples}
           onCategoriesChange={setCategories}
           theme={theme}
           onThemeChange={setTheme}

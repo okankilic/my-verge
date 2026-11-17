@@ -7,6 +7,9 @@ interface ReminderWhenFieldsProps {
   recurrence: RecurrenceType;
   value: string;
   onChange: (value: string) => void;
+  min?: string; // earliest one-off date-time, for new plans
+  error?: string; // a short hint under the one-off date-time
+  onTooEarly?: () => void; // the one-off date-time is before min; replaces the browser's bubble
 }
 
 export const fieldClass =
@@ -32,7 +35,7 @@ const dayOptions = (count: number) =>
   ));
 
 // The reminder's when, shaped by Repeat. Every view edits the same reminder date string.
-export const ReminderWhenFields: React.FC<ReminderWhenFieldsProps> = ({ recurrence, value, onChange }) => {
+export const ReminderWhenFields: React.FC<ReminderWhenFieldsProps> = ({ recurrence, value, onChange, min, error, onTooEarly }) => {
   if (recurrence === 'none') {
     return (
       <div>
@@ -44,9 +47,20 @@ export const ReminderWhenFields: React.FC<ReminderWhenFieldsProps> = ({ recurren
           type="datetime-local"
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          min={min}
+          onInvalid={(e) => {
+            if (!onTooEarly || !e.currentTarget.validity.rangeUnderflow) return;
+            e.preventDefault();
+            onTooEarly();
+          }}
           required
           className={fieldClass}
         />
+        {error && (
+          <p role="alert" className="mt-1.5 text-[11px] text-ink/70">
+            {error}
+          </p>
+        )}
       </div>
     );
   }

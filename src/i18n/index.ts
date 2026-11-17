@@ -83,7 +83,7 @@ export function t(key: MessageKey, vars?: Vars): string {
   );
 }
 
-// True when the catalog has this key (used for per-id lookups such as categories and samples)
+// True when the catalog has this key (used for per-id lookups such as categories)
 export const hasKey = (key: string): key is MessageKey => key in en;
 
 // Dates and numbers always use the app's language, never the browser default
